@@ -1,0 +1,123 @@
+%==============================================================================
+% ETHIDSC -- (ethidsc.sty) Style file
+% A LaTeX package providing new style definitions and commands.
+% The ethidsc-package defines a title page and an info page for term papers
+% and master theses written at the Measurement and Control Laboratory
+% of the Swiss Federal Institute of Technology (ETH) Zurich.
+% Author: Eric A. Mueller
+%         Measurement and Control Laboratory
+%         Swiss Federal Institute of Technology (ETH) Zurich
+%         Zurich, Switzerland
+%
+% Copyright (c) 2004 Eric A. Mueller
+% All rights reserved.
+%
+% ethidsc.sty,v.1.0 2009/29/05
+%
+% Revisions: 	2011/22/03  (Soren Ebbesen)
+%
+%==============================================================================
+\def\Presentation@Version{1.1}
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesPackage{ethidscLab}[2009/29/05, v. \Presentation@Version]
+\typeout{providing new style definitions and commands ---}
+\typeout{Eric Müller, ETHZ, Switzerland, 2004/04/02}
+\typeout{Maintained by Soren Ebbesen, 2009 ---}
+
+\newif\ifingerman
+\DeclareOption{german}{\global\ingermantrue}
+\DeclareOption{english}{\global\ingermanfalse}
+
+\ExecuteOptions{german}
+\ProcessOptions
+
+%\RequirePackage{auto-pst-pdf}
+\usepackage[utf8]{inputenc}                                               % keybord settings (allow umlaute)
+\RequirePackage[T1]{fontenc}                                              % to change fonts
+\RequirePackage{amsmath,amssymb,amsthm}                                   % additional math functionality
+\RequirePackage{graphicx}                                                 % EPS figures
+%\RequirePackage{epstopdf}                                                 % to convert eps to pdf (only for pdflatex)
+%\RequirePackage[cleanup={.dvi,.tex,.out,.nlo,.ps,.pdf,.log,.aux}]{pstool} % helps with ps figures (only for pdflatex)
+%\RequirePackage[dvips]{epsfig}                                            % EPS figures (only for dvipdf)
+\RequirePackage{float}                                                    % placement of floating objects
+\RequirePackage{fancyhdr}                                                 % headings
+\RequirePackage{hyperref}                                                 % enable hyberrefs in PDF
+%\RequirePackage{pstricks,pst-plot,psfrag}                                 % post-script graphics (only for dvipdf)
+\RequirePackage{multirow}                                                 % add functionality to tab. env.
+\RequirePackage{rotating}                                                 % rotate tables 90 degrees
+\RequirePackage{mcode}                                                    % to include matlab code
+\RequirePackage{units}                                                    % concise printing of units
+\RequirePackage{booktabs}                                                 % additional tab functions$
+\RequirePackage{lmodern}                                                  % smooth fonts
+\ifingerman
+%\RequirePackage{german,ae}                                                % german language & german specials
+\RequirePackage{ngerman}                                                  % new german language & german specials
+\fi
+
+\newcommand{\@authors}{}
+\newcommand{\authors}[1]{\gdef\@authors{#1}}
+
+\newcommand{\@lineone}{}
+\newcommand{\lineone}[1]{\gdef\@lineone{#1}}
+
+\newif\iflinetwo
+\newcommand{\@linetwo}{}
+\newcommand{\linetwo}[1]{\gdef\@linetwo{#1}\linetwotrue}
+
+
+
+% Definition of title page______________________________________________________
+\renewcommand{\maketitle}{
+
+\pagestyle{empty}
+
+\begin{center}
+\hspace{0.02\textwidth}
+\parbox[c][\textheight][t]{0.97\textwidth}{
+\begin{center}
+
+\vspace*{-0cm}
+\begin{minipage}[c]{0.3\textwidth}
+ \begin{flushleft}
+ \hspace*{-1.5cm}
+ \includegraphics[height=2.0cm]{img/titlepage/ethlogo}
+ \end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.5\textwidth}
+ \begin{flushright}
+ \hspace*{0.4cm}
+ \includegraphics[height=1.8cm]{img/titlepage/IDSC_logo_Full}
+ \end{flushright}
+\end{minipage}
+\vspace*{5.0cm}
+
+{\LARGE \@lineone \\}
+\vspace{0.75cm}
+{\LARGE \@linetwo}
+\vspace{2.5cm}
+
+{\Huge \bf \@title \par}
+\vspace{2.0cm} 
+
+\vspace{3.0cm}
+
+\ifingerman
+ {\bf \Large Autoren} \\[1.5ex]
+\else
+ {\bf \large Authors} \\[1.5ex]
+\fi
+\large \@authors
+
+\vfill
+%\vspace*{3cm}
+\@date
+
+\end{center}
+}
+\end{center}
+\cleardoublepage
+}
+
+% Revision history___________________________________________________________ 
+% 2009/29/05 Adapted from ethimrt.sty,v 1.1 2004/04/02
