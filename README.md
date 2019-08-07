@@ -5,6 +5,7 @@
 This repository contains the following folders.
 - `script_student` containing the Latex source files for the assignment script.
 - `script_assistant` containing the Latex source files for the assistant / sample solution script.
+- Note that due to the size, the setup files for this project are hosted on the IDSC NAS.
 
 ## Contributing to this Repository:
 
