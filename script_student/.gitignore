@@ -1,5 +1,0 @@
-# ignore everything below build
-build/*
-
-# ignore every file automatically converted by LaTeX package epstopdf
-*-eps-converted-to.pdf
