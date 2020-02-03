@@ -8,3 +8,7 @@ Contains all the code needed to set up the computing platform and interact with 
 3. To ensure access when you have no peripherals, follow the [setup of a headless Raspberry Pi](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 4. `git clone https://github.com/bpfel/MassflowController_code.git`
 5. Install required packages using the setup script in this repository.
+```
+cd MassflowController_code
+sudo /bin/sh -c './setup.sh'
+```
