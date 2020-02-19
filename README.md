@@ -9,6 +9,6 @@ Contains all the code needed to set up the computing platform and interact with 
 4. `git clone https://github.com/bpfel/MassflowController_code.git`
 5. Install required packages using the setup script in this repository.
 ```
-cd MassflowController_code
+cd MassflowController_code/01_SETUP
 sudo /bin/sh -c './setup.sh'
 ```
