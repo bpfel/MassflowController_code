@@ -22,8 +22,6 @@ echo -e "${GREEN}Done!${NC}"
 echo -e "${RED}Downloading and installing pycharm...${NC}"
 wget -nc https://download.jetbrains.com/python/pycharm-community-2019.3.2.tar.gz -P ~/Downloads
 sudo tar xfz -k ~/Downloads/pycharm-*.tar.gz -C /opt/
-sudo /bin/bash -c 'echo export PATH=$PATH:/opt/pycharm*/bin'
-sudo cp /opt/pycharm*/bin/pycharm.sh /opt/pycharm*/bin/pycharm
 echo -e "${GREEN}Done! Pycharm is now executable as `pycharm`'${NC}"
 
 sudo reboot
