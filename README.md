@@ -12,3 +12,8 @@ Contains all the code needed to set up the computing platform and interact with 
 cd MassflowController_code/01_SETUP
 sudo /bin/sh -c './setup.sh'
 ```
+6. The RPi will reboot. After that connect all Sensors and execute `tty_setup.ssh`
+7. Check if all sensors show up as tty_USB devices using 
+```
+python -m serial.tools.list_ports
+```
