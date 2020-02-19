@@ -7,8 +7,8 @@ NC='\033[0m'
 
 # Setup script
 echo -e "${RED}Updating the distribution...${NC}"
-sudo apt-get update
-sudo apt-get dist-upgrade
+sudo apt-get -y update
+sudo apt-get -y dist-upgrade
 echo -e "${GREEN}Done!${NC}"
 
 
