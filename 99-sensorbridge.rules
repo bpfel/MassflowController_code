@@ -1,5 +1,0 @@
-SUBSYSTEMS="usb", \
-ATTRS{idVendor}=="0403", \
-ATTRS{idProduct}=="7168", \
-RUN{builtin}+="modprobe ftdi_sio", \
-RUN+="/bin/sh -c 'echo 0403 7168 >/sys/bus/usb-serial/drivers/ftdi_sio/new_id'"
