@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
-
-logger = logging.getLogger("Massflow_INFO")
-
+from threading import RLock
+import sys
 
 class SensorBase(ABC):
     """
@@ -11,20 +10,28 @@ class SensorBase(ABC):
 
     def __init__(self, name):
         self.name = name
-        logger.debug('Ceating Sensor "{}"'.format(self.name))
+        self._lock = RLock()
+        # Set up sensor-specific logger
+        self.logger = logging.getLogger("Sensor {}".format(name))
+        self.logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        self.logger.addHandler(ch)
+        self.logger.debug('Creating Sensor "{}"'.format(self.name))
 
     def open(self):
-        logger.debug('Connecting Sensor "{}"...'.format(self.name))
+        self.logger.debug('Connecting Sensor "{}"...'.format(self.name))
         answer = self.connect()
         if answer:
-            logger.info('... connected {} successfully!'.format(self.name))
+            self.logger.info('... connected {} successfully!'.format(self.name))
         else:
-            logger.info('... could not connect {}! {}'.format(self.name, answer))
+            self.logger.info('... could not connect {}! {}'.format(self.name, answer))
 
     def close(self):
         if self.is_connected():
             self.disconnect()
-        logger.debug('Closing Sensor "{}"'.format(self.name))
+        self.logger.debug('Closing Sensor "{}"'.format(self.name))
 
     @abstractmethod
     def disconnect(self):
