@@ -2,7 +2,8 @@ from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection
 from sensirion_shdlc_sensorbridge import SensorBridgePort, SensorBridgeShdlcDevice
 
 import logging
-from SensorBase import SensorBase
+logger = logging.getLogger(__name__)
+from Drivers.SensorBase import SensorBase
 
 TIMEOUT_US = 10e5
 TEMPERATURE_MEASUREMENT_NAME = "Temperature"
@@ -161,5 +162,10 @@ class Sht3x(SensorBase):
 
 if __name__ == "__main__":
     with Sht3x(serial_port="/dev/ttyUSB2", device_port='ONE') as sht:
+        import sys
+        ch = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
         sht.open()
         print(sht.measure())

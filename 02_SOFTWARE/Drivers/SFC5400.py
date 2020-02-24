@@ -3,7 +3,7 @@ from sensirion_shdlc_driver.command import ShdlcCommand
 from struct import pack, unpack
 
 import logging
-from SensorBase import SensorBase
+from Drivers.SensorBase import SensorBase
 
 logging.basicConfig(level=logging.INFO)
 
