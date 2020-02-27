@@ -19,13 +19,21 @@ class Sfc5400ShdlcCmdSetSetpoint(ShdlcCommand):
             max_response_time=5e-3,
         )
 
+class Sfc5400ShdlcCmdGetDeviceInformation(ShdlcCommand):
+    def __init__(self, index):
+        super(Sfc5400ShdlcCmdGetDeviceInformation, self).__init__(
+            id=0xD0,
+            data=[index],
+            max_response_time=10e-3
+        )
+
 
 class Sfc5400ShdlcCmdReadMeasuredFlow(ShdlcCommand):
     def __init__(self):
         super(Sfc5400ShdlcCmdReadMeasuredFlow, self).__init__(
             id=0x08,
             data=[FLOW_UNIT],
-            max_response_time=5e-3,
+            max_response_time=5e-3
         )
 
     def interpret_response(self, data):
@@ -56,6 +64,18 @@ class Sfc5400(SensorBase):
 
     def set_flow(self, setpoint_normalized):
         self.ShdlcDevice.execute(Sfc5400ShdlcCmdSetSetpoint(setpoint_normalized))
+
+    def get_device_information(self, index):
+        """
+        Returns device information
+        Parameters
+        ----------
+        index
+            1 : Product Name
+            2 : Article Code
+            3 : Serial number
+        """
+        self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))
 
     def is_connected(self):
         #todo: implement check whether connected
