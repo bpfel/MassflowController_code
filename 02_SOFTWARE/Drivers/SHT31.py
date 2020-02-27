@@ -32,18 +32,16 @@ class Sht3x(SensorBase):
         """
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
-            self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort), slave_address=0)
+            self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort),
+                                                       slave_address=0)
             self.ShdlcDevice.blink_led(port=self.sensor_bridge_port)
             self.connect_sensor(supply_voltage=3.3, frequency=400000)
         except Exception as e:
-            return e
+            logger.error("Could not connect sensor  {} : {}".format(self.name, e))
+            return False
         return True
 
     def is_connected(self):
-        # todo: implement check whether connected
-        pass
-
-    def probe(self):
         """
         Check if the sensor operates correctly
         Returns
@@ -79,10 +77,10 @@ class Sht3x(SensorBase):
         """Called by SensorBase.close upon deletion of this class.
 
         """
-        self.port.close()
+        self.ShdlcPort.close()
 
     def connect_sensor(self, supply_voltage, frequency):
-        """Connection of a sensor attached to the sensirion sensor bridge accroding to
+        """Connection of a sensor attached to the sensirion sensor bridge according to
         the quick start guide to sensirion-shdlc-sensorbridge.
 
         Parameters
@@ -101,8 +99,6 @@ class Sht3x(SensorBase):
 
         A high repeatability measurement with clock stretching enabled is performed.
 
-        Parameters
-        ----------
         Returns
         -------
         dict
