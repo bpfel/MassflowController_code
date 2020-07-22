@@ -75,7 +75,7 @@ class Sfc5400(SensorBase):
             2 : Article Code
             3 : Serial number
         """
-        self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))
+        return self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))
 
     def is_connected(self):
         #todo: implement check whether connected
@@ -83,6 +83,12 @@ class Sfc5400(SensorBase):
 
 
 if __name__ == "__main__":
-    with Sfc5400(port="/dev/ttyUSB0") as sfc:
+    from DeviceIdentifier import DeviceIdentifier
+
+    serials = {
+        'SFC': 'FTVQSB5S',
+    }
+    devices = DeviceIdentifier(serials=serials)
+    with Sfc5400(serial_port=devices.serial_ports['SFC']) as sfc:
         sfc.open()
         print(sfc.measure())
