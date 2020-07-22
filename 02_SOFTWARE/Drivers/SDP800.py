@@ -5,6 +5,8 @@ import logging
 logger = logging.getLogger(__name__)
 from Drivers.SensorBase import SensorBase
 
+import time
+
 TIMEOUT_US = 10e5
 DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME = "Differential Pressure"
 
@@ -79,7 +81,7 @@ class Sdp800(SensorBase):
             tx_data=[0x36, 0x2F],
             rx_length=10,
             timeout_us=TIMEOUT_US)
-        result_differential_pressure = self._convert_differential_pressure(rx_data[1:3])
+        result_differential_pressure = self._convert_differential_pressure(rx_data[0:2])
         return {
             DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME: result_differential_pressure
         }
@@ -110,4 +112,6 @@ if __name__ == "__main__":
     logger.addHandler(ch)
     with Sdp800(serial_port='/dev/ttyUSB2', device_port='TWO') as sdp:
         sdp.open()
-        print(sdp.measure())
+        for i in range(0,100):
+            time.sleep(1)
+            print(sdp.measure())

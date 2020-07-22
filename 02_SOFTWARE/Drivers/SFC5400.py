@@ -41,9 +41,9 @@ class Sfc5400ShdlcCmdReadMeasuredFlow(ShdlcCommand):
 
 
 class Sfc5400(SensorBase):
-    def __init__(self, port, name="Sfc5400"):
+    def __init__(self, serial_port, name="Sfc5400"):
         super(Sfc5400, self).__init__(name)
-        self.port = port
+        self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
 
