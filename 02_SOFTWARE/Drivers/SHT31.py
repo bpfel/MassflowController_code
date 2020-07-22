@@ -2,6 +2,7 @@ from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection
 from sensirion_shdlc_sensorbridge import SensorBridgePort, SensorBridgeShdlcDevice
 
 import logging
+
 logger = logging.getLogger(__name__)
 from Drivers.SensorBase import SensorBase
 
@@ -10,34 +11,78 @@ TEMPERATURE_MEASUREMENT_NAME = "Temperature"
 HUMIDITY_MEASUREMENT_NAME = "Humidity"
 
 
-class Sht3x(SensorBase):
-    def __init__(self, serial_port, device_port='ONE', name="Sht3x"):
-        super(Sht3x, self).__init__(name)
+class EKS(object):
+    def __init__(self, serial_port):
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
+        self.sensors = []
+
+    def open(self):
+        logger.info('Connecting EKS platform...')
+        try:
+            self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
+            self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort),
+                                                       slave_address=0)
+            self.connect_sensors()
+        except Exception as e:
+            logger.error('Could not connect EKS platform.')
+            return False
+        logger.info('... connected EKS platform successfully!')
+        return True
+
+    def connect_sensors(self):
+        # Scan both ports for sensors
+        for i in range(2):
+            sensor = Sht3x(device_port=i, shdlc_device=self.ShdlcDevice)
+            sensor.open()
+            if sensor.is_connected():
+                self.sensors.append(sensor)
+
+    def measure(self):
+        result = []
+        for sensor in self.sensors:
+            result.append(sensor.measure())
+        return result
+
+    def disconnect(self):
+        self.ShdlcPort.close()
+
+    def is_connected(self):
+        try:
+            self.ShdlcDevice.get_serial_number()
+        except TimeoutError:
+            return False
+        return True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.is_connected:
+            self.disconnect()
+        logger.info('Closing EKS platform.')
+
+
+class Sht3x(SensorBase):
+    def __init__(self, device_port, shdlc_device, name="Sht3x"):
+        super(Sht3x, self).__init__(name)
+        self.ShdlcDevice = shdlc_device
         self.i2c_address = 0x44
 
         # Assign the sensor bridge port for the chosen sensor.
-        if device_port == 'ONE':
+        if device_port == 0:
             self.sensor_bridge_port = SensorBridgePort.ONE
-        elif device_port == 'TWO':
+        elif device_port == 1:
             self.sensor_bridge_port = SensorBridgePort.TWO
         else:
             raise ValueError("Incorrect device_port chosen. Select either 'ONE' or 'TWO'.")
 
     def connect(self):
-        """Called by SensorBase.__init__(), handles the connection of all sensors
-
-        """
         try:
-            self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
-            self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort),
-                                                       slave_address=0)
-            self.ShdlcDevice.blink_led(port=self.sensor_bridge_port)
             self.connect_sensor(supply_voltage=3.3, frequency=400000)
-        except Exception as e:
-            logger.error("Could not connect sensor  {} : {}".format(self.name, e))
+            self.ShdlcDevice.blink_led(port=self.sensor_bridge_port)
+        except TimeoutError:
             return False
         return True
 
@@ -51,9 +96,9 @@ class Sht3x(SensorBase):
         """
         try:
             self.read_status_reg()
-            return True
         except IOError:
             return False
+        return True
 
     def read_status_reg(self):
         """
@@ -77,7 +122,8 @@ class Sht3x(SensorBase):
         """Called by SensorBase.close upon deletion of this class.
 
         """
-        self.ShdlcPort.close()
+        # todo: implement
+        pass
 
     def connect_sensor(self, supply_voltage, frequency):
         """Connection of a sensor attached to the sensirion sensor bridge according to
@@ -115,8 +161,8 @@ class Sht3x(SensorBase):
         result_temperature = self._convert_temperature(rx_data[0:2])
         result_humidity = self._convert_humidity(rx_data[3:5])
         return {
-            TEMPERATURE_MEASUREMENT_NAME : result_temperature,
-            HUMIDITY_MEASUREMENT_NAME : result_humidity
+            TEMPERATURE_MEASUREMENT_NAME: result_temperature,
+            HUMIDITY_MEASUREMENT_NAME: result_humidity
         }
 
     def _convert_humidity(self, data):
@@ -156,12 +202,14 @@ class Sht3x(SensorBase):
         adc_out = data[0] << 8 | data[1]
         return -45.0 + 175.0 * adc_out / 0x10000
 
+
 if __name__ == "__main__":
-    with Sht3x(serial_port="/dev/ttyUSB2", device_port='ONE') as sht:
-        import sys
-        ch = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        ch.setFormatter(formatter)
-        logger.addHandler(ch)
-        sht.open()
-        print(sht.measure())
+    from DeviceIdentifier import DeviceIdentifier
+
+    serials = {
+        'EKS': 'EKS231R5DL',
+    }
+    devices = DeviceIdentifier(serials=serials)
+    with EKS(serial_port=devices.serial_ports['EKS']) as eks:
+        eks.open()
+        print(eks.measure())
