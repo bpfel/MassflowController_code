@@ -1,5 +1,12 @@
 from struct import unpack, pack
 from sensirion_shdlc_driver import ShdlcConnection, ShdlcDevice, ShdlcSerialPort
+from DeviceIdentifier import DeviceIdentifier
+from serial.serialutil import SerialException
+import time
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 SHDLC_IO_ERROR_CODES = {
     0x20: 'sensor busy',
@@ -8,6 +15,7 @@ SHDLC_IO_ERROR_CODES = {
     0x23: 'sensor timeout',
     0x24: 'no measurement started'
 }
+
 
 class ShdlcIoModule(ShdlcDevice):
     """
@@ -32,6 +40,31 @@ class ShdlcIoModule(ShdlcDevice):
             input_pins = range(0, 6)
 
         self._input_pins = input_pins
+        logger.debug("SHDLC box connected.")
+
+    def is_connected(self):
+        try:
+            self.get_serial_number()
+        except SerialException:
+            return False
+        return True
+
+
+    def disconnect(self):
+        self.set_all_digital_io_off()
+        time.sleep(0.1)
+        self.set_analog_output(value=0.0)
+        time.sleep(0.1)
+        self.set_pwm(pwm_bit=0, dc=0)
+        time.sleep(0.1)
+        self.set_pwm(pwm_bit=1, dc=0)
+        logger.debug("SHDLC box disconnected.")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
 
     def get_digital_io(self, io_bit):
         """
@@ -44,8 +77,17 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        p_level = self._connection.transceive(0x28, [io_bit], self._slave_address)
-        return unpack('?', p_level)[0]
+        p_level, err = self._connection.transceive(
+            command_id=0x28,
+            data=[io_bit],
+            slave_address=self._slave_address,
+            response_timeout=1
+        )
+        if err:
+            logger.error('Digital IO {} could not be read'.format(io_bit))
+            return -1
+        else:
+            return unpack('?', p_level)[0]
 
     def set_digital_io(self, io_bit, value):
         """
@@ -65,7 +107,7 @@ class ShdlcIoModule(ShdlcDevice):
             data=[io_bit, data],
             slave_address=self._slave_address,
             response_timeout=1
-            )
+        )
 
     def set_all_digital_io_off(self):
         for i in self._input_pins:
@@ -79,13 +121,17 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        data = self._connection.transceive(
+        data, err = self._connection.transceive(
             command_id=0x2b,
             data=[],
             slave_address=self._slave_address,
             response_timeout=1)
-        adc_value = unpack('>H', data)[0] / 65535.0 * 10.0
-        return adc_value
+        if err:
+            logger.error('Analog input could not be read.')
+            return -1
+        else:
+            adc_value = unpack('>H', data)[0] / 65535.0 * 10.0
+            return adc_value
 
     def get_analog_output(self):
         """
@@ -95,13 +141,17 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        data = self._connection.transceive(
+        data, err = self._connection.transceive(
             command_id=0x2a,
             data=[],
-            salve_address=self._slave_address,
+            slave_address=self._slave_address,
             response_timeout=1)
-        dac_value = unpack('>H', data)[0] / 65535.0 / 10.0
-        return dac_value
+        if err:
+            logger.error('Analog output could not be read.')
+            return -1
+        else:
+            dac_value = unpack('>H', data)[0] / 65535.0 / 10.0
+            return dac_value
 
     def set_analog_output(self, value):
         """
@@ -147,9 +197,39 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        p_dutycycle = self._connection.transceive(
+        p_dutycycle, err = self._connection.transceive(
             command_id=0x29,
             data=[pwm_bit],
             slave_address=self._slave_address,
             response_timeout=1)
-        return unpack('>H', p_dutycycle)[0]
+        if err:
+            logger.error('PWM {} could not be read'.format(pwm_bit))
+            return -1
+        else:
+            return unpack('>H', p_dutycycle)[0]
+
+
+if __name__ == "__main__":
+    serials = {
+        'Heater': 'AM01ZB7J'
+    }
+    devices = DeviceIdentifier(serials=serials)
+    with ShdlcIoModule(serial_port=devices.serial_ports['Heater']) as h:
+        # Testing digital io
+        print(h.get_digital_io(io_bit=0))
+        h.set_digital_io(io_bit=0, value=True)
+        print(h.get_digital_io(io_bit=0))
+        h.set_all_digital_io_off()
+        print(h.get_digital_io(io_bit=0))
+
+        # Testing analog io
+        print(h.get_analog_input())
+        h.set_analog_output(value=1.0)
+        print(h.get_analog_output())
+        h.set_analog_output(value=0.0)
+
+        # Testing PWM io
+        print(h.get_pwm(pwm_bit=0))
+        h.set_pwm(pwm_bit=0, dc=1000)
+        print(h.get_pwm(pwm_bit=0))
+        h.set_pwm(pwm_bit=0, dc=0)
