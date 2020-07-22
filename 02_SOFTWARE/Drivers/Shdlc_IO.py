@@ -1,6 +1,5 @@
 from struct import unpack, pack
 from sensirion_shdlc_driver import ShdlcConnection, ShdlcDevice, ShdlcSerialPort
-from DeviceIdentifier import DeviceIdentifier
 from serial.serialutil import SerialException
 import time
 
@@ -210,6 +209,8 @@ class ShdlcIoModule(ShdlcDevice):
 
 
 if __name__ == "__main__":
+    from DeviceIdentifier import DeviceIdentifier
+
     serials = {
         'Heater': 'AM01ZB7J'
     }
