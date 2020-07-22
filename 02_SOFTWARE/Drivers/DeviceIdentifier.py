@@ -11,7 +11,10 @@ class DeviceIdentifier:
         elif platform.system() == 'Linux':
             print('We re on linux')
             # Setup tty
-            os.system('../01_SETUP/tty_setup.sh')
+            dirname = os.path.dirname(__file__)
+            filename = os.path.join(dirname, '../../01_SETUP/tty_setup.sh')
+            filename = os.path.normpath(filename)
+            os.system(filename)
         else:
             print('System unknown')
         # List comports
