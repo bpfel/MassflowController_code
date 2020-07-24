@@ -4,16 +4,9 @@ from Drivers.Shdlc_IO import ShdlcIoModule
 from Drivers.DeviceIdentifier import DeviceIdentifier
 
 import logging
-import sys
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    # Setup logging
-    ch = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    logger.setLevel(logging.DEBUG)
 
     # Get the comports
     serials = {
@@ -38,6 +31,8 @@ if __name__ == "__main__":
     print(sfc.measure())
 
     heater = ShdlcIoModule(serial_port=devices.serial_ports['Heater'])
-    heater.
+    heater.get_digital_io(io_bit=0)
+    heater.set_digital_io(io_bit=0)
+    heater.get_digital_io()
     # test all methods!
     pass
