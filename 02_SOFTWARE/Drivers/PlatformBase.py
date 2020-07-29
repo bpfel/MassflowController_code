@@ -5,7 +5,7 @@ from threading import RLock
 logger = logging.getLogger('root')
 
 
-class SensorBase(ABC):
+class PlatformBase(ABC):
     """
     Abstract base class for all sensors used in this project.
     """
@@ -14,10 +14,10 @@ class SensorBase(ABC):
         self.name = name
         self._lock = RLock()
         # Set up sensor-specific logger
-        logger.info('Creating Sensor "{}"'.format(self.name))
+        logger.info('Creating platform "{}"'.format(self.name))
 
     def open(self):
-        logger.info('Connecting Sensor "{}"...'.format(self.name))
+        logger.info('Connecting platform "{}"...'.format(self.name))
         answer = self.connect()
         if answer:
             logger.info('... connected {} successfully!'.format(self.name))
@@ -27,7 +27,7 @@ class SensorBase(ABC):
     def close(self):
         if self.is_connected():
             self.disconnect()
-        logger.info('Closing Sensor "{}"'.format(self.name))
+        logger.info('Closing platform "{}"'.format(self.name))
 
     @abstractmethod
     def disconnect(self):
@@ -39,10 +39,6 @@ class SensorBase(ABC):
 
     @abstractmethod
     def is_connected(self):
-        pass
-
-    @abstractmethod
-    def measure(self):
         pass
 
     def __enter__(self):

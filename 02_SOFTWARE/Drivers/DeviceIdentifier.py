@@ -1,6 +1,9 @@
 from serial.tools import list_ports
 import platform
 import os
+import logging
+
+logger = logging.getLogger('root')
 
 
 class DeviceIdentifier:
@@ -8,6 +11,8 @@ class DeviceIdentifier:
         # Find current os
         if platform.system() == 'Windows':
             print('We re on windows')
+            for device in serials.keys():
+                serials[device] = '{}A'.format(serials[device])
         elif platform.system() == 'Linux':
             print('We re on linux')
             # Setup tty

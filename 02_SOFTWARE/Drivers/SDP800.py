@@ -1,11 +1,10 @@
 from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection
 from sensirion_shdlc_sensorbridge import SensorBridgePort, SensorBridgeShdlcDevice
-
-import logging
-logger = logging.getLogger(__name__)
 from Drivers.SensorBase import SensorBase
-
+import logging
 import time
+
+logger = logging.getLogger('root')
 
 TIMEOUT_US = 10e5
 DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME = "Differential Pressure"
@@ -104,14 +103,20 @@ class Sdp800(SensorBase):
         adc_out = data[0] << 8 | data[1]
         return adc_out / 60.0
 
+
 if __name__ == "__main__":
     import sys
+    from Utility.Logger import setup_custom_logger
+    from logging import getLevelName
+
+    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
+
     ch = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     with Sdp800(serial_port='/dev/ttyUSB2', device_port='TWO') as sdp:
         sdp.open()
-        for i in range(0,100):
+        for i in range(0, 100):
             time.sleep(1)
             print(sdp.measure())

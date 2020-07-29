@@ -1,34 +1,32 @@
 from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection
 from sensirion_shdlc_sensorbridge import SensorBridgePort, SensorBridgeShdlcDevice
-
+from Drivers.SensorBase import SensorBase
+from Drivers.PlatformBase import PlatformBase
 import logging
 
-logger = logging.getLogger(__name__)
-from Drivers.SensorBase import SensorBase
+logger = logging.getLogger('root')
 
 TIMEOUT_US = 10e5
 TEMPERATURE_MEASUREMENT_NAME = "Temperature"
 HUMIDITY_MEASUREMENT_NAME = "Humidity"
 
 
-class EKS(object):
+class EKS(PlatformBase):
     def __init__(self, serial_port):
+        super(EKS, self).__init__(name='EKS')
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
         self.sensors = []
 
-    def open(self):
-        logger.info('Connecting EKS platform...')
+    def connect(self):
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
             self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort),
                                                        slave_address=0)
             self.connect_sensors()
         except Exception as e:
-            logger.error('Could not connect EKS platform.')
-            return False
-        logger.info('... connected EKS platform successfully!')
+            return e
         return True
 
     def connect_sensors(self):
@@ -46,6 +44,8 @@ class EKS(object):
         return result
 
     def disconnect(self):
+        for sensor in self.sensors:
+            sensor.close()
         self.ShdlcPort.close()
 
     def is_connected(self):
@@ -54,14 +54,6 @@ class EKS(object):
         except TimeoutError:
             return False
         return True
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.is_connected:
-            self.disconnect()
-        logger.info('Closing EKS platform.')
 
 
 class Sht3x(SensorBase):
@@ -122,8 +114,7 @@ class Sht3x(SensorBase):
         """Called by SensorBase.close upon deletion of this class.
 
         """
-        # todo: implement
-        pass
+        self.ShdlcDevice.switch_supply_off(port=self.sensor_bridge_port)
 
     def connect_sensor(self, supply_voltage, frequency):
         """Connection of a sensor attached to the sensirion sensor bridge according to
@@ -204,7 +195,11 @@ class Sht3x(SensorBase):
 
 
 if __name__ == "__main__":
-    from DeviceIdentifier import DeviceIdentifier
+    from Drivers.DeviceIdentifier import DeviceIdentifier
+    from Utility.Logger import setup_custom_logger
+    from logging import getLevelName
+
+    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
 
     serials = {
         'EKS': 'EKS231R5DL',

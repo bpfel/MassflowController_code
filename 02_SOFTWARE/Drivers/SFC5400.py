@@ -1,11 +1,10 @@
 from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection, ShdlcDevice
 from sensirion_shdlc_driver.command import ShdlcCommand
 from struct import pack, unpack
-
-import logging
 from Drivers.SensorBase import SensorBase
+import logging
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('root')
 
 FLOW_UNIT = 0  # 0 = Normalized (0..1) / 1 = Physical / 2 = User Defined
 FLOW_MEASUREMENT_NAME = "Flow"
@@ -18,6 +17,7 @@ class Sfc5400ShdlcCmdSetSetpoint(ShdlcCommand):
             data=pack(">Bf", FLOW_UNIT, setpoint_normalized),
             max_response_time=5e-3,
         )
+
 
 class Sfc5400ShdlcCmdGetDeviceInformation(ShdlcCommand):
     def __init__(self, index):
@@ -56,7 +56,7 @@ class Sfc5400(SensorBase):
         return True
 
     def disconnect(self):
-        self.port.close()
+        self.ShdlcPort.close()
 
     def measure(self):
         result = self.ShdlcDevice.execute(Sfc5400ShdlcCmdReadMeasuredFlow())
@@ -78,12 +78,16 @@ class Sfc5400(SensorBase):
         return self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))
 
     def is_connected(self):
-        #todo: implement check whether connected
+        # todo: implement check whether connected
         pass
 
 
 if __name__ == "__main__":
-    from DeviceIdentifier import DeviceIdentifier
+    from Drivers.DeviceIdentifier import DeviceIdentifier
+    from Utility.Logger import setup_custom_logger
+    from logging import getLevelName
+
+    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
 
     serials = {
         'SFC': 'FTVQSB5S',

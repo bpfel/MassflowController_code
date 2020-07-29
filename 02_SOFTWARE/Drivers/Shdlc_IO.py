@@ -1,11 +1,11 @@
 from struct import unpack, pack
 from sensirion_shdlc_driver import ShdlcConnection, ShdlcDevice, ShdlcSerialPort
 from serial.serialutil import SerialException
+from Drivers.PlatformBase import PlatformBase
 import time
-
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('root')
 
 SHDLC_IO_ERROR_CODES = {
     0x20: 'sensor busy',
@@ -16,7 +16,7 @@ SHDLC_IO_ERROR_CODES = {
 }
 
 
-class ShdlcIoModule(ShdlcDevice):
+class ShdlcIoModule(PlatformBase):
     """
     SHDLC driver for the IO box
     """
@@ -30,10 +30,11 @@ class ShdlcIoModule(ShdlcDevice):
         slave_address: Slave address
         input_pins: list of integers of the input pins
         """
-        shdlc_port = ShdlcSerialPort(port=serial_port, baudrate=baudrate)
-        connection = ShdlcConnection(port=shdlc_port)
-
-        super(ShdlcIoModule, self).__init__(connection=connection, slave_address=slave_address)
+        self.ShdlcDevice = None
+        self._serial_port = serial_port
+        self._baudrate = baudrate
+        self._slave_address = slave_address
+        super(ShdlcIoModule, self).__init__(name='Heater')
 
         if input_pins is None:
             input_pins = range(0, 6)
@@ -41,13 +42,21 @@ class ShdlcIoModule(ShdlcDevice):
         self._input_pins = input_pins
         logger.debug("SHDLC box connected.")
 
+    def connect(self):
+        try:
+            shdlc_port = ShdlcSerialPort(port=self._serial_port, baudrate=self._baudrate)
+            connection = ShdlcConnection(port=shdlc_port)
+            self.ShdlcDevice = ShdlcDevice(connection=connection, slave_address=self._slave_address)
+        except Exception as e:
+            return e
+        return True
+
     def is_connected(self):
         try:
-            self.get_serial_number()
+            self.ShdlcDevice.get_serial_number()
         except SerialException:
             return False
         return True
-
 
     def disconnect(self):
         self.set_all_digital_io_off()
@@ -57,7 +66,6 @@ class ShdlcIoModule(ShdlcDevice):
         self.set_pwm(pwm_bit=0, dc=0)
         time.sleep(0.1)
         self.set_pwm(pwm_bit=1, dc=0)
-        logger.debug("SHDLC box disconnected.")
 
     def __enter__(self):
         return self
@@ -76,7 +84,7 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        p_level, err = self._connection.transceive(
+        p_level, err = self.ShdlcDevice._connection.transceive(
             command_id=0x28,
             data=[io_bit],
             slave_address=self._slave_address,
@@ -101,7 +109,7 @@ class ShdlcIoModule(ShdlcDevice):
 
         """
         data = 1 if value else 0
-        self._connection.transceive(
+        self.ShdlcDevice._connection.transceive(
             command_id=0x28,
             data=[io_bit, data],
             slave_address=self._slave_address,
@@ -120,7 +128,7 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        data, err = self._connection.transceive(
+        data, err = self.ShdlcDevice._connection.transceive(
             command_id=0x2b,
             data=[],
             slave_address=self._slave_address,
@@ -140,7 +148,7 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        data, err = self._connection.transceive(
+        data, err = self.ShdlcDevice._connection.transceive(
             command_id=0x2a,
             data=[],
             slave_address=self._slave_address,
@@ -163,7 +171,7 @@ class ShdlcIoModule(ShdlcDevice):
         """
         adc_value = int(value / 10.0 * 65535)
         data = bytearray(pack('>H', adc_value))
-        self._connection.transceive(
+        self.ShdlcDevice._connection.transceive(
             command_id=0x2a,
             data=data,
             slave_address=self._slave_address,
@@ -180,7 +188,7 @@ class ShdlcIoModule(ShdlcDevice):
 
         """
         data = [pwm_bit] + list(bytearray(pack('>H', dc)))
-        self._connection.transceive(
+        self.ShdlcDevice._connection.transceive(
             command_id=0x29,
             data=data,
             slave_address=self._slave_address,
@@ -196,7 +204,7 @@ class ShdlcIoModule(ShdlcDevice):
         -------
 
         """
-        p_dutycycle, err = self._connection.transceive(
+        p_dutycycle, err = self.ShdlcDevice._connection.transceive(
             command_id=0x29,
             data=[pwm_bit],
             slave_address=self._slave_address,
@@ -209,13 +217,18 @@ class ShdlcIoModule(ShdlcDevice):
 
 
 if __name__ == "__main__":
-    from DeviceIdentifier import DeviceIdentifier
+    from Drivers.DeviceIdentifier import DeviceIdentifier
+    from Utility.Logger import setup_custom_logger
+    from logging import getLevelName
+
+    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
 
     serials = {
         'Heater': 'AM01ZB7J'
     }
     devices = DeviceIdentifier(serials=serials)
-    with ShdlcIoModule(serial_port=devices.serial_ports['Heater']) as h:
+    with ShdlcIoModule(serial_port=str(devices.serial_ports['Heater'])) as h:
+        h.connect()
         # Testing digital io
         print(h.get_digital_io(io_bit=0))
         h.set_digital_io(io_bit=0, value=True)
@@ -234,3 +247,5 @@ if __name__ == "__main__":
         h.set_pwm(pwm_bit=0, dc=1000)
         print(h.get_pwm(pwm_bit=0))
         h.set_pwm(pwm_bit=0, dc=0)
+
+    print('lölö')
