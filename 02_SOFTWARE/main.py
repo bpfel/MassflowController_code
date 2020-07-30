@@ -17,5 +17,5 @@ if __name__ == "__main__":
         setup.open()
         setup.measure()
         time.sleep(0.1)
-        setup.start_measurement_thread(t_sampling_sec=1)
-        time.sleep(3)
+        setup.start_measurement_thread(t_sampling_sec=0.3)
+        time.sleep(2)

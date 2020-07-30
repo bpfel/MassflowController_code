@@ -1,7 +1,8 @@
 from struct import pack
-
 import logging
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('root')
+
 
 class I2cDevice(object):
     def __init__(self, connection, slave_address):
@@ -27,6 +28,7 @@ class I2cDevice(object):
 
     def read(self):
         return self._connection(self._slave_address, self._last_command)
+
 
 class I2cConnection(object):
     def __init__(self, transceiver):
