@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger('root')
 
-FLOW_UNIT = 0  # 0 = Normalized (0..1) / 1 = Physical / 2 = User Defined
+FLOW_UNIT = 1  # 0 = Normalized (0..1) / 1 = Physical / 2 = User Defined
 FLOW_MEASUREMENT_NAME = "Flow"
 
 

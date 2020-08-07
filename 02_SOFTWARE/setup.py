@@ -4,9 +4,20 @@ from Drivers.Shdlc_IO import ShdlcIoModule
 from Drivers.DeviceIdentifier import DeviceIdentifier
 from Utility.MeasurementBuffer import MeasurementBuffer
 from Utility.Timer import RepeatTimer
+from Utility.Controller import pid_controller, p_controller
 import logging
+import time
+from enum import Enum
+
+
+class Mode(Enum):
+    IDLE = 0
+    FORCE_PWM = 2
+    PID = 3
+
 
 logger = logging.getLogger('root')
+
 
 class Setup(object):
     # Standard methods
@@ -15,10 +26,24 @@ class Setup(object):
         self._serials = serials
         self._devices = None
         signals = {
-            'Temperature 1', 'Temperature 2', 'Humidity 1', 'Humidity 2', 'Flow'
+            'Temperature 1', 'Temperature 2', 'Humidity 1',
+            'Humidity 2', 'Flow', 'Time', 'Temperature Difference',
+            'PWM', 'Flow Estimate'
         }
-        self._measurement_buffer = MeasurementBuffer(signals=signals, buffer_length=200)
+        self.measurement_buffer = MeasurementBuffer(signals=signals, buffer_length=100)
+        # Initialize members
         self._measurement_timer = None
+        self._eks = None
+        self._sfc = None
+        self._heater = None
+        self._sdp = None
+        self._current_pwm_value = 0
+        self._current_mode = 'Idle'
+        self._setpoint = 0
+        self._initial_time = time.time()
+        # self.controller = pid_controller(k_p=0.3, k_i=0, k_d=0, tau=4, t_s=0.3, lower_limit=0, upper_limit=1)
+        self.controller = p_controller(k_p=0.3, lower_limit=0, upper_limit=1)
+        self.controller.assign_buffers(value_buffer=self.measurement_buffer['Temperature Difference'])
 
     def open(self):
         # Find all USB devices and identify them
@@ -57,15 +82,24 @@ class Setup(object):
     def measure(self):
         results_eks = self._eks.measure()
         results_sfc = self._sfc.measure()
+        results_timestamp = time.time() - self._initial_time
+        delta_T = results_eks[1]['Temperature'] - results_eks[0]['Temperature']
         results = {
             'Temperature 1': results_eks[0]['Temperature'],
             'Temperature 2': results_eks[1]['Temperature'],
             'Humidity 1': results_eks[0]['Humidity'],
             'Humidity 2': results_eks[1]['Humidity'],
             'Flow': results_sfc['Flow'],
+            'Time': results_timestamp,
+            'Temperature Difference': delta_T,
+            'PWM': self._current_pwm_value,
+            'Flow Estimate': 46432.0*self._current_pwm_value*24.0*24.0/(11.0*1006.0*delta_T)
         }
         logger.info('Measuring once...')
-        self._measurement_buffer.update(results)
+        self.measurement_buffer.update(results)
+        if self._current_mode is Mode.PID:
+            desired_pwm = self.controller.update(target_value=self._setpoint)
+            self.set_pwm(desired_pwm)
 
     def start_measurement_thread(self, t_sampling_sec):
         if self._measurement_timer is None:
@@ -82,8 +116,24 @@ class Setup(object):
         else:
             logger.error('Measurement thread not started yet!')
 
-    def start_pid_controller(self):
-        pass
+    def set_pwm(self, value):
+        value = float(value)
+        if not 0.0 <= value <= 1.0:
+            raise ValueError('PWM value: {} has to be between 0 and 1'.format(value))
+        self._current_pwm_value = value
+        # convert to heater units:
+        value = int(value * 65535.0)
+        self._heater.set_pwm(pwm_bit=0, dc=value)
+
+    def wrap_set_pwm(self, value):
+        if self._current_mode is not Mode.FORCE_PWM:
+            raise RuntimeError('PWM cannot be forced if system is not in FORCE_PWM mode!')
+        self.set_pwm(value)
+
+    def start_pid_controller(self, setpoint):
+        self._current_mode = Mode.PID
+        self._setpoint = setpoint
 
     def start_direct_power_setting(self):
-        pass
+        self._current_mode = Mode.FORCE_PWM
+        self.set_pwm(value=0)

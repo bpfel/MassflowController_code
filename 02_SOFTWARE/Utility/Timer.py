@@ -18,7 +18,6 @@ class RepeatTimer(Timer):
         time.sleep(5)
         timer.cancel()
     """
-
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
