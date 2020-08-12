@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import logging
 from threading import RLock
 
-logger = logging.getLogger('root')
+logger = logging.getLogger("root")
 
 
 class SensorBase(ABC):
@@ -20,9 +20,10 @@ class SensorBase(ABC):
         logger.info('Connecting Sensor "{}"...'.format(self.name))
         answer = self.connect()
         if answer:
-            logger.info('... connected {} successfully!'.format(self.name))
+            logger.info("... connected {} successfully!".format(self.name))
         else:
-            logger.info('... could not connect {}! {}'.format(self.name, answer))
+            logger.info("... could not connect {}! {}".format(self.name, answer))
+        return answer
 
     def close(self):
         if self.is_connected():

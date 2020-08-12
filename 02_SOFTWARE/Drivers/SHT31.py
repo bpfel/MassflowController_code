@@ -4,7 +4,7 @@ from Drivers.SensorBase import SensorBase
 from Drivers.PlatformBase import PlatformBase
 import logging
 
-logger = logging.getLogger('root')
+logger = logging.getLogger("root")
 
 TIMEOUT_US = 10e5
 TEMPERATURE_MEASUREMENT_NAME = "Temperature"
@@ -13,7 +13,7 @@ HUMIDITY_MEASUREMENT_NAME = "Humidity"
 
 class EKS(PlatformBase):
     def __init__(self, serial_port):
-        super(EKS, self).__init__(name='EKS')
+        super(EKS, self).__init__(name="EKS")
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
@@ -22,8 +22,9 @@ class EKS(PlatformBase):
     def connect(self):
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
-            self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort),
-                                                       slave_address=0)
+            self.ShdlcDevice = SensorBridgeShdlcDevice(
+                ShdlcConnection(self.ShdlcPort), slave_address=0
+            )
             self.connect_sensors()
         except Exception as e:
             return e
@@ -68,7 +69,9 @@ class Sht3x(SensorBase):
         elif device_port == 1:
             self.sensor_bridge_port = SensorBridgePort.TWO
         else:
-            raise ValueError("Incorrect device_port chosen. Select either 'ONE' or 'TWO'.")
+            raise ValueError(
+                "Incorrect device_port chosen. Select either 'ONE' or 'TWO'."
+            )
 
     def connect(self):
         try:
@@ -106,7 +109,7 @@ class Sht3x(SensorBase):
                 address=self.i2c_address,
                 tx_data=[0xF3, 0x2D],
                 rx_length=1,
-                timeout_us=TIMEOUT_US
+                timeout_us=TIMEOUT_US,
             )
         return data[0]
 
@@ -127,8 +130,12 @@ class Sht3x(SensorBase):
         frequency : int
             I2C frequency
         """
-        self.ShdlcDevice.set_i2c_frequency(port=self.sensor_bridge_port, frequency=frequency)
-        self.ShdlcDevice.set_supply_voltage(port=self.sensor_bridge_port, voltage=supply_voltage)
+        self.ShdlcDevice.set_i2c_frequency(
+            port=self.sensor_bridge_port, frequency=frequency
+        )
+        self.ShdlcDevice.set_supply_voltage(
+            port=self.sensor_bridge_port, voltage=supply_voltage
+        )
         self.ShdlcDevice.switch_supply_on(port=self.sensor_bridge_port)
 
     def measure(self):
@@ -148,12 +155,13 @@ class Sht3x(SensorBase):
             address=self.i2c_address,
             tx_data=[0x2C, 0x06],
             rx_length=6,
-            timeout_us=TIMEOUT_US)
+            timeout_us=TIMEOUT_US,
+        )
         result_temperature = self._convert_temperature(rx_data[0:2])
         result_humidity = self._convert_humidity(rx_data[3:5])
         return {
             TEMPERATURE_MEASUREMENT_NAME: result_temperature,
-            HUMIDITY_MEASUREMENT_NAME: result_humidity
+            HUMIDITY_MEASUREMENT_NAME: result_humidity,
         }
 
     def _convert_humidity(self, data):
@@ -199,12 +207,12 @@ if __name__ == "__main__":
     from Utility.Logger import setup_custom_logger
     from logging import getLevelName
 
-    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
+    logger = setup_custom_logger(name="root", level=getLevelName("DEBUG"))
 
     serials = {
-        'EKS': 'EKS231R5DL',
+        "EKS": "EKS231R5DL",
     }
     devices = DeviceIdentifier(serials=serials)
-    with EKS(serial_port=devices.serial_ports['EKS']) as eks:
+    with EKS(serial_port=devices.serial_ports["EKS"]) as eks:
         eks.open()
         print(eks.measure())

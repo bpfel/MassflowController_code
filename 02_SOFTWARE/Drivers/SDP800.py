@@ -4,32 +4,35 @@ from Drivers.SensorBase import SensorBase
 import logging
 import time
 
-logger = logging.getLogger('root')
+logger = logging.getLogger("root")
 
 TIMEOUT_US = 10e5
 DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME = "Differential Pressure"
 
 
 class Sdp800(SensorBase):
-    def __init__(self, serial_port, device_port='TWO', name="Sdp800"):
+    def __init__(self, serial_port, device_port="TWO", name="Sdp800"):
         super(Sdp800, self).__init__(name)
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
         self.i2c_address = 0x25
 
-        if device_port == 'ONE':
+        if device_port == "ONE":
             self.sensor_bridge_port = SensorBridgePort.ONE
-        elif device_port == 'TWO':
+        elif device_port == "TWO":
             self.sensor_bridge_port = SensorBridgePort.TWO
         else:
-            raise ValueError("Incorrect device_port chosen. Select either 'ONE' or 'TWO'.")
+            raise ValueError(
+                "Incorrect device_port chosen. Select either 'ONE' or 'TWO'."
+            )
 
     def connect(self):
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
-            self.ShdlcDevice = SensorBridgeShdlcDevice(ShdlcConnection(self.ShdlcPort),
-                                                       slave_address=0)
+            self.ShdlcDevice = SensorBridgeShdlcDevice(
+                ShdlcConnection(self.ShdlcPort), slave_address=0
+            )
             self.ShdlcDevice.blink_led(port=self.sensor_bridge_port)
             self.connect_sensor(supply_voltage=3.3, frequency=400000)
         except Exception as e:
@@ -48,8 +51,12 @@ class Sdp800(SensorBase):
         frequency : int
             I2C frequency
         """
-        self.ShdlcDevice.set_i2c_frequency(port=self.sensor_bridge_port, frequency=frequency)
-        self.ShdlcDevice.set_supply_voltage(port=self.sensor_bridge_port, voltage=supply_voltage)
+        self.ShdlcDevice.set_i2c_frequency(
+            port=self.sensor_bridge_port, frequency=frequency
+        )
+        self.ShdlcDevice.set_supply_voltage(
+            port=self.sensor_bridge_port, voltage=supply_voltage
+        )
         self.ShdlcDevice.switch_supply_on(port=self.sensor_bridge_port)
 
     def is_connected(self):
@@ -79,11 +86,10 @@ class Sdp800(SensorBase):
             address=self.i2c_address,
             tx_data=[0x36, 0x2F],
             rx_length=10,
-            timeout_us=TIMEOUT_US)
+            timeout_us=TIMEOUT_US,
+        )
         result_differential_pressure = self._convert_differential_pressure(rx_data[0:2])
-        return {
-            DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME: result_differential_pressure
-        }
+        return {DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME: result_differential_pressure}
 
     def _convert_differential_pressure(self, data):
         """
@@ -109,13 +115,15 @@ if __name__ == "__main__":
     from Utility.Logger import setup_custom_logger
     from logging import getLevelName
 
-    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
+    logger = setup_custom_logger(name="root", level=getLevelName("DEBUG"))
 
     ch = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-    with Sdp800(serial_port='/dev/ttyUSB2', device_port='TWO') as sdp:
+    with Sdp800(serial_port="/dev/ttyUSB2", device_port="TWO") as sdp:
         sdp.open()
         for i in range(0, 100):
             time.sleep(1)

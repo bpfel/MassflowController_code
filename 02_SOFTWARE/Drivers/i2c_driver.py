@@ -1,7 +1,7 @@
 from struct import pack
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 
 class I2cDevice(object):
@@ -36,10 +36,13 @@ class I2cConnection(object):
         self._transceiver = transceiver
 
     def write(self, slave_address, command):
-        return self._interpret_response(command, self._transceive(
-            slave_address=slave_address,
-            tx_data=command.tx_data,
-            rx_length=None,
-            read_delay=0,
-            timeout=command.timeout
-        ))
+        return self._interpret_response(
+            command,
+            self._transceive(
+                slave_address=slave_address,
+                tx_data=command.tx_data,
+                rx_length=None,
+                read_delay=0,
+                timeout=command.timeout,
+            ),
+        )

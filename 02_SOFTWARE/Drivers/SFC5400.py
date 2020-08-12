@@ -4,7 +4,7 @@ from struct import pack, unpack
 from Drivers.SensorBase import SensorBase
 import logging
 
-logger = logging.getLogger('root')
+logger = logging.getLogger("root")
 
 FLOW_UNIT = 1  # 0 = Normalized (0..1) / 1 = Physical / 2 = User Defined
 FLOW_MEASUREMENT_NAME = "Flow"
@@ -22,22 +22,18 @@ class Sfc5400ShdlcCmdSetSetpoint(ShdlcCommand):
 class Sfc5400ShdlcCmdGetDeviceInformation(ShdlcCommand):
     def __init__(self, index):
         super(Sfc5400ShdlcCmdGetDeviceInformation, self).__init__(
-            id=0xD0,
-            data=[index],
-            max_response_time=10e-3
+            id=0xD0, data=[index], max_response_time=10e-3
         )
 
 
 class Sfc5400ShdlcCmdReadMeasuredFlow(ShdlcCommand):
     def __init__(self):
         super(Sfc5400ShdlcCmdReadMeasuredFlow, self).__init__(
-            id=0x08,
-            data=[FLOW_UNIT],
-            max_response_time=5e-3
+            id=0x08, data=[FLOW_UNIT], max_response_time=5e-3
         )
 
     def interpret_response(self, data):
-        return unpack('>f', data)[0]
+        return unpack(">f", data)[0]
 
 
 class Sfc5400(SensorBase):
@@ -50,7 +46,9 @@ class Sfc5400(SensorBase):
     def connect(self):
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=115200)
-            self.ShdlcDevice = ShdlcDevice(ShdlcConnection(self.ShdlcPort), slave_address=0)
+            self.ShdlcDevice = ShdlcDevice(
+                ShdlcConnection(self.ShdlcPort), slave_address=0
+            )
         except Exception as e:
             return e
         return True
@@ -87,12 +85,12 @@ if __name__ == "__main__":
     from Utility.Logger import setup_custom_logger
     from logging import getLevelName
 
-    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
+    logger = setup_custom_logger(name="root", level=getLevelName("DEBUG"))
 
     serials = {
-        'SFC': 'FTVQSB5S',
+        "SFC": "FTVQSB5S",
     }
     devices = DeviceIdentifier(serials=serials)
-    with Sfc5400(serial_port=devices.serial_ports['SFC']) as sfc:
+    with Sfc5400(serial_port=devices.serial_ports["SFC"]) as sfc:
         sfc.open()
         print(sfc.measure())

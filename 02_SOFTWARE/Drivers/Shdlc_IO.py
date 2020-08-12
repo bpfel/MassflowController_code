@@ -1,18 +1,19 @@
 from struct import unpack, pack
 from sensirion_shdlc_driver import ShdlcConnection, ShdlcDevice, ShdlcSerialPort
+from sensirion_shdlc_driver.errors import ShdlcTimeoutError
 from serial.serialutil import SerialException
 from Drivers.PlatformBase import PlatformBase
 import time
 import logging
 
-logger = logging.getLogger('root')
+logger = logging.getLogger("root")
 
 SHDLC_IO_ERROR_CODES = {
-    0x20: 'sensor busy',
-    0x21: 'no ack from sensor',
-    0x22: 'i2c crc false',
-    0x23: 'sensor timeout',
-    0x24: 'no measurement started'
+    0x20: "sensor busy",
+    0x21: "no ack from sensor",
+    0x22: "i2c crc false",
+    0x23: "sensor timeout",
+    0x24: "no measurement started",
 }
 
 
@@ -34,7 +35,7 @@ class ShdlcIoModule(PlatformBase):
         self._serial_port = serial_port
         self._baudrate = baudrate
         self._slave_address = slave_address
-        super(ShdlcIoModule, self).__init__(name='Heater')
+        super(ShdlcIoModule, self).__init__(name="Heater")
 
         if input_pins is None:
             input_pins = range(0, 6)
@@ -44,9 +45,13 @@ class ShdlcIoModule(PlatformBase):
 
     def connect(self):
         try:
-            shdlc_port = ShdlcSerialPort(port=self._serial_port, baudrate=self._baudrate)
+            shdlc_port = ShdlcSerialPort(
+                port=self._serial_port, baudrate=self._baudrate
+            )
             connection = ShdlcConnection(port=shdlc_port)
-            self.ShdlcDevice = ShdlcDevice(connection=connection, slave_address=self._slave_address)
+            self.ShdlcDevice = ShdlcDevice(
+                connection=connection, slave_address=self._slave_address
+            )
         except Exception as e:
             return e
         return True
@@ -54,7 +59,7 @@ class ShdlcIoModule(PlatformBase):
     def is_connected(self):
         try:
             self.ShdlcDevice.get_serial_number()
-        except SerialException:
+        except (SerialException, ShdlcTimeoutError):
             return False
         return True
 
@@ -88,13 +93,13 @@ class ShdlcIoModule(PlatformBase):
             command_id=0x28,
             data=[io_bit],
             slave_address=self._slave_address,
-            response_timeout=1
+            response_timeout=1,
         )
         if err:
-            logger.error('Digital IO {} could not be read'.format(io_bit))
+            logger.error("Digital IO {} could not be read".format(io_bit))
             return -1
         else:
-            return unpack('?', p_level)[0]
+            return unpack("?", p_level)[0]
 
     def set_digital_io(self, io_bit, value):
         """
@@ -113,7 +118,7 @@ class ShdlcIoModule(PlatformBase):
             command_id=0x28,
             data=[io_bit, data],
             slave_address=self._slave_address,
-            response_timeout=1
+            response_timeout=1,
         )
 
     def set_all_digital_io_off(self):
@@ -129,15 +134,16 @@ class ShdlcIoModule(PlatformBase):
 
         """
         data, err = self.ShdlcDevice._connection.transceive(
-            command_id=0x2b,
+            command_id=0x2B,
             data=[],
             slave_address=self._slave_address,
-            response_timeout=1)
+            response_timeout=1,
+        )
         if err:
-            logger.error('Analog input could not be read.')
+            logger.error("Analog input could not be read.")
             return -1
         else:
-            adc_value = unpack('>H', data)[0] / 65535.0 * 10.0
+            adc_value = unpack(">H", data)[0] / 65535.0 * 10.0
             return adc_value
 
     def get_analog_output(self):
@@ -149,15 +155,16 @@ class ShdlcIoModule(PlatformBase):
 
         """
         data, err = self.ShdlcDevice._connection.transceive(
-            command_id=0x2a,
+            command_id=0x2A,
             data=[],
             slave_address=self._slave_address,
-            response_timeout=1)
+            response_timeout=1,
+        )
         if err:
-            logger.error('Analog output could not be read.')
+            logger.error("Analog output could not be read.")
             return -1
         else:
-            dac_value = unpack('>H', data)[0] / 65535.0 / 10.0
+            dac_value = unpack(">H", data)[0] / 65535.0 / 10.0
             return dac_value
 
     def set_analog_output(self, value):
@@ -170,12 +177,13 @@ class ShdlcIoModule(PlatformBase):
 
         """
         adc_value = int(value / 10.0 * 65535)
-        data = bytearray(pack('>H', adc_value))
+        data = bytearray(pack(">H", adc_value))
         self.ShdlcDevice._connection.transceive(
-            command_id=0x2a,
+            command_id=0x2A,
             data=data,
             slave_address=self._slave_address,
-            response_timeout=1)
+            response_timeout=1,
+        )
 
     def set_pwm(self, pwm_bit, dc):
         """
@@ -187,12 +195,13 @@ class ShdlcIoModule(PlatformBase):
         dc: A duty cycle value between 0 - 65535
 
         """
-        data = [pwm_bit] + list(bytearray(pack('>H', dc)))
+        data = [pwm_bit] + list(bytearray(pack(">H", dc)))
         self.ShdlcDevice._connection.transceive(
             command_id=0x29,
             data=data,
             slave_address=self._slave_address,
-            response_timeout=1)
+            response_timeout=1,
+        )
 
     def get_pwm(self, pwm_bit):
         """
@@ -208,12 +217,13 @@ class ShdlcIoModule(PlatformBase):
             command_id=0x29,
             data=[pwm_bit],
             slave_address=self._slave_address,
-            response_timeout=1)
+            response_timeout=1,
+        )
         if err:
-            logger.error('PWM {} could not be read'.format(pwm_bit))
+            logger.error("PWM {} could not be read".format(pwm_bit))
             return -1
         else:
-            return unpack('>H', p_dutycycle)[0]
+            return unpack(">H", p_dutycycle)[0]
 
 
 if __name__ == "__main__":
@@ -221,13 +231,11 @@ if __name__ == "__main__":
     from Utility.Logger import setup_custom_logger
     from logging import getLevelName
 
-    logger = setup_custom_logger(name='root', level=getLevelName('DEBUG'))
+    logger = setup_custom_logger(name="root", level=getLevelName("DEBUG"))
 
-    serials = {
-        'Heater': 'AM01ZB7J'
-    }
+    serials = {"Heater": "AM01ZB7J"}
     devices = DeviceIdentifier(serials=serials)
-    with ShdlcIoModule(serial_port=str(devices.serial_ports['Heater'])) as h:
+    with ShdlcIoModule(serial_port=str(devices.serial_ports["Heater"])) as h:
         h.connect()
         # Testing digital io
         print(h.get_digital_io(io_bit=0))
@@ -248,4 +256,4 @@ if __name__ == "__main__":
         print(h.get_pwm(pwm_bit=0))
         h.set_pwm(pwm_bit=0, dc=0)
 
-    print('lölö')
+    print("lölö")
