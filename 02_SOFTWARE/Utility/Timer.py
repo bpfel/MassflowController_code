@@ -1,7 +1,7 @@
 from threading import Timer
 import logging
 
-logger = logging.getLogger('root')
+logger = logging.getLogger("root")
 
 
 class RepeatTimer(Timer):
@@ -18,6 +18,7 @@ class RepeatTimer(Timer):
         time.sleep(5)
         timer.cancel()
     """
+
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
