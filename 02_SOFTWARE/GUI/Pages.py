@@ -8,28 +8,19 @@ from tkinter import messagebox
 from functools import partial
 
 LARGE_FONT = ("Verdana", 12)
+MEDIUM_GRAY = "#d0d0d0"
+WHITE = "#ffffff"
 style.use("ggplot")
 
 
-class Scale(tk.Scale):
-    """a type of Scale where the left click is hijacked to work like a right click"""
-
-    def __init__(self, master=None, **kwargs):
-        tk.Scale.__init__(self, master, **kwargs)
-        self.bind('<Button-1>', self.set_value)
-
-    def set_value(self, event):
-        self.event_generate('<Button-3>', x=event.x, y=event.y)
-        return 'break'
-
-
 class TkGUI(tk.Tk):
-
     def __init__(self, figures, setup: Setup, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.figures = figures
 
-        tk.Tk.wm_title(self, "Mass Flow Measurement")
+        self.wm_title("Mass Flow Measurement")
+        self.iconbitmap('GUI/icon.ico')
+
 
         # container = tk.Frame(self)
         container = ttk.Notebook(self, style="TNotebook")
@@ -39,8 +30,12 @@ class TkGUI(tk.Tk):
 
         self.frames = {
             StartPage: StartPage(parent=container, controller=self),
-            DiagnosticView: DiagnosticView(parent=container, controller=self, figures=self.figures, setup=setup),
-            PageThree: PageThree(parent=container, controller=self, figure=self.figures['graph']),
+            DiagnosticView: DiagnosticView(
+                parent=container, controller=self, figures=self.figures, setup=setup
+            ),
+            PageThree: PageThree(
+                parent=container, controller=self, figure=self.figures["graph"]
+            ),
         }
 
         for F in self.frames.values():
@@ -63,7 +58,6 @@ class TkGUI(tk.Tk):
 
 
 class StartPage(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Start Page", font=LARGE_FONT)
@@ -71,88 +65,174 @@ class StartPage(tk.Frame):
 
 
 class DiagnosticView(tk.Frame):
-
     def __init__(self, parent, controller, figures, setup: Setup):
-        tk.Frame.__init__(self, master=parent, background='white')
+        tk.Frame.__init__(self, master=parent, background="white")
         self.setup = setup
 
         #################
         # Label section #
         #################
-        label_section = tk.Frame(master=self, background='white')
-        label_section.grid(row=0, column=0, columnspan=2, sticky='nwes')
-        label = tk.Label(label_section, text="Diagnostic View", font=LARGE_FONT, background='white')
+        label_section = tk.Frame(master=self, background="white")
+        label_section.grid(row=0, column=0, columnspan=2, sticky="nwes")
+        label = tk.Label(
+            label_section, text="Diagnostic View", font=LARGE_FONT, background="white"
+        )
         label.pack(pady=10, padx=10)
 
         ####################
         # Plotting section #
         ####################
-        plotting_section = tk.Frame(master=self, background='white')
-        plotting_section.grid(row=1, column=1, sticky='se')
+        plotting_section = tk.Frame(master=self, background="white")
+        plotting_section.grid(row=1, column=1, sticky="se")
         plotting_section.rowconfigure(0, weight=1)
         plotting_section.rowconfigure(1, weight=1)
         plotting_section.columnconfigure(0, weight=1)
         plotting_section.columnconfigure(1, weight=1)
 
-        canvas_temp = FigureCanvasTkAgg(figures['diagnostic_temperatures'], plotting_section)
+        canvas_temp = FigureCanvasTkAgg(
+            figures["diagnostic_temperatures"], plotting_section
+        )
         canvas_temp.draw()
-        canvas_temp.get_tk_widget().grid(column=0, row=0, sticky='sewn')
+        canvas_temp.get_tk_widget().grid(column=0, row=0, sticky="sewn")
 
-        canvas_flow = FigureCanvasTkAgg(figures['diagnostic_flows'], plotting_section)
+        canvas_flow = FigureCanvasTkAgg(figures["diagnostic_flows"], plotting_section)
         canvas_flow.draw()
-        canvas_flow.get_tk_widget().grid(column=1, row=0, sticky='sewn')
+        canvas_flow.get_tk_widget().grid(column=1, row=0, sticky="sewn")
 
-        canvas_d_temp = FigureCanvasTkAgg(figures['diagnostic_delta_temperatures'], plotting_section)
+        canvas_d_temp = FigureCanvasTkAgg(
+            figures["diagnostic_delta_temperatures"], plotting_section
+        )
         canvas_d_temp.draw()
-        canvas_d_temp.get_tk_widget().grid(column=0, row=1, sticky='sewn')
+        canvas_d_temp.get_tk_widget().grid(column=0, row=1, sticky="sewn")
 
-        canvas_pwm = FigureCanvasTkAgg(figures['diagnostic_PWM'], plotting_section)
+        canvas_pwm = FigureCanvasTkAgg(figures["diagnostic_PWM"], plotting_section)
         canvas_pwm.draw()
-        canvas_pwm.get_tk_widget().grid(column=1, row=1, sticky='sewn')
+        canvas_pwm.get_tk_widget().grid(column=1, row=1, sticky="sewn")
 
         #######################
         # Interactive section #
         #######################
-        interactive_section = tk.Frame(master=self, background='white')
-        interactive_section.grid(row=1, column=0)
-        power_section = tk.Frame(master=interactive_section, background='white')
-        power_section.grid(row=0)
-        pid_section = tk.Frame(master=interactive_section, background='white')
-        pid_section.grid(row=1)
-        interactive_section.rowconfigure(0, weight=1)
-        interactive_section.rowconfigure(1, weight=1)
+        self.interactive_section = tk.Frame(master=self, background="white")
+        self.interactive_section.grid(row=1, column=0, padx=10, pady=10)
+        self.mode_selection_section = tk.LabelFrame(
+            master=self.interactive_section, background="white", text="Mode selection"
+        )
+        self.mode_selection_section.grid(row=0, column=0, padx=10, pady=10)
+        self.power_section = tk.LabelFrame(
+            master=self.interactive_section, background="white", text="PWM Setting"
+        )
+        self.power_section.grid(row=1, padx=10, pady=10)
+        self.pid_section = tk.LabelFrame(
+            master=self.interactive_section, background="white", text="PID Settings"
+        )
+        self.pid_section.grid(row=2, padx=10, pady=10)
+        self.setpoint_section = tk.LabelFrame(
+            master=self.interactive_section, background="white", text="Setpoint Setting"
+        )
+        self.setpoint_section.grid(row=3, padx=10, pady=10)
+        self.interactive_section.rowconfigure(0, weight=1)
+        self.interactive_section.rowconfigure(1, weight=1)
+        self.interactive_section.rowconfigure(2, weight=1)
+        self.interactive_section.rowconfigure(3, weight=1)
 
-        self.P_scale = Scale(master=pid_section, from_=0, to=1.5, label='P', background='white',
-                             resolution=0.01, showvalue=True, orient=HORIZONTAL, tickinterval=0.25,
-                             command=self.setup.controller.set_k_p, length=400)
-        self.P_scale.set(0)
-
-        self.I_scale = Scale(master=pid_section, from_=0, to=0.2, label='I', background='white',
-                             resolution=0.01, showvalue=True, orient=HORIZONTAL, tickinterval=0.25,
-                             command=self.setup.controller.set_k_i, length=400)
-        self.I_scale.set(0)
-
-        self.D_scale = Scale(master=pid_section, from_=0, to=1, label='D', background='white',
-                             resolution=0.01, showvalue=True, orient=HORIZONTAL, tickinterval=0.25,
-                             command=self.setup.controller.set_k_d, length=400)
-        self.D_scale.set(0)
-
-        self.power_scale = Scale(master=power_section, from_=0, to=1, label='Power', background='white',
-                                 resolution=0.01, showvalue=True, orient=HORIZONTAL, tickinterval=0.25,
-                                 command=self.setup.wrap_set_pwm, length=400)
+        self.power_scale = tk.Scale(
+            master=self.power_section,
+            from_=0,
+            to=1,
+            label="Power",
+            background="white",
+            resolution=0.01,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=1 / 5.0,
+            command=self.setup.wrap_set_pwm,
+            length=400,
+        )
         self.power_scale.set(0)
+        self.power_scale.pack(side="top", padx=10, pady=10)
 
-        self.mode_var = tk.StringVar(interactive_section, 'Set PWM')
+        self.P_scale = tk.Scale(
+            master=self.pid_section,
+            from_=0,
+            to=1,
+            label="P",
+            background="white",
+            resolution=0.01,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=1 / 5,
+            command=self.setup.set_Kp,
+            length=400,
+        )
+        self.P_scale.set(self.setup.controller.Kp)
+        self.P_scale.pack(side="top", padx=10, pady=10)
+
+        self.I_scale = tk.Scale(
+            master=self.pid_section,
+            from_=0,
+            to=0.2,
+            label="I",
+            background="white",
+            resolution=0.01,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=0.2 / 5,
+            command=self.setup.set_Ki,
+            length=400,
+        )
+        self.I_scale.set(self.setup.controller.Ki)
+        self.I_scale.pack(side="top", padx=10, pady=10)
+
+        self.D_scale = tk.Scale(
+            master=self.pid_section,
+            from_=0,
+            to=10,
+            label="D",
+            background="white",
+            resolution=0.1,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=10 / 5,
+            command=self.setup.set_Kd,
+            length=400,
+        )
+        self.D_scale.set(self.setup.controller.Kd)
+        self.D_scale.pack(side="top", padx=10, pady=10)
+
+        self.Setpoint_scale = tk.Scale(
+            master=self.setpoint_section,
+            from_=0,
+            to=20,
+            label="Setpoint",
+            background="white",
+            resolution=1,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=20 / 5,
+            command=self.setup.set_setpoint,
+            length=400,
+        )
+        self.Setpoint_scale.set(10)
+        self.Setpoint_scale.pack(side="top", padx=10, pady=10)
+
+        self.mode_var = tk.StringVar(self.interactive_section, "Set PWM")
         self.mode_check()
-
-        mode_switch = tk.Checkbutton(master=power_section, textvariable=self.mode_var,
-                                     width=12, variable=self.mode_var, offvalue='Set PWM',
-                                     onvalue='Set PID', indicator=False, command=partial(self.mode_check))
-        mode_switch.pack(pady=10, padx=10)
-        self.power_scale.pack(side='top', padx=10, pady=10)
-        self.P_scale.pack(side='top', padx=10, pady=10)
-        self.I_scale.pack(side='top', padx=10, pady=10)
-        self.D_scale.pack(side='top', padx=10, pady=10)
+        set_power_switch = tk.Radiobutton(
+            master=self.mode_selection_section,
+            text="Set power",
+            variable=self.mode_var,
+            value="Set PWM",
+            command=partial(self.mode_check),
+        )
+        set_power_switch.grid(column=0, row=0, padx=10, pady=10)
+        set_pid_switch = tk.Radiobutton(
+            master=self.mode_selection_section,
+            text="Set PID",
+            variable=self.mode_var,
+            value="Set PID",
+            command=partial(self.mode_check),
+        )
+        set_pid_switch.grid(column=1, row=0, padx=10, pady=10)
 
         # configure weighting of rows and columns upon resizing
         self.columnconfigure(0, weight=3)
@@ -161,22 +241,44 @@ class DiagnosticView(tk.Frame):
         self.rowconfigure(1, weight=7)
 
     def mode_check(self):
-        if self.mode_var.get() in 'Set PWM':
-            self.power_scale.config(state=NORMAL, takefocus=1, background='#ffffff')
-            self.P_scale.config(state=DISABLED, takefocus=0, background='#d0d0d0')
-            self.I_scale.config(state=DISABLED, takefocus=0, background='#d0d0d0')
-            self.D_scale.config(state=DISABLED, takefocus=0, background='#d0d0d0')
+        if self.mode_var.get() in "Set PWM":
+            for widget in self.power_section.winfo_children():
+                self.enable_widget(widget)
+            for widget in self.pid_section.winfo_children():
+                self.disable_widget(widget)
+            for widget in self.setpoint_section.winfo_children():
+                self.disable_widget(widget)
+
+            self.power_section.config(background=WHITE)
+            self.pid_section.config(background=MEDIUM_GRAY)
+            self.setpoint_section.config(background=MEDIUM_GRAY)
+
             self.setup.start_direct_power_setting()
-        elif self.mode_var.get() in 'Set PID':
-            self.power_scale.config(state=DISABLED, takefocus=0, background='#d0d0d0')
-            self.P_scale.config(state=NORMAL, takefocus=1, background='#ffffff')
-            self.I_scale.config(state=NORMAL, takefocus=1, background='#ffffff')
-            self.D_scale.config(state=NORMAL, takefocus=1, background='#ffffff')
+
+        elif self.mode_var.get() in "Set PID":
+            for widget in self.power_section.winfo_children():
+                self.disable_widget(widget)
+            for widget in self.pid_section.winfo_children():
+                self.enable_widget(widget)
+            for widget in self.setpoint_section.winfo_children():
+                self.enable_widget(widget)
+
+            self.power_section.config(background=MEDIUM_GRAY)
+            self.pid_section.config(background="white")
+            self.setpoint_section.config(background="white")
+
             self.setup.start_pid_controller(setpoint=10)
+
+    @staticmethod
+    def enable_widget(widget):
+        widget.config(state=NORMAL, takefocus=1, background=WHITE)
+
+    @staticmethod
+    def disable_widget(widget):
+        widget.config(state=DISABLED, takefocus=0, background=MEDIUM_GRAY)
 
 
 class PageTwo(tk.Frame):
-
     def __init__(self, parent, controller, figure):
         self.figure = figure
         tk.Frame.__init__(self, parent)
@@ -185,7 +287,6 @@ class PageTwo(tk.Frame):
 
 
 class PageThree(tk.Frame):
-
     def __init__(self, parent, controller, figure):
         self.figure = figure
         tk.Frame.__init__(self, parent)
