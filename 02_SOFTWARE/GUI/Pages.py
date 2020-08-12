@@ -19,8 +19,7 @@ class TkGUI(tk.Tk):
         self.figures = figures
 
         self.wm_title("Mass Flow Measurement")
-        self.iconbitmap('GUI/icon.ico')
-
+        self.iconbitmap("GUI/icon.ico")
 
         # container = tk.Frame(self)
         container = ttk.Notebook(self, style="TNotebook")

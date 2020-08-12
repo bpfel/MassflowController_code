@@ -39,9 +39,14 @@ class Setup(object):
             "PWM",
             "Flow Estimate",
             "Target Delta T",
+            "Controller Output P",
+            "Controller Output I",
+            "Controller Output D",
         }
         self.measurement_buffer = MeasurementBuffer(
-            signals=signals, buffer_interval_s=self.interval_s, sampling_time_s=self._t_sampling_s
+            signals=signals,
+            buffer_interval_s=self.interval_s,
+            sampling_time_s=self._t_sampling_s,
         )
         # Initialize members
         self._measurement_timer = None
@@ -129,6 +134,9 @@ class Setup(object):
                     delta_t=delta_T, pwm=self._current_pwm_value
                 ),
                 "Target Delta T": self._setpoint,
+                "Controller Output P": 0,
+                "Controller Output I": 0,
+                "Controller Output D": 0,
             }
             self.measurement_buffer.update(results)
             if self._current_mode is Mode.PID:
@@ -158,10 +166,23 @@ class Setup(object):
             if self._current_mode is Mode.PID:
                 desired_pwm = self.controller(input_=delta_T)
                 self.set_pwm(desired_pwm)
+                (
+                    results["Controller Output P"],
+                    results["Controller Output I"],
+                    results["Controller Output D"],
+                ) = self.controller.components
+            else:
+                (
+                    results["Controller Output P"],
+                    results["Controller Output I"],
+                    results["Controller Output D"],
+                ) = (0, 0, 0)
 
     def start_measurement_thread(self):
         if self._measurement_timer is None:
-            self._measurement_timer = RepeatTimer(interval=self._t_sampling_s, function=self.measure)
+            self._measurement_timer = RepeatTimer(
+                interval=self._t_sampling_s, function=self.measure
+            )
             self._measurement_timer.start()
             logger.info(
                 "Started measurement thread running at t_s={} s".format(
