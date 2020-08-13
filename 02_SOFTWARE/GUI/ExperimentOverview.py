@@ -1,4 +1,4 @@
-from GUI.Pages import TkGUI
+from GUI.ExperimentGUI import TkGUI
 from setup import Setup
 import matplotlib
 import matplotlib.pyplot as plt
