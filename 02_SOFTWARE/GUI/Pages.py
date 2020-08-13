@@ -6,6 +6,9 @@ from tkinter import ttk
 from matplotlib import style
 from tkinter import messagebox
 from functools import partial
+import logging
+
+logger = logging.getLogger("root")
 
 LARGE_FONT = ("Verdana", 12)
 MEDIUM_GRAY = "#d0d0d0"
@@ -32,8 +35,9 @@ class TkGUI(tk.Tk):
             DiagnosticView: DiagnosticView(
                 parent=container, controller=self, figures=self.figures, setup=setup
             ),
-            PageThree: PageThree(
-                parent=container, controller=self, figure=self.figures["graph"]
+            PWMSettingTraining: PWMSettingTraining(
+                parent=container, controller=self, figure=self.figures["pid_components"],
+                setup=setup
             ),
         }
 
@@ -285,8 +289,8 @@ class PageTwo(tk.Frame):
         label.pack(pady=10, padx=10)
 
 
-class PageThree(tk.Frame):
-    def __init__(self, parent, controller, figure):
+class PWMSettingTraining(tk.Frame):
+    def __init__(self, parent, controller, figure, setup):
         self.figure = figure
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
@@ -298,4 +302,37 @@ class PageThree(tk.Frame):
 
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
-        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        toolbar.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        self.power_scale = tk.Scale(
+            master=self,
+            from_=0,
+            to=1,
+            label="Power",
+            background="white",
+            resolution=0.01,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=1 / 5.0,
+            command=setup.wrap_set_pwm,
+            length=400,
+        )
+        self.power_scale.set(0)
+        self.power_scale.pack(side="top", padx=10, pady=10)
+
+        def start_stop_measurement(setup=setup):
+            if stop_measurement_button["text"] == "Stop":
+                stop_measurement_button["text"] = "Start"
+                setup.stop_measurement_thread()
+            elif stop_measurement_button["text"] == "Start":
+                stop_measurement_button["text"] = "Stop"
+                setup.start_measurement_thread()
+            else:
+                raise RuntimeError('Invalid button state!')
+
+        stop_measurement_button = tk.Button(
+            master=self,
+            text='Stop',
+            command=partial(start_stop_measurement, setup=setup)
+        )
+        stop_measurement_button.pack(side="top", padx=10, pady=10)
