@@ -162,7 +162,6 @@ class Setup(object):
                 ),
                 "Target Delta T": self._setpoint,
             }
-            self.measurement_buffer.update(results)
             if self._current_mode is Mode.PID:
                 desired_pwm = self.controller(input_=delta_T)
                 self.set_pwm(desired_pwm)
@@ -177,9 +176,11 @@ class Setup(object):
                     results["Controller Output I"],
                     results["Controller Output D"],
                 ) = (0, 0, 0)
+            self.measurement_buffer.update(results)
 
     def start_measurement_thread(self):
         if self._measurement_timer is None:
+            self.measurement_buffer.clear()
             self._measurement_timer = RepeatTimer(
                 interval=self._t_sampling_s, function=self.measure
             )
@@ -195,6 +196,7 @@ class Setup(object):
     def stop_measurement_thread(self):
         if self._measurement_timer is not None:
             self._measurement_timer.cancel()
+            self._measurement_timer = None
             logger.info("Stopped measurement thread.")
         else:
             logger.error("Measurement thread not started yet!")
