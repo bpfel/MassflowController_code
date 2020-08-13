@@ -23,3 +23,7 @@ class MeasurementBuffer(object):
             return self._data[item]
         else:
             raise KeyError("Signal {} is not available!".format(item))
+
+    def clear(self):
+        for signal in self._signals:
+            self._data[signal].clear()

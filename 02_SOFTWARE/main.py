@@ -1,7 +1,7 @@
 from setup import Setup
 from Utility.Logger import setup_custom_logger
 from logging import getLevelName
-from GUI.ExperimentOverview import ExperimentOverview
+from GUI.ExperimentGUI import TkGUI
 
 logger = setup_custom_logger(name="root", level=getLevelName("WARNING"))
 
@@ -11,4 +11,4 @@ if __name__ == "__main__":
         setup.open()
         setup.start_measurement_thread()
         # Start up GUI
-        GUI = ExperimentOverview(setup=setup)
+        GUI = TkGUI(setup=setup)
