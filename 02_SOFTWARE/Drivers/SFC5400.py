@@ -76,8 +76,11 @@ class Sfc5400(SensorBase):
         return self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))
 
     def is_connected(self):
-        # todo: implement check whether connected
-        pass
+        try:
+            self.ShdlcDevice.get_serial_number()
+        except TimeoutError:
+            return False
+        return True
 
 
 if __name__ == "__main__":
