@@ -5,9 +5,6 @@ from tkinter import DISABLED, NORMAL, HORIZONTAL
 from matplotlib import style
 from functools import partial
 import logging
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import numpy as np
 
 logger = logging.getLogger("root")
 
@@ -15,7 +12,7 @@ LARGE_FONT = ("Verdana", 12)
 MEDIUM_GRAY = "#d0d0d0"
 WHITE = "#ffffff"
 style.use("ggplot")
-UPDATE_TIME=100
+UPDATE_TIME = 100
 
 
 class DiagnosticView(tk.Frame):
@@ -23,39 +20,13 @@ class DiagnosticView(tk.Frame):
         tk.Frame.__init__(self, master=parent, background="white")
         self.setup = setup
 
-        ###################
-        # Figures section #
-        ###################
-        fig, ax = plt.subplots()
-
-        pid = LivePlot_two(
-            ax=ax,
-            fig=fig,
-            title="PID Components",
-            ylabel="Gain []",
-            ylims=(-2, 2),
-            signal_buffers=[
-                setup.measurement_buffer["Controller Output P"],
-                setup.measurement_buffer["Controller Output I"],
-                setup.measurement_buffer["Controller Output D"],
-            ],
-            time_buffer=setup.measurement_buffer["Time"],
-            line_styles=["b-", "r-", "g-"],
-            legend_entries=["P", "I", "D"],
-            interval=self.setup.interval_s,
-        )
-        self.ani_1 = animation.FuncAnimation(
-            fig=fig,
-            func=pid,
-            blit=True,
-            interval=UPDATE_TIME,
-        )
-
         #################
         # Label section #
         #################
         label_section = tk.Frame(master=self, background="white")
-        label_section.grid(row=0, column=0, columnspan=2, sticky="nwes")
+        label_section.grid(row=0, column=1, sticky="nwes")
+        stop_go_section = tk.Frame(master=self, background="white")
+        stop_go_section.grid(row=0, column=0, sticky="nwes")
         label = tk.Label(
             label_section, text="Diagnostic View", font=LARGE_FONT, background="white"
         )
@@ -92,7 +63,7 @@ class DiagnosticView(tk.Frame):
         canvas_pwm.draw()
         canvas_pwm.get_tk_widget().grid(column=1, row=1, sticky="sewn")
 
-        canvas_pid = FigureCanvasTkAgg(fig, plotting_section)
+        canvas_pid = FigureCanvasTkAgg(figures["pid_components"], plotting_section)
         canvas_pid.draw()
         canvas_pid.get_tk_widget().grid(column=2, row=0, sticky="sewn")
 
@@ -120,7 +91,23 @@ class DiagnosticView(tk.Frame):
         self.interactive_section.rowconfigure(0, weight=1)
         self.interactive_section.rowconfigure(1, weight=1)
         self.interactive_section.rowconfigure(2, weight=1)
-        self.interactive_section.rowconfigure(3, weight=1)
+
+        def start_stop_measurement(setup=setup):
+            if stop_measurement_button["text"] == "Stop":
+                stop_measurement_button["text"] = "Start"
+                setup.stop_measurement_thread()
+            elif stop_measurement_button["text"] == "Start":
+                stop_measurement_button["text"] = "Stop"
+                setup.start_measurement_thread()
+            else:
+                raise RuntimeError('Invalid button state!')
+
+        stop_measurement_button = tk.Button(
+            master=stop_go_section,
+            text='Stop',
+            command=partial(start_stop_measurement, setup=self.setup)
+        )
+        stop_measurement_button.pack(side="top", padx=10, pady=10)
 
         self.power_scale = tk.Scale(
             master=self.power_section,
@@ -131,9 +118,9 @@ class DiagnosticView(tk.Frame):
             resolution=0.01,
             showvalue=True,
             orient=HORIZONTAL,
-            tickinterval=1 / 5.0,
+            tickinterval=1 / 2,
             command=self.setup.wrap_set_pwm,
-            length=400,
+            length=100,
         )
         self.power_scale.set(0)
         self.power_scale.pack(side="top", padx=10, pady=10)
@@ -147,9 +134,9 @@ class DiagnosticView(tk.Frame):
             resolution=0.01,
             showvalue=True,
             orient=HORIZONTAL,
-            tickinterval=1 / 5,
+            tickinterval=1 / 2,
             command=self.setup.set_Kp,
-            length=400,
+            length=100,
         )
         self.P_scale.set(self.setup.controller.Kp)
         self.P_scale.pack(side="top", padx=10, pady=10)
@@ -163,9 +150,9 @@ class DiagnosticView(tk.Frame):
             resolution=0.01,
             showvalue=True,
             orient=HORIZONTAL,
-            tickinterval=0.2 / 5,
+            tickinterval=0.2 / 2,
             command=self.setup.set_Ki,
-            length=400,
+            length=100,
         )
         self.I_scale.set(self.setup.controller.Ki)
         self.I_scale.pack(side="top", padx=10, pady=10)
@@ -179,9 +166,9 @@ class DiagnosticView(tk.Frame):
             resolution=0.1,
             showvalue=True,
             orient=HORIZONTAL,
-            tickinterval=10 / 5,
+            tickinterval=10 / 2,
             command=self.setup.set_Kd,
-            length=400,
+            length=100,
         )
         self.D_scale.set(self.setup.controller.Kd)
         self.D_scale.pack(side="top", padx=10, pady=10)
@@ -195,9 +182,9 @@ class DiagnosticView(tk.Frame):
             resolution=1,
             showvalue=True,
             orient=HORIZONTAL,
-            tickinterval=20 / 5,
+            tickinterval=20 / 2,
             command=self.setup.set_setpoint,
-            length=400,
+            length=100,
         )
         self.Setpoint_scale.set(10)
         self.Setpoint_scale.pack(side="top", padx=10, pady=10)
@@ -222,10 +209,10 @@ class DiagnosticView(tk.Frame):
         set_pid_switch.grid(column=1, row=0, padx=10, pady=10)
 
         # configure weighting of rows and columns upon resizing
-        self.columnconfigure(0, weight=3)
-        self.columnconfigure(1, weight=3)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=100)
         self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=7)
+        self.rowconfigure(1, weight=1)
 
     def mode_check(self):
         if self.mode_var.get() in "Set PWM":
@@ -263,77 +250,3 @@ class DiagnosticView(tk.Frame):
     @staticmethod
     def disable_widget(widget):
         widget.config(state=DISABLED, takefocus=0, background=MEDIUM_GRAY)
-
-
-class LivePlot_two:
-    def __init__(
-            self,
-            ax,
-            fig,
-            title,
-            ylabel,
-            ylims,
-            signal_buffers,
-            time_buffer,
-            line_styles,
-            legend_entries,
-            interval,
-    ):
-        # Check input validity
-        if len(signal_buffers) != len(line_styles) != len(legend_entries):
-            raise AttributeError(
-                "Number of signal buffers must be equal to number of line styles and number of legend entries."
-            )
-        # Set up line artists
-        self.lines = []
-        for line_style, legend_entry in zip(line_styles, legend_entries):
-            (line,) = ax.plot([], [], line_style, label=legend_entry)
-            self.lines.append(line)
-        # Register members
-        self.axis = ax
-        self.interval = interval
-        self.time_buffer = time_buffer
-        self.signal_buffers = signal_buffers
-
-        # Set the axis and plot titles
-        self.axis.set_title(title)
-        self.axis.set_xlabel("Time [s]")
-        self.axis.set_ylabel(ylabel)
-
-        # Set axis limits
-        self.axis.set_xlim(0, self.interval)
-        self.axis.set_ylim(ylims)
-
-        # Set up the legend
-        self.leg = fig.legend(
-            handles=self.lines, loc="upper right", bbox_to_anchor=(0.9, 0.88)
-        )
-
-        # Counter for missing values
-        self._missing_values = 0
-
-    def __call__(self, i):
-        if i == 0:
-            for line in self.lines:
-                line.set_data([], [])
-            return self.lines
-        if self.time_buffer:
-            # Shift time such that the most up-to-date measurement is at the left of the plot
-            t = np.array(self.time_buffer) - self.time_buffer[-1] + self.interval
-            # Select only times that lie within the specified interval
-            chosen_indices = t >= 0
-            t_chosen = t[chosen_indices]
-            # Go through all lines, draw the data, but only for the selected indices
-            for line, signal_buffer in zip(self.lines, self.signal_buffers):
-                line.set_data(t_chosen, np.array(signal_buffer)[chosen_indices])
-        else:
-            if self._missing_values < 10:
-                self._missing_values += 1
-            else:
-                logger.warning("Empty measurement buffer!")
-                self._missing_values = 0
-
-        return self.lines
-
-    def resize_yaxis(self):
-        self.axis.set_ylim(auto=True)

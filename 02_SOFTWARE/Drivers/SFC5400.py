@@ -1,5 +1,6 @@
 from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection, ShdlcDevice
 from sensirion_shdlc_driver.command import ShdlcCommand
+from sensirion_shdlc_driver.errors import ShdlcTimeoutError
 from struct import pack, unpack
 from Drivers.SensorBase import SensorBase
 import logging
@@ -78,7 +79,7 @@ class Sfc5400(SensorBase):
     def is_connected(self):
         try:
             self.ShdlcDevice.get_serial_number()
-        except TimeoutError:
+        except (TimeoutError, ShdlcTimeoutError):
             return False
         return True
 

@@ -36,10 +36,10 @@ class TkGUI(tk.Tk):
             DiagnosticView: DiagnosticView(
                 parent=container, controller=self, figures=self.figures, setup=setup
             ),
-            PWMSettingTraining: PWMSettingTraining(
-                parent=container, controller=self, figure=self.figures["pid_components"],
-                setup=setup
-            ),
+            # PWMSettingTraining: PWMSettingTraining(
+            #     parent=container, controller=self,
+            #     setup=setup
+            # ),
         }
 
         for F in self.frames.values():
