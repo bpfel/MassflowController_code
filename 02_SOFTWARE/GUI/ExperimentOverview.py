@@ -22,9 +22,13 @@ class ExperimentOverview(tk.Tk):
         self.wm_title("Mass Flow Measurement")
         self.iconbitmap("GUI/icon.ico")
         if platform.system() == "Windows":
-            self.attributes('-fullscreen', True)
-            self.bind("<F11>",
-                      lambda event: self.attributes("-fullscreen", not self.attributes("-fullscreen")))
+            self.attributes("-fullscreen", True)
+            self.bind(
+                "<F11>",
+                lambda event: self.attributes(
+                    "-fullscreen", not self.attributes("-fullscreen")
+                ),
+            )
             self.bind("<Escape>", lambda event: self.attributes("-fullscreen", False))
         elif platform.system() == "Linux":
             pass

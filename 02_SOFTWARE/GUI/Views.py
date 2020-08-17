@@ -8,6 +8,7 @@ LARGE_FONT = ("Verdana", 12)
 MEDIUM_GRAY = "#d0d0d0"
 WHITE = "#ffffff"
 
+
 class View(object):
     def __init__(self, master, figures, setup):
         self.master = master
@@ -25,15 +26,19 @@ class View(object):
 
 class DiagnosticView(View):
     def __init__(self, master, figures, setup):
-        super(DiagnosticView, self).__init__(master=master, figures=figures, setup=setup)
-        self.mode_var = tk.StringVar(master=master, value="Set PWM")  # States: "Set PWM", "Set PID"
+        super(DiagnosticView, self).__init__(
+            master=master, figures=figures, setup=setup
+        )
+        self.mode_var = tk.StringVar(
+            master=master, value="Set PWM"
+        )  # States: "Set PWM", "Set PID"
 
     def load_widgets(self):
         ####################
         # Plotting section #
         ####################
         plotting_section = tk.Frame(master=self.master, background="white")
-        plotting_section.grid(row=1, column=1, sticky="se")
+        plotting_section.grid(row=0, column=1, sticky="se")
         plotting_section.rowconfigure(0, weight=1)
         plotting_section.rowconfigure(1, weight=1)
         plotting_section.columnconfigure(0, weight=1)
@@ -69,7 +74,7 @@ class DiagnosticView(View):
         # Interactive section #
         #######################
         interactive_section = tk.Frame(master=self.master, background="white")
-        interactive_section.grid(row=1, column=0, padx=10, pady=10)
+        interactive_section.grid(row=0, column=0, padx=10, pady=10)
         mode_selection_section = tk.LabelFrame(
             master=interactive_section, background="white", text="Mode selection"
         )
@@ -171,14 +176,22 @@ class DiagnosticView(View):
         self.Setpoint_scale.set(10)
         self.Setpoint_scale.pack(side="top", padx=10, pady=10)
 
-        self.mode_check(power_section=power_section, pid_section=pid_section, setpoint_section=setpoint_section)
+        self.mode_check(
+            power_section=power_section,
+            pid_section=pid_section,
+            setpoint_section=setpoint_section,
+        )
         set_power_switch = tk.Radiobutton(
             master=mode_selection_section,
             text="Set power",
             variable=self.mode_var,
             value="Set PWM",
-            command=partial(self.mode_check, power_section=power_section, pid_section=pid_section,
-                            setpoint_section=setpoint_section),
+            command=partial(
+                self.mode_check,
+                power_section=power_section,
+                pid_section=pid_section,
+                setpoint_section=setpoint_section,
+            ),
         )
         set_power_switch.grid(column=0, row=0, padx=10, pady=10)
         set_pid_switch = tk.Radiobutton(
@@ -186,8 +199,12 @@ class DiagnosticView(View):
             text="Set PID",
             variable=self.mode_var,
             value="Set PID",
-            command=partial(self.mode_check, power_section=power_section, pid_section=pid_section,
-                            setpoint_section=setpoint_section),
+            command=partial(
+                self.mode_check,
+                power_section=power_section,
+                pid_section=pid_section,
+                setpoint_section=setpoint_section,
+            ),
         )
         set_pid_switch.grid(column=1, row=0, padx=10, pady=10)
 
@@ -231,3 +248,59 @@ class DiagnosticView(View):
     @staticmethod
     def disable_widget(widget):
         widget.config(state=DISABLED, takefocus=0, background=MEDIUM_GRAY)
+
+
+class PWMSettingTrainingView(View):
+    def __init__(self, master, figures, setup):
+        super(PWMSettingTrainingView, self).__init__(
+            master=master, figures=figures, setup=setup
+        )
+
+    def load_widgets(self):
+        ####################
+        # Plotting Section #
+        ####################
+        plotting_section = tk.Frame(master=self.master, background=WHITE)
+        plotting_section.grid(row=1, column=1)
+        plotting_section.rowconfigure(0, weight=1)
+        plotting_section.rowconfigure(1, weight=1)
+        plotting_section.columnconfigure(0, weight=1)
+
+        # Necessary to make sure later figures are plotted correctly
+        FigureCanvasTkAgg(self.figures["dummy"], plotting_section).draw()
+
+        canvas_d_temp = FigureCanvasTkAgg(
+            self.figures["delta_temperatures"], plotting_section
+        )
+        canvas_d_temp.draw()
+        canvas_d_temp.get_tk_widget().grid(column=0, row=1, sticky="sewn")
+
+        canvas_pwm = FigureCanvasTkAgg(self.figures["PWM"], plotting_section)
+        canvas_pwm.draw()
+        canvas_pwm.get_tk_widget().grid(column=1, row=1, sticky="sewn")
+
+        #######################
+        # Interactive section #
+        #######################
+        interactive_section = tk.Frame(master=self.master, background=WHITE)
+        interactive_section.grid(row=0, column=0, padx=10, pady=10)
+
+        power_scale = tk.Scale(
+            master=interactive_section,
+            from_=0,
+            to=1,
+            label="Power",
+            background="white",
+            resolution=0.01,
+            showvalue=True,
+            orient=HORIZONTAL,
+            tickinterval=1 / 5,
+            command=self.setup.wrap_set_pwm,
+            length=400,
+        )
+        power_scale.set(0)
+        power_scale.pack(side="top", padx=10, pady=10)
+
+    def destroy_widgets(self):
+        for widget in self.master.winfo_children():
+            widget.destroy()

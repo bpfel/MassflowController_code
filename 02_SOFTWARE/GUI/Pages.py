@@ -3,6 +3,7 @@ from GUI.Views import DiagnosticView
 import tkinter as tk
 import logging
 from matplotlib import style
+from functools import partial
 
 logger = logging.getLogger("root")
 
@@ -59,24 +60,68 @@ class ExperimentPage(tk.Frame):
         self.static_header.grid(row=0, column=0, sticky="nwes")
         self.dynamic_main.grid(row=1, column=0, sticky="nwes")
         self.static_footer.grid(row=1, column=0, sticky="ew")
+        self.header_left = tk.Frame(master=self.static_header)
+        self.header_center = tk.Frame(master=self.static_header)
+        self.header_right = tk.Frame(master=self.static_header)
+        self.header_left.grid(row=0, column=0, sticky="nwes")
+        self.header_center.grid(row=0, column=1, sticky="nwes")
+        self.header_right.grid(row=0, column=2, sticky="nwes")
+        self.static_header.columnconfigure(0, weight=1)
+        self.static_header.columnconfigure(1, weight=1)
+        self.static_header.columnconfigure(2, weight=1)
+
         label = tk.Label(
-            self.static_header, textvariable="WIP title", font=LARGE_FONT, background="white"
+            self.header_center,
+            textvariable="WIP title",
+            font=LARGE_FONT,
+            background="white",
         )
-        label.grid(column=2, columnspan=2, row=0, sticky="nwes")
+        label.pack(fill='x')
+
+        # Create a stop button to pause the measurement
+
+        def start_stop_measurement(setup=setup):
+            if stop_measurement_button["text"] == "Stop":
+                stop_measurement_button["text"] = "Start"
+                setup.stop_measurement_thread()
+            elif stop_measurement_button["text"] == "Start":
+                stop_measurement_button["text"] = "Stop"
+                setup.start_measurement_thread()
+            else:
+                raise RuntimeError("Invalid button state!")
+
+        stop_measurement_button = tk.Button(
+            master=self.header_left,
+            text="Stop",
+            command=partial(start_stop_measurement, setup=self.setup),
+        )
+        stop_measurement_button.pack(side='left')
 
         self.views = {
-            DiagnosticView: DiagnosticView(master=self.dynamic_main, figures=self.figures, setup=self.setup)
+            DiagnosticView: DiagnosticView(
+                master=self.dynamic_main, figures=self.figures, setup=self.setup
+            )
         }
-        killbuton = tk.Button(master=self.static_header, text="Let the world burn", command=self.views[DiagnosticView].destroy_widgets)
-        killbuton.grid(column=1, row=0, sticky="nwes")
-        restorebuton = tk.Button(master=self.static_header,
-                                 text="Resurrect", command=self.views[DiagnosticView].load_widgets)
-        restorebuton.grid(column=0, row=0, sticky="nwes")
+
+        killbutton = tk.Button(
+            master=self.header_left,
+            text="Let the world burn",
+            command=self.views[DiagnosticView].destroy_widgets,
+        )
+        killbutton.pack(side='left')
+        restorebutton = tk.Button(
+            master=self.header_left,
+            text="Resurrect",
+            command=self.views[DiagnosticView].load_widgets,
+        )
+        restorebutton.pack(side='left')
+
 
         # configure weighting of rows and columns upon resizing
         self.dynamic_main.columnconfigure(0, weight=1)
         self.dynamic_main.columnconfigure(1, weight=100)
         self.dynamic_main.rowconfigure(0, weight=1)
         self.dynamic_main.rowconfigure(1, weight=1)
+
 
         self.views[DiagnosticView].load_widgets()
