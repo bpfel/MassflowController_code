@@ -52,7 +52,7 @@ class EKS(PlatformBase):
     def is_connected(self):
         try:
             self.ShdlcDevice.get_serial_number()
-        except TimeoutError:
+        except (TimeoutError, AttributeError):
             return False
         return True
 
