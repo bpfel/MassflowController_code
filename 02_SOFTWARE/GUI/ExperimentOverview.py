@@ -61,7 +61,7 @@ class ExperimentOverview(tk.Tk):
         }
         self.axes = deepcopy(self.figures)
         for figure_name in self.figures.keys():
-            fig, ax = plt.subplots(figsize=(5, 5))
+            fig, ax = plt.subplots(figsize=(4, 4))
             self.figures[figure_name] = fig
             self.axes[figure_name] = ax
 

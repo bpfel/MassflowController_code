@@ -14,6 +14,7 @@ class View(object):
         self.master = master
         self.figures = figures
         self.setup = setup
+        self.title = None
 
     @abstractmethod
     def load_widgets(self):
@@ -32,11 +33,15 @@ class DiagnosticView(View):
         self.mode_var = tk.StringVar(
             master=master, value="Set PWM"
         )  # States: "Set PWM", "Set PID"
+        self.title = "Diagnostic View"
 
     def load_widgets(self):
         ####################
         # Plotting section #
         ####################
+        self.master.rowconfigure(0, weight=1)
+        self.master.columnconfigure(0, weight=1)
+        self.master.columnconfigure(1, weight=1)
         plotting_section = tk.Frame(master=self.master, background="white")
         plotting_section.grid(row=0, column=1, sticky="se")
         plotting_section.rowconfigure(0, weight=1)
@@ -64,11 +69,14 @@ class DiagnosticView(View):
 
         canvas_pwm = FigureCanvasTkAgg(self.figures["PWM"], plotting_section)
         canvas_pwm.draw()
-        canvas_pwm.get_tk_widget().grid(column=1, row=1, sticky="sewn")
+        canvas_pwm.get_tk_widget().grid(column=2, row=1, sticky="sewn")
 
         canvas_pid = FigureCanvasTkAgg(self.figures["pid_components"], plotting_section)
         canvas_pid.draw()
-        canvas_pid.get_tk_widget().grid(column=2, row=1, sticky="sewn")
+        canvas_pid.get_tk_widget().grid(column=1, row=1, sticky="sewn")
+
+        for fig in self.figures.values():
+            fig.tight_layout()
 
         #######################
         # Interactive section #
@@ -255,13 +263,14 @@ class PWMSettingTrainingView(View):
         super(PWMSettingTrainingView, self).__init__(
             master=master, figures=figures, setup=setup
         )
+        self.title = "Direct Power Setting"
 
     def load_widgets(self):
         ####################
         # Plotting Section #
         ####################
         plotting_section = tk.Frame(master=self.master, background=WHITE)
-        plotting_section.grid(row=1, column=1)
+        plotting_section.grid(row=0, column=1)
         plotting_section.rowconfigure(0, weight=1)
         plotting_section.rowconfigure(1, weight=1)
         plotting_section.columnconfigure(0, weight=1)
@@ -273,11 +282,11 @@ class PWMSettingTrainingView(View):
             self.figures["delta_temperatures"], plotting_section
         )
         canvas_d_temp.draw()
-        canvas_d_temp.get_tk_widget().grid(column=0, row=1, sticky="sewn")
+        canvas_d_temp.get_tk_widget().grid(column=0, row=0, sticky="sewn")
 
         canvas_pwm = FigureCanvasTkAgg(self.figures["PWM"], plotting_section)
         canvas_pwm.draw()
-        canvas_pwm.get_tk_widget().grid(column=1, row=1, sticky="sewn")
+        canvas_pwm.get_tk_widget().grid(column=0, row=1, sticky="sewn")
 
         #######################
         # Interactive section #
