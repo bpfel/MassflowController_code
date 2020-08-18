@@ -1,4 +1,8 @@
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from GUI.LivePlotHandler import LivePlotHandler
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import tkinter as tk
 from tkinter import DISABLED, NORMAL, HORIZONTAL
 from functools import partial
@@ -7,6 +11,7 @@ from abc import abstractmethod
 LARGE_FONT = ("Verdana", 12)
 MEDIUM_GRAY = "#d0d0d0"
 WHITE = "#ffffff"
+matplotlib.use("TkAgg")
 
 
 class View(object):
@@ -53,7 +58,29 @@ class DiagnosticView(View):
         # Necessary to make sure later figures are plotted correctly
         FigureCanvasTkAgg(self.figures["dummy"], plotting_section).draw()
 
-        canvas_flow = FigureCanvasTkAgg(self.figures["flows"], plotting_section)
+        self.testfigure, self.testaxis = plt.subplots(figsize=(4, 4))
+        self.testliveplot = LivePlotHandler(
+            ax=self.testaxis,
+            fig=self.testfigure,
+            title="Testliveplot",
+            ylabel="Test",
+            ylims=(0, 40),
+            signal_buffers=[
+                self.setup.measurement_buffer["Temperature 1"],
+                self.setup.measurement_buffer["Temperature 2"],
+            ],
+            time_buffer=self.setup.measurement_buffer["Time"],
+            line_styles=["b-", "k-"],
+            legend_entries=["bla", "bli"],
+            interval=self.setup.interval_s,
+        )
+        self.animation = animation.FuncAnimation(
+            fig=self.testfigure,
+            func=self.testliveplot,
+            blit=True,
+            interval=200
+        )
+        canvas_flow = FigureCanvasTkAgg(self.testfigure, plotting_section)
         canvas_flow.draw()
         canvas_flow.get_tk_widget().grid(column=1, row=0, sticky="sewn")
 
@@ -67,7 +94,7 @@ class DiagnosticView(View):
         canvas_d_temp.draw()
         canvas_d_temp.get_tk_widget().grid(column=0, row=1, sticky="sewn")
 
-        canvas_pwm = FigureCanvasTkAgg(self.figures["PWM"], plotting_section)
+        canvas_pwm = FigureCanvasTkAgg(self.figures["pwm"], plotting_section)
         canvas_pwm.draw()
         canvas_pwm.get_tk_widget().grid(column=2, row=1, sticky="sewn")
 
@@ -284,7 +311,7 @@ class PWMSettingTrainingView(View):
         canvas_d_temp.draw()
         canvas_d_temp.get_tk_widget().grid(column=0, row=0, sticky="sewn")
 
-        canvas_pwm = FigureCanvasTkAgg(self.figures["PWM"], plotting_section)
+        canvas_pwm = FigureCanvasTkAgg(self.figures["pwm"], plotting_section)
         canvas_pwm.draw()
         canvas_pwm.get_tk_widget().grid(column=0, row=1, sticky="sewn")
 

@@ -55,7 +55,7 @@ class ExperimentOverview(tk.Tk):
             "temperatures": None,
             "flows": None,
             "delta_temperatures": None,
-            "PWM": None,
+            "pwm": None,
             "pid_components": None,
             "dummy": None,
         }
@@ -153,17 +153,24 @@ class ExperimentOverview(tk.Tk):
         )
 
         pwm = LivePlotHandler(
-            ax=self.axes["PWM"],
-            fig=self.figures["PWM"],
-            title="Power",
-            ylabel="PWM",
-            ylims=(0, 1),
-            signal_buffers=[self.setup.measurement_buffer["PWM"]],
+            ax=self.axes["pwm"],
+            fig=self.figures["pwm"],
+            title="Testplot",
+            ylabel="dx [bla]",
+            ylims=(0, 100),
+            signal_buffers=[
+                self.setup.measurement_buffer["Temperature Difference"],
+                self.setup.measurement_buffer["Target Delta T"]
+            ],
             time_buffer=self.setup.measurement_buffer["Time"],
-            line_styles=["-k"],
-            legend_entries=["PWM Output"],
+            line_styles=["k-", "b-"],
+            legend_entries=["bla", "bli"],
             interval=self.setup.interval_s,
         )
+
         self.ani_5 = animation.FuncAnimation(
-            fig=self.figures["PWM"], func=pwm, blit=True, interval=UPDATE_TIME,
+            fig=self.figures["pwm"],
+            func=pwm,
+            blit=True,
+            interval=UPDATE_TIME,
         )

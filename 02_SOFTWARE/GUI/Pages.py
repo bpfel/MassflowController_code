@@ -142,9 +142,9 @@ class ExperimentPage(tk.Frame):
             command=partial(start_stop_measurement, setup=self.setup),
             bg="red",
             fg="white",
-            font=("Arial Black", "14")
+            font=("Arial Black", "14"),
         )
-        stop_measurement_button.pack(padx=20, pady=20, fill='x')
+        stop_measurement_button.pack(padx=20, pady=20, fill="x")
 
         next_view_button = tk.Button(
             master=self.header_right,
@@ -152,7 +152,7 @@ class ExperimentPage(tk.Frame):
             command=partial(self.next_view),
             bg="blue",
             fg="white",
-            font=("Arial Black", "14")
+            font=("Arial Black", "14"),
         )
         next_view_button.pack(side="top")
 
@@ -162,7 +162,7 @@ class ExperimentPage(tk.Frame):
             command=partial(self.previous_view),
             bg="blue",
             fg="white",
-            font=("Arial Black", "14")
+            font=("Arial Black", "14"),
         )
         previous_view_button.pack(side="top")
 
