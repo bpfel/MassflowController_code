@@ -58,10 +58,10 @@ class Setup(object):
         self._simulation_mode = False
         self._current_pwm_value = 0
         self._current_mode = "Idle"
-        self._setpoint = 0
+        self._setpoint = 6
         self._initial_time = time.time()
         self.controller = PID(
-            Kp=0.1, Ki=0.01, Kd=0.1, setpoint=10, sample_time=0.3, output_limits=(0, 1)
+            Kp=0.0, Ki=0.0, Kd=0.0, setpoint=self._setpoint, sample_time=0.3, output_limits=(0, 1)
         )
 
     def open(self):
@@ -178,7 +178,7 @@ class Setup(object):
                     results["Controller Output P"],
                     results["Controller Output I"],
                     results["Controller Output D"],
-                    results["Contoller Output"],
+                    results["Controller Output"],
                 ) = (0, 0, 0, 0)
             self.measurement_buffer.update(results)
 
