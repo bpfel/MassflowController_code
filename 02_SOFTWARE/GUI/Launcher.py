@@ -19,8 +19,8 @@ class MainWindow(QMainWindow):
 
         # Main stack
         self.stack = QStackedWidget()
-        self.stack.addWidget(ExperimentPageOne(setup=self.setup))
-        self.stack.addWidget(ExperimentPageTwo(setup=self.setup))
+        self.stack.addWidget(PWMSetting(setup=self.setup))
+        self.stack.addWidget(PIDSetting(setup=self.setup))
         self.setCentralWidget(self.stack)
 
     def setup_tool_bar(self):

@@ -42,6 +42,7 @@ class Setup(object):
             "Controller Output P",
             "Controller Output I",
             "Controller Output D",
+            "Controller Output",
         }
         self.measurement_buffer = MeasurementBuffer(
             signals=signals,
@@ -137,6 +138,7 @@ class Setup(object):
                 "Controller Output P": 0,
                 "Controller Output I": 0,
                 "Controller Output D": 0,
+                "Controller Output": 0,
             }
             self.measurement_buffer.update(results)
             if self._current_mode is Mode.PID:
@@ -170,12 +172,14 @@ class Setup(object):
                     results["Controller Output I"],
                     results["Controller Output D"],
                 ) = self.controller.components
+                results["Controller Output"] = self.controller._last_output
             else:
                 (
                     results["Controller Output P"],
                     results["Controller Output I"],
                     results["Controller Output D"],
-                ) = (0, 0, 0)
+                    results["Contoller Output"],
+                ) = (0, 0, 0, 0)
             self.measurement_buffer.update(results)
 
     def start_measurement_thread(self):
