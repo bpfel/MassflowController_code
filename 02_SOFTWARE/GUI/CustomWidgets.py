@@ -2,6 +2,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import logging
+
+logger = logging.getLogger("root")
 
 
 class AnnotatedSlider(QFrame):
