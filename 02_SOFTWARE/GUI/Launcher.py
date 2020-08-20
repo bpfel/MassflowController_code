@@ -2,7 +2,6 @@ from setup import Setup
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import logging
 from GUI.ExperimentPages import *
 
 logger = logging.getLogger("root")
@@ -22,6 +21,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(PWMSetting(setup=self.setup))
         self.stack.addWidget(PIDSetting(setup=self.setup))
         self.setCentralWidget(self.stack)
+        self.stack.currentWidget().enter()
 
     def setup_tool_bar(self):
         toolbar = QToolBar("MyMainToolbar")
@@ -61,6 +61,15 @@ class MainWindow(QMainWindow):
         self.action_next_view.triggered.connect(self._go_to_next_view)
         toolbar.addAction(self.action_next_view)
 
+        toolbar.addSeparator()
+
+        self.action_reset_plots = QAction(
+            QIcon("./GUI/Icons/application-monitor.png"), "Reset Plots", self
+        )
+        self.action_reset_plots.setStatusTip("Reset plots to original axis limits")
+        self.action_reset_plots.triggered.connect(self._reset_plots)
+        toolbar.addAction(self.action_reset_plots)
+
     def _stop_recording(self):
         self.action_stop_recording.setDisabled(True)
         self.setup.stop_measurement_thread()
@@ -75,7 +84,9 @@ class MainWindow(QMainWindow):
         if self.stack.currentIndex() == 0:
             pass
         else:
+            self.stack.currentWidget().leave()
             self.stack.setCurrentIndex(self.stack.currentIndex() - 1)
+            self.stack.currentWidget().enter()
             if self.stack.currentIndex() == 0:
                 self.action_previous_view.setDisabled(True)
                 self.action_next_view.setEnabled(True)
@@ -84,10 +95,15 @@ class MainWindow(QMainWindow):
         if self.stack.currentIndex() == self.stack.count() - 1:
             pass
         else:
+            self.stack.currentWidget().leave()
             self.stack.setCurrentIndex(self.stack.currentIndex() + 1)
+            self.stack.currentWidget().enter()
             if self.stack.currentIndex() == self.stack.count() - 1:
                 self.action_next_view.setDisabled(True)
                 self.action_previous_view.setEnabled(True)
+
+    def _reset_plots(self):
+        self.stack.currentWidget().reset_plots()
 
     def setup_status_bar(self):
         sensirion_img = QPixmap("GUI/Icons/sensirion.png")
