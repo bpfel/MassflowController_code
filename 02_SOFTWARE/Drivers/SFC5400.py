@@ -79,7 +79,7 @@ class Sfc5400(SensorBase):
     def is_connected(self):
         try:
             self.ShdlcDevice.get_serial_number()
-        except (TimeoutError, ShdlcTimeoutError):
+        except (TimeoutError, ShdlcTimeoutError, AttributeError):
             return False
         return True
 

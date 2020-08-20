@@ -1,5 +1,6 @@
 from sensirion_shdlc_driver import ShdlcSerialPort, ShdlcConnection
 from sensirion_shdlc_sensorbridge import SensorBridgePort, SensorBridgeShdlcDevice
+from sensirion_shdlc_driver.errors import ShdlcTimeoutError
 from Drivers.SensorBase import SensorBase
 from Drivers.PlatformBase import PlatformBase
 import logging
@@ -52,7 +53,7 @@ class EKS(PlatformBase):
     def is_connected(self):
         try:
             self.ShdlcDevice.get_serial_number()
-        except TimeoutError:
+        except (TimeoutError, ShdlcTimeoutError, AttributeError):
             return False
         return True
 
