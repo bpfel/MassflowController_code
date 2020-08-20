@@ -1,47 +1,100 @@
 from setup import Setup
-from GUI.LivePlots import LivePlotWidget, LivePlotSignal
-import pyqtgraph as pg
-from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import logging
+from GUI.ExperimentPages import *
 
-
-class Color(QWidget):
-    def __init__(self, color, *args, **kwargs):
-        super(Color, self).__init__(*args, **kwargs)
-        self.setAutoFillBackground(True)
-
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
-        self.setPalette(palette)
-
-        label = QLabel(self)
-        label.setText('bla')
+logger = logging.getLogger("root")
 
 
 class MainWindow(QMainWindow):
-
     def __init__(self, setup: Setup, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setup = setup
 
         self.setWindowTitle("Mass Flow Sensor")
+        self.setup_tool_bar()
+        self.setup_status_bar()
 
-        toolbar = QToolBar("MyMainToolbar")
-        toolbar.setIconSize(QSize(16, 16))
-        self.addToolBar(toolbar)
-
+        # Main stack
         self.stack = QStackedWidget()
         self.stack.addWidget(ExperimentPageOne(setup=self.setup))
+        self.stack.addWidget(ExperimentPageTwo(setup=self.setup))
         self.setCentralWidget(self.stack)
 
-        sensirion_img = QPixmap('GUI/sensirion.png')
+    def setup_tool_bar(self):
+        toolbar = QToolBar("MyMainToolbar")
+        toolbar.setIconSize(QSize(24, 24))
+        self.addToolBar(toolbar)
+
+        # Set up actions
+        self.action_stop_recording = QAction(
+            QIcon("./GUI/Icons/control-stop-square.png"), "Stop recording", self
+        )
+        self.action_stop_recording.setStatusTip("Stop recording measurements")
+        self.action_stop_recording.triggered.connect(self._stop_recording)
+        toolbar.addAction(self.action_stop_recording)
+
+        self.action_start_recording = QAction(
+            QIcon("./GUI/Icons/control.png"), "Start recording", self
+        )
+        self.action_start_recording.setStatusTip("Start recording measurements")
+        self.action_start_recording.triggered.connect(self._start_recording)
+        self.action_start_recording.setDisabled(True)
+        toolbar.addAction(self.action_start_recording)
+
+        toolbar.addSeparator()
+
+        self.action_previous_view = QAction(
+            QIcon("./GUI/Icons/arrow-180.png"), "Previous View", self
+        )
+        self.action_previous_view.setStatusTip("Go to previous view")
+        self.action_previous_view.triggered.connect(self._go_to_previous_view)
+        self.action_previous_view.setDisabled(True)
+        toolbar.addAction(self.action_previous_view)
+
+        self.action_next_view = QAction(
+            QIcon("./GUI/Icons/arrow.png"), "Next View", self
+        )
+        self.action_next_view.setStatusTip("Go to next view")
+        self.action_next_view.triggered.connect(self._go_to_next_view)
+        toolbar.addAction(self.action_next_view)
+
+    def _stop_recording(self):
+        self.action_stop_recording.setDisabled(True)
+        self.setup.stop_measurement_thread()
+        self.action_start_recording.setEnabled(True)
+
+    def _start_recording(self):
+        self.action_start_recording.setDisabled(True)
+        self.setup.start_measurement_thread()
+        self.action_stop_recording.setEnabled(True)
+
+    def _go_to_previous_view(self):
+        if self.stack.currentIndex() == 0:
+            pass
+        else:
+            self.stack.setCurrentIndex(self.stack.currentIndex() - 1)
+            if self.stack.currentIndex() == 0:
+                self.action_previous_view.setDisabled(True)
+                self.action_next_view.setEnabled(True)
+
+    def _go_to_next_view(self):
+        if self.stack.currentIndex() == self.stack.count() - 1:
+            pass
+        else:
+            self.stack.setCurrentIndex(self.stack.currentIndex() + 1)
+            if self.stack.currentIndex() == self.stack.count() - 1:
+                self.action_next_view.setDisabled(True)
+                self.action_previous_view.setEnabled(True)
+
+    def setup_status_bar(self):
+        sensirion_img = QPixmap("GUI/Icons/sensirion.png")
         sensirion_logo = QLabel(self)
         sensirion_logo.setPixmap(sensirion_img.scaledToHeight(32))
         sensirion_logo.setAlignment(Qt.AlignLeft)
-        sensirion_logo.setStatusTip("Sensirion helping us.")
-        eth_img = QPixmap('GUI/eth.png')
+        eth_img = QPixmap("GUI/Icons/eth.png")
         eth_logo = QLabel(self)
         eth_logo.setPixmap(eth_img.scaledToHeight(32))
         eth_logo.setAlignment(Qt.AlignRight)
@@ -51,79 +104,11 @@ class MainWindow(QMainWindow):
         self.setStatusBar(status_bar)
 
 
-class ExperimentPageOne(QWidget):
-    def __init__(self, setup):
-        super(ExperimentPageOne, self).__init__()
-        self.setup = setup
-        # Create controls
-        self.pwm = AnnotatedSlider(min=0, max=100, title="Heating Power [%]")
-        self.pwm.slider.setSingleStep(1)
-        self.pwm.slider.setPageStep(10)
-        self.pwm.slider.setValue(self.setup._current_pwm_value)
-        self.pwm.slider.setTickInterval(10)
-        self.pwm.slider.setTickPosition(QSlider.TicksBelow)
-        self.pwm.slider.valueChanged.connect(self.set_pwm_value)
-        # Create visualization
-        self.graphWidget = LivePlotWidget(setup=self.setup, title="Temperature Plot", ylabel="Temperature [°C]", ylims=(20, 40))
-        first_signal = LivePlotSignal(name="T 1", identifier="Temperature 1", color='b')
-        second_signal = LivePlotSignal(name="T 2", identifier="Temperature 2", color='r')
-        self.graphWidget.add_signals([first_signal, second_signal])
-        # Add widgets to layout
-        horizontal_layout = QHBoxLayout()
-        vertical_layout = QVBoxLayout()
-        vertical_layout.addWidget(self.pwm)
-        vertical_layout.addWidget(QLabel(), 1)
-        horizontal_layout.addLayout(vertical_layout)
-        horizontal_layout.addWidget(self.graphWidget)
-        self.setLayout(horizontal_layout)
-
-    def set_pwm_value(self):
-        self.setup.wrap_set_pwm(value=self.pwm.slider.value() / 100.0)
-
-
-class AnnotatedSlider(QWidget):
-    def __init__(self, min, max, title):
-        super(AnnotatedSlider, self).__init__()
-        # Configure slider
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(min)
-        self.slider.setMaximum(max)
-        # Set up layouts
-        vbox = QVBoxLayout()
-        hbox = QHBoxLayout()
-        vbox.setContentsMargins(0, 0, 0, 0)
-        hbox.setContentsMargins(0, 0, 0, 0)
-        vbox.setSpacing(0)
-        # Define labels
-        label_minimum = QLabel()
-        label_minimum.setAlignment(Qt.AlignLeft)
-        label_minimum.setNum(min)
-        label_maximum = QLabel()
-        label_maximum.setAlignment(Qt.AlignRight)
-        label_maximum.setNum(max)
-        label_current = QLabel()
-        label_current.setAlignment(Qt.AlignCenter)
-        label_current.setNum(0)
-        label_title = QLabel()
-        label_title.setAlignment(Qt.AlignCenter)
-        label_title.setText(title)
-        # Assemble widgets
-        vbox.addWidget(label_title)
-        vbox.addWidget(self.slider)
-        vbox.addLayout(hbox)
-        hbox.addWidget(label_minimum, Qt.AlignLeft)
-        hbox.addWidget(label_current, Qt.AlignCenter)
-        hbox.addWidget(label_maximum, Qt.AlignRight)
-        self.slider.valueChanged.connect(label_current.setNum)
-        vbox.setGeometry(QRect(300, 300, 300, 140))
-        self.setLayout(vbox)
-
-
 class Launcher(object):
     def __init__(self, setup: Setup):
         self.setup = setup
 
         app = QApplication([])
         window = MainWindow(setup=setup)
-        window.show()
+        window.showMaximized()
         app.exec_()

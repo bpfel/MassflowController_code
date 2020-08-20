@@ -24,7 +24,7 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
         self.title = title
 
         # Standard visual setup for plots:
-        self.setBackground('w')
+        self.setBackground("w")
         self.setXRange(0, self.setup.interval_s)
         self.setYRange(ylims[0], ylims[1])
         self.setTitle(title)
@@ -48,11 +48,16 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
     def update_plot_data(self):
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
-                shifted_time_axis = numpy.array(self.setup.measurement_buffer["Time"]) - \
-                                    self.setup.measurement_buffer["Time"][
-                                        -1] + self.setup.interval_s
+                shifted_time_axis = (
+                    numpy.array(self.setup.measurement_buffer["Time"])
+                    - self.setup.measurement_buffer["Time"][-1]
+                    + self.setup.interval_s
+                )
                 for signal in self.signals:
-                    signal.data_line.setData(shifted_time_axis, self.setup.measurement_buffer[signal.identifier])
+                    signal.data_line.setData(
+                        shifted_time_axis,
+                        self.setup.measurement_buffer[signal.identifier],
+                    )
             else:
                 # No signals added yet
                 pass
@@ -65,5 +70,8 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
             self.setYRange(self.ylims[0], self.ylims[1])
         else:
             logger.error(
-                "Use set_ylims to define y-axis limits before reseting the plot layout for plot {}".format(self.title))
+                "Use set_ylims to define y-axis limits before reseting the plot layout for plot {}".format(
+                    self.title
+                )
+            )
         self.setXRange(0, self.setup.interval_s)
