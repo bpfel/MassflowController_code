@@ -10,6 +10,8 @@ import time
 import numpy as np
 from enum import Enum
 
+FLOW_LIMIT_FOR_HEATING = 20.0
+
 
 class Mode(Enum):
     IDLE = 0
@@ -116,7 +118,6 @@ class Setup(object):
         else:
             self.close()
 
-    # API
     def measure(self):
         if self._simulation_mode:
             T_1 = 25 + np.random.rand()
@@ -166,7 +167,7 @@ class Setup(object):
             }
             if self._current_mode is Mode.PID:
                 desired_pwm = self.controller(input_=delta_T)
-                self.set_pwm(desired_pwm)
+                self._set_pwm(desired_pwm)
                 (
                     results["Controller Output P"],
                     results["Controller Output I"],
@@ -180,6 +181,8 @@ class Setup(object):
                     results["Controller Output D"],
                     results["Controller Output"],
                 ) = (0, 0, 0, 0)
+            if results_sfc["Flow"] < FLOW_LIMIT_FOR_HEATING:
+                self._set_pwm(0)
             self.measurement_buffer.update(results)
 
     def start_measurement_thread(self):
@@ -205,14 +208,20 @@ class Setup(object):
         else:
             logger.error("Measurement thread not started yet!")
 
-    def set_pwm(self, value):
-        value = float(value)
-        if not 0.0 <= value <= 1.0:
-            raise ValueError("PWM value: {} has to be between 0 and 1".format(value))
-        self._current_pwm_value = value
-        # convert to heater units:
-        value = int(value * 65535.0)
-        self._heater.set_pwm(pwm_bit=0, dc=value)
+    def _set_pwm(self, value):
+        if self._simulation_mode:
+            raise RuntimeError("Heating is not allowed in simulation mode!")
+        else:
+            value = float(value)
+            if not 0.0 <= value <= 1.0:
+                raise ValueError("PWM value: {} has to be between 0 and 1".format(value))
+            # Safety check: If the flow is smaller than 10.0 slm, heating will not be allowed
+            if value != 0 and self.measurement_buffer["Flow"][-1] < FLOW_LIMIT_FOR_HEATING:
+                value = 0
+            self._current_pwm_value = value
+            # convert to heater units:
+            value = int(value * 65535.0)
+            self._heater.set_pwm(pwm_bit=0, dc=value)
 
     def wrap_set_pwm(self, value):
         if self._current_mode is not Mode.FORCE_PWM:
@@ -222,7 +231,7 @@ class Setup(object):
         if self._simulation_mode:
             self._current_pwm_value = float(value)
         else:
-            self.set_pwm(value)
+            self._set_pwm(value)
 
     def set_setpoint(self, value):
         value = float(value)
@@ -261,7 +270,7 @@ class Setup(object):
         if self._simulation_mode:
             pass
         else:
-            self.set_pwm(value=0)
+            self._set_pwm(value=0)
 
     @staticmethod
     def calculate_massflow_estimate(delta_t, pwm):

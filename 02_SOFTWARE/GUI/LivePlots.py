@@ -141,7 +141,7 @@ class PlotWidgetFactory:
 
     def power(self):
         graph_power = LivePlotWidget(
-            setup=self.setup, title="Power", ylabel="Power [%]", ylims=(0, 100)
+            setup=self.setup, title="Power", ylabel="Power [%]", ylims=(0, 1)
         )
         signal_power = LivePlotSignal(name="Power", identifier="PWM", color="k")
         graph_power.add_signals([signal_power])

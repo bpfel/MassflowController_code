@@ -10,6 +10,11 @@ logger = logging.getLogger("root")
 class AnnotatedSlider(QFrame):
     def __init__(self, min, max, title):
         super(AnnotatedSlider, self).__init__()
+        self.setStyleSheet("""
+        QFrame {
+            background: rgb(255, 255, 255);
+        }
+        """)
         self.min = min
         self.max = max
         # Configure slider
@@ -49,7 +54,7 @@ class AnnotatedSlider(QFrame):
         self.slider.valueChanged.connect(self.set_label_value)
         self.setLayout(vbox)
         # Set up frame style
-        self.setFrameStyle(QFrame.Panel | QFrame.Raised)
+        self.setFrameStyle(QFrame.Box | QFrame.Sunken)
 
     def set_label_value(self):
         self.label_current.setNum(self.value)

@@ -14,6 +14,8 @@ class ExperimentPage(QWidget):
         self.plot_widget_factory = PlotWidgetFactory(setup=setup)
         self.vertical_layout_controls = QVBoxLayout()
         self.vertical_layout_plots = QVBoxLayout()
+        self.vertical_layout_plots.setContentsMargins(10, 10, 10, 10)
+        self.vertical_layout_controls.setContentsMargins(10, 10, 10, 10)
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addLayout(self.vertical_layout_controls, 1)
         self.horizontal_layout.addLayout(self.vertical_layout_plots, 3)

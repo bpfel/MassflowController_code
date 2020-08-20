@@ -11,6 +11,11 @@ class MainWindow(QMainWindow):
     def __init__(self, setup: Setup, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setup = setup
+        self.setStyleSheet("""
+        QMainWindow {
+            background-color: rgb(255, 255, 255);
+        }
+        """)
 
         self.setWindowTitle("Mass Flow Sensor")
         self.setup_tool_bar()
