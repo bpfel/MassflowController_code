@@ -1,5 +1,6 @@
 from setup import Setup
 from Utility.Logger import setup_custom_logger
+from GUI.Launcher import Launcher
 from logging import getLevelName
 
 logger = setup_custom_logger(name="root", level=getLevelName("WARNING"))
@@ -9,3 +10,4 @@ if __name__ == "__main__":
     with Setup(serials=serials, t_sampling_s=0.25, interval_s=50) as setup:
         setup.open()
         setup.start_measurement_thread()
+        launcher = Launcher(setup=setup)
