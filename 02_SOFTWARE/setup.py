@@ -30,6 +30,8 @@ class Setup(object):
         self._t_sampling_s = t_sampling_s
         self.interval_s = interval_s
         self._devices = None
+        self._buffering = True
+        self.results = None
         signals = {
             "Temperature 1",
             "Temperature 2",
@@ -63,7 +65,12 @@ class Setup(object):
         self._setpoint = 6
         self._initial_time = time.time()
         self.controller = PID(
-            Kp=0.0, Ki=0.0, Kd=0.0, setpoint=self._setpoint, sample_time=0.3, output_limits=(0, 1)
+            Kp=0.0,
+            Ki=0.0,
+            Kd=0.0,
+            setpoint=self._setpoint,
+            sample_time=0.3,
+            output_limits=(0, 1),
         )
 
     def open(self):
@@ -183,7 +190,24 @@ class Setup(object):
                 ) = (0, 0, 0, 0)
             if results_sfc["Flow"] < FLOW_LIMIT_FOR_HEATING:
                 self._set_pwm(0)
-            self.measurement_buffer.update(results)
+            # Store the current measurement in a single list
+            self.results = results
+            if self._buffering:
+                # Buffer multiple measurements in the measurement buffer
+                self.measurement_buffer.update(results)
+
+    def start_buffering(self):
+        if self._buffering:
+            logger.error("Cannot start buffering, already recording to buffer!")
+        else:
+            self._buffering = True
+            self.measurement_buffer.clear()
+
+    def stop_buffering(self):
+        if not self._buffering:
+            logger.error("Cannot stop buffering, not currenly recording to buffer!")
+        else:
+            self._buffering = False
 
     def start_measurement_thread(self):
         if self._measurement_timer is None:
@@ -202,6 +226,8 @@ class Setup(object):
 
     def stop_measurement_thread(self):
         if self._measurement_timer is not None:
+            self._set_pwm(0)
+            self.controller.reset()
             self._measurement_timer.cancel()
             self._measurement_timer = None
             logger.info("Stopped measurement thread.")
@@ -214,10 +240,16 @@ class Setup(object):
         else:
             value = float(value)
             if not 0.0 <= value <= 1.0:
-                raise ValueError("PWM value: {} has to be between 0 and 1".format(value))
-            # Safety check: If the flow is smaller than 10.0 slm, heating will not be allowed
-            if value != 0 and self.measurement_buffer["Flow"][-1] < FLOW_LIMIT_FOR_HEATING:
-                value = 0
+                raise ValueError(
+                    "PWM value: {} has to be between 0 and 1".format(value)
+                )
+            # Safety check: If the flow is smaller than 20.0 slm, heating will not be allowed
+            if value != 0:
+                if self.measurement_buffer["Flow"]:
+                    if self.measurement_buffer["Flow"][-1] < FLOW_LIMIT_FOR_HEATING:
+                        value = 0
+                else:
+                    value = 0
             self._current_pwm_value = value
             # convert to heater units:
             value = int(value * 65535.0)
