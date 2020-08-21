@@ -11,11 +11,13 @@ class MainWindow(QMainWindow):
     def __init__(self, setup: Setup, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setup = setup
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
         QMainWindow {
             background-color: rgb(255, 255, 255);
         }
-        """)
+        """
+        )
 
         self.setWindowTitle("Mass Flow Sensor")
         self.setup_tool_bar()
@@ -23,8 +25,20 @@ class MainWindow(QMainWindow):
 
         # Main stack
         self.stack = QStackedWidget()
-        self.stack.addWidget(PWMSetting(setup=self.setup))
-        self.stack.addWidget(PIDSetting(setup=self.setup))
+        self.stack.addWidget(
+            PWMSetting(
+                setup=self.setup,
+                start_action=self._start_recording,
+                stop_action=self._stop_recording,
+            )
+        )
+        self.stack.addWidget(
+            PIDSetting(
+                setup=self.setup,
+                start_action=self._start_recording,
+                stop_action=self._stop_recording,
+            )
+        )
         self.setCentralWidget(self.stack)
         self.stack.currentWidget().enter()
 
@@ -78,7 +92,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.action_competition_mode = QPushButton(
-            QIcon("./GUI/Icons/smiley-money.png"), "Competition Mode", self
+            QIcon("./GUI/Icons/smiley-money.png"), "", self
         )
         self.action_competition_mode.setStatusTip("Win a guided tour at Sensirion!")
         self.action_competition_mode.setCheckable(True)
@@ -88,26 +102,28 @@ class MainWindow(QMainWindow):
 
     def _change_competition_mode(self):
         if self.action_competition_mode.isChecked():
-            # leave competition mode
-            self.stack.currentWidget().switch_to_normal_mode()
-        else:
             # enter competition mode
             self.stack.currentWidget().switch_to_competition_mode()
+        else:
+            # leave competition mode
+            self.stack.currentWidget().switch_to_normal_mode()
 
     def _stop_recording(self):
         self.action_stop_recording.setDisabled(True)
-        self.setup.stop_measurement_thread()
+        self.setup.stop_buffering()
+        self.stack.currentWidget().pause()
         self.action_start_recording.setEnabled(True)
 
     def _start_recording(self):
         self.action_start_recording.setDisabled(True)
-        self.setup.start_measurement_thread()
+        self.setup.start_buffering()
         self.action_stop_recording.setEnabled(True)
 
     def _go_to_previous_view(self):
         if self.stack.currentIndex() == 0:
             pass
         else:
+            self.action_competition_mode.setChecked(False)
             self.stack.currentWidget().leave()
             self.stack.setCurrentIndex(self.stack.currentIndex() - 1)
             self.stack.currentWidget().enter()
@@ -119,6 +135,7 @@ class MainWindow(QMainWindow):
         if self.stack.currentIndex() == self.stack.count() - 1:
             pass
         else:
+            self.action_competition_mode.setChecked(False)
             self.stack.currentWidget().leave()
             self.stack.setCurrentIndex(self.stack.currentIndex() + 1)
             self.stack.currentWidget().enter()
