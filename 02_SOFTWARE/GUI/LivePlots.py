@@ -49,9 +49,9 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
                 shifted_time_axis = (
-                    numpy.array(self.setup.measurement_buffer["Time"])
-                    - self.setup.measurement_buffer["Time"][-1]
-                    + self.setup.interval_s
+                        numpy.array(self.setup.measurement_buffer["Time"])
+                        - self.setup.measurement_buffer["Time"][-1]
+                        + self.setup.interval_s
                 )
                 for signal in self.signals:
                     signal.data_line.setData(
@@ -75,6 +75,36 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
                 )
             )
         self.setXRange(0, self.setup.interval_s)
+
+
+class LivePlotWidgetCompetition(LivePlotWidget):
+    def __init__(self, setup: Setup, title, ylabel, ylims, *args, **kwargs):
+        super(LivePlotWidgetCompetition, self).__init__(setup=setup, title=title, ylabel=ylabel, ylims=ylims, *args,
+                                                        **kwargs)
+
+    def add_signals(self, reference_signal, actual_signal):
+        self.addLegend()
+        reference_signal.data_line = self.plot([], [], pen=reference_signal.pen, name=reference_signal.name)
+        actual_signal.data_line = self.plot([], [], pen=actual_signal.pen, name=actual_signal.name)
+        self.signals.append(actual_signal)
+        self.signals.append(reference_signal)
+
+    def update_plot_data(self):
+        if self.setup.measurement_buffer["Time"]:
+            if self.signals:
+                shifted_time_axis = (
+                        numpy.array(self.setup.measurement_buffer["Time"])
+                        - self.setup.measurement_buffer["Time"][-1]
+                        + self.setup.interval_s
+                )
+                for signal in self.signals:
+                    signal.data_line.setData(
+                        shifted_time_axis,
+                        self.setup.measurement_buffer[signal.identifier],
+                    )
+                # brush = pyqtgraph.mkBrush(color=(255, 0, 0))
+                # pyqtgraph.FillBetweenItem(curve1=self.signals[1].data_line,
+                #                           curve2=self.signals[0].data_line, brush=brush)
 
 
 class PlotWidgetFactory:
@@ -146,3 +176,19 @@ class PlotWidgetFactory:
         signal_power = LivePlotSignal(name="Power", identifier="PWM", color="k")
         graph_power.add_signals([signal_power])
         return graph_power
+
+    def delta_t_competition(self):
+        graph_delta_t = LivePlotWidgetCompetition(
+            setup=self.setup,
+            title="Temperature Difference",
+            ylabel="Temperature Difference [°C]",
+            ylims=(0, 10),
+        )
+        signal_actual_delta_t = LivePlotSignal(
+            name="Actual Delta T", identifier="Temperature Difference", color="g"
+        )
+        signal_target_delta_t = LivePlotSignal(
+            name="Target Delta T", identifier="Target Delta T", color="r"
+        )
+        graph_delta_t.add_signals(actual_signal=signal_actual_delta_t, reference_signal=signal_target_delta_t)
+        return graph_delta_t

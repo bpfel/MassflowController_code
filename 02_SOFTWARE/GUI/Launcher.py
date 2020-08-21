@@ -75,6 +75,25 @@ class MainWindow(QMainWindow):
         self.action_reset_plots.triggered.connect(self._reset_plots)
         toolbar.addAction(self.action_reset_plots)
 
+        toolbar.addSeparator()
+
+        self.action_competition_mode = QPushButton(
+            QIcon("./GUI/Icons/smiley-money.png"), "Competition Mode", self
+        )
+        self.action_competition_mode.setStatusTip("Win a guided tour at Sensirion!")
+        self.action_competition_mode.setCheckable(True)
+        self.action_competition_mode.setChecked(False)
+        self.action_competition_mode.clicked.connect(self._change_competition_mode)
+        toolbar.addWidget(self.action_competition_mode)
+
+    def _change_competition_mode(self):
+        if self.action_competition_mode.isChecked():
+            # leave competition mode
+            self.stack.currentWidget().switch_to_normal_mode()
+        else:
+            # enter competition mode
+            self.stack.currentWidget().switch_to_competition_mode()
+
     def _stop_recording(self):
         self.action_stop_recording.setDisabled(True)
         self.setup.stop_measurement_thread()

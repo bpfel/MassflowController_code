@@ -31,6 +31,12 @@ class ExperimentPage(QWidget):
         for i in range(self.vertical_layout_plots.count()):
             self.vertical_layout_plots.itemAt(i).widget().reset_plot_layout()
 
+    def switch_to_competition_mode(self):
+        NotImplementedError("switch_to_competition_mode() for page {} not implemented!".format(self.name))
+
+    def switch_to_normal_mode(self):
+        NotImplementedError("switch_to_normal_mode() for page {} not implemented!".format(self.name))
+
 
 class PWMSetting(ExperimentPage):
     def __init__(self, setup):
@@ -55,6 +61,18 @@ class PWMSetting(ExperimentPage):
 
     def leave(self):
         self.setup.wrap_set_pwm(0)
+
+    def switch_to_competition_mode(self):
+        delta_t_plot_widget = self.vertical_layout_plots.itemAt(0).widget()
+        self.vertical_layout_plots.removeWidget(delta_t_plot_widget)
+        del delta_t_plot_widget
+        self.vertical_layout_plots.insertWidget(0, self.plot_widget_factory.delta_t_competition())
+
+    def switch_to_normal_mode(self):
+        delta_t_plot_widget = self.vertical_layout_plots.itemAt(0).widget()
+        self.vertical_layout_plots.removeWidget(delta_t_plot_widget)
+        del delta_t_plot_widget
+        self.vertical_layout_plots.insertWidget(0, self.plot_widget_factory.delta_t())
 
 
 class PIDSetting(ExperimentPage):
