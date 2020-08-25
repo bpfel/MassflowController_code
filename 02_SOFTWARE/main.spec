@@ -4,7 +4,6 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:\\Users\\gam19\\Documents\\MassflowController_code\\02_SOFTWARE'],
              binaries=[],
              datas=[ ("GUI\\Icons", "Icons")],
              hiddenimports=[],
@@ -24,11 +23,11 @@ exe = EXE(pyz,
           a.datas,
           [],
           name='Mass Flow Sensor',
-          debug=False,
+          debug=True,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=False,
+          console=True,
           icon='GUI/Icons/icon.ico')
