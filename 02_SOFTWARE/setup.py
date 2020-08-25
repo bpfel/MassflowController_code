@@ -256,7 +256,6 @@ class Setup(object):
 
     def set_pwm(self, value):
         if self._simulation_mode:
-            self._heater.set_pwm(pwm_bit=0, dc=0)
             self._current_pwm_value = 0
         elif self._current_mode in [Mode.IDLE, Mode.FORCE_PWM_OFF, Mode.PID_OFF]:
             self._heater.set_pwm(pwm_bit=0, dc=0)
