@@ -10,24 +10,52 @@ import time
 import numpy as np
 from enum import Enum
 
+logger = logging.getLogger("root")
+
+FLOW_LIMIT_FOR_HEATING = 20.0
+
 
 class Mode(Enum):
-    IDLE = 0
-    FORCE_PWM = 2
-    PID = 3
-
-
-logger = logging.getLogger("root")
+    IDLE = 0  # Not started yet
+    FORCE_PWM_OFF = 1  # User defines PWM
+    FORCE_PWM_ON = 2
+    PID_OFF = 3  # PID defines PWM, but is inactive
+    PID_ON = 4  # PID defines PWM, is active
 
 
 class Setup(object):
-    # Standard methods
     def __init__(self, serials, t_sampling_s, interval_s):
-        # allocate member variables
+        # allocate private member variables
         self._serials = serials
         self._t_sampling_s = t_sampling_s
-        self.interval_s = interval_s
         self._devices = None
+        self._buffering = True
+        self._measurement_timer = None
+        self._eks = None
+        self._sfc = None
+        self._heater = None
+        self._sdp = None
+        self._simulation_mode = False
+        self._current_pwm_value = 0
+        self._current_mode = Mode.IDLE
+        self._setpoint = 6  # Temperature difference setpoint
+
+        # allocate public member variables
+        self.interval_s = (
+            interval_s  # Time interval over which measurements are buffered
+        )
+        self.measurement_buffer = self._setup_measurement_buffer()  # Measurement buffer
+        self.results = None  # Storage for current measurement frame
+        self.controller = PID(
+            Kp=0.0,
+            Ki=0.0,
+            Kd=0.0,
+            setpoint=self._setpoint,
+            sample_time=0.3,
+            output_limits=(0, 1),
+        )
+
+    def _setup_measurement_buffer(self):
         signals = {
             "Temperature 1",
             "Temperature 2",
@@ -42,25 +70,12 @@ class Setup(object):
             "Controller Output P",
             "Controller Output I",
             "Controller Output D",
+            "Controller Output",
         }
-        self.measurement_buffer = MeasurementBuffer(
+        return MeasurementBuffer(
             signals=signals,
             buffer_interval_s=self.interval_s,
             sampling_time_s=self._t_sampling_s,
-        )
-        # Initialize members
-        self._measurement_timer = None
-        self._eks = None
-        self._sfc = None
-        self._heater = None
-        self._sdp = None
-        self._simulation_mode = False
-        self._current_pwm_value = 0
-        self._current_mode = "Idle"
-        self._setpoint = 0
-        self._initial_time = time.time()
-        self.controller = PID(
-            Kp=0.1, Ki=0.01, Kd=0.1, setpoint=10, sample_time=0.3, output_limits=(0, 1)
         )
 
     def open(self):
@@ -115,68 +130,104 @@ class Setup(object):
         else:
             self.close()
 
-    # API
     def measure(self):
+        # Retrieve all recorded signals depending on system mode
         if self._simulation_mode:
-            T_1 = 25 + np.random.rand()
-            T_2 = 30 + np.random.rand()
-            delta_T = T_2 - T_1
-            results = {
-                "Temperature 1": T_1,
-                "Temperature 2": T_2,
-                "Humidity 1": 50 + np.random.rand(),
-                "Humidity 2": 30 + np.random.rand(),
-                "Flow": 50 + np.random.rand(),
-                "Time": time.time(),
-                "Temperature Difference": delta_T,
-                "PWM": self._current_pwm_value,
-                "Flow Estimate": self.calculate_massflow_estimate(
-                    delta_t=delta_T, pwm=self._current_pwm_value
-                ),
-                "Target Delta T": self._setpoint,
-                "Controller Output P": 0,
-                "Controller Output I": 0,
-                "Controller Output D": 0,
-            }
-            self.measurement_buffer.update(results)
-            if self._current_mode is Mode.PID:
-                desired_pwm = self.controller(input_=delta_T)
-                self._current_pwm_value = desired_pwm
+            results = self._measure_simulation_mode()
         else:
-            logger.info("Measuring once...")
-            results_eks = self._eks.measure()
-            results_sfc = self._sfc.measure()
-            results_timestamp = time.time() - self._initial_time
-            delta_T = results_eks[1]["Temperature"] - results_eks[0]["Temperature"]
-            results = {
-                "Temperature 1": results_eks[0]["Temperature"],
-                "Temperature 2": results_eks[1]["Temperature"],
-                "Humidity 1": results_eks[0]["Humidity"],
-                "Humidity 2": results_eks[1]["Humidity"],
-                "Flow": results_sfc["Flow"],
-                "Time": results_timestamp,
-                "Temperature Difference": delta_T,
-                "PWM": self._current_pwm_value,
-                "Flow Estimate": self.calculate_massflow_estimate(
-                    delta_t=delta_T, pwm=self._current_pwm_value
-                ),
-                "Target Delta T": self._setpoint,
-            }
-            if self._current_mode is Mode.PID:
-                desired_pwm = self.controller(input_=delta_T)
-                self.set_pwm(desired_pwm)
-                (
-                    results["Controller Output P"],
-                    results["Controller Output I"],
-                    results["Controller Output D"],
-                ) = self.controller.components
-            else:
-                (
-                    results["Controller Output P"],
-                    results["Controller Output I"],
-                    results["Controller Output D"],
-                ) = (0, 0, 0)
+            results = self._measure_normal_mode()
+
+        # Calculate control related signals depending on whether the controller is active
+        if self._current_mode is Mode.PID_ON:
+            desired_pwm = self.controller(input_=results["Temperature Difference"])
+            (
+                results["Controller Output P"],
+                results["Controller Output I"],
+                results["Controller Output D"],
+            ) = self.controller.components
+            results["Controller Output"] = self.controller._last_output
+        else:
+            desired_pwm = 0
+            (
+                results["Controller Output P"],
+                results["Controller Output I"],
+                results["Controller Output D"],
+                results["Controller Output"],
+            ) = (0, 0, 0, 0)
+
+        # Decide whether to set a new pwm value:
+        # If the flow is too low do not heat!
+        if results["Flow"] < FLOW_LIMIT_FOR_HEATING:
+            self.set_pwm(0)
+        # If we're in PID mode set the previously calculated value
+        elif self._current_mode is Mode.PID_ON:
+            self._current_pwm_value = desired_pwm
+            self.set_pwm(desired_pwm)
+        # If we're not in PID mode the pwm setting is handled directly via the slider
+        else:
+            pass
+
+        # Store the current measurement
+        self.results = results
+        if self._buffering:
+            # Buffer multiple measurements in the measurement buffer
             self.measurement_buffer.update(results)
+
+    def _measure_simulation_mode(self):
+        T_1 = 25 + np.random.rand()
+        T_2 = 30 + np.random.rand()
+        delta_T = T_2 - T_1
+        results_timestamp = time.time()
+        results = {
+            "Temperature 1": T_1,
+            "Temperature 2": T_2,
+            "Humidity 1": 50 + np.random.rand(),
+            "Humidity 2": 30 + np.random.rand(),
+            "Flow": 50 + np.random.rand(),
+            "Time": results_timestamp,
+            "Temperature Difference": delta_T,
+            "PWM": self._current_pwm_value,
+            "Flow Estimate": self.calculate_massflow_estimate(
+                delta_t=delta_T, pwm=self._current_pwm_value
+            ),
+            "Target Delta T": self._setpoint,
+        }
+        return results
+
+    def _measure_normal_mode(self):
+        logger.info("Measuring once...")
+        results_eks = self._eks.measure()
+        results_sfc = self._sfc.measure()
+        results_timestamp = time.time()
+        delta_T = results_eks[1]["Temperature"] - results_eks[0]["Temperature"]
+        results = {
+            "Temperature 1": results_eks[0]["Temperature"],
+            "Temperature 2": results_eks[1]["Temperature"],
+            "Humidity 1": results_eks[0]["Humidity"],
+            "Humidity 2": results_eks[1]["Humidity"],
+            "Flow": results_sfc["Flow"],
+            "Time": results_timestamp,
+            "Temperature Difference": delta_T,
+            "PWM": self._current_pwm_value,
+            "Flow Estimate": self.calculate_massflow_estimate(
+                delta_t=delta_T, pwm=self._current_pwm_value
+            ),
+            "Target Delta T": self._setpoint,
+        }
+        return results
+
+    def start_buffering(self):
+        if self._buffering:
+            logger.error("Cannot start buffering, already recording to buffer!")
+        else:
+            self._buffering = True
+            self.measurement_buffer.clear()
+
+    def stop_buffering(self):
+        if not self._buffering:
+            logger.error("Cannot stop buffering, not currenly recording to buffer!")
+        else:
+            self._buffering = False
 
     def start_measurement_thread(self):
         if self._measurement_timer is None:
@@ -195,6 +246,8 @@ class Setup(object):
 
     def stop_measurement_thread(self):
         if self._measurement_timer is not None:
+            self.set_pwm(0)
+            self.controller.reset()
             self._measurement_timer.cancel()
             self._measurement_timer = None
             logger.info("Stopped measurement thread.")
@@ -202,23 +255,30 @@ class Setup(object):
             logger.error("Measurement thread not started yet!")
 
     def set_pwm(self, value):
-        value = float(value)
-        if not 0.0 <= value <= 1.0:
-            raise ValueError("PWM value: {} has to be between 0 and 1".format(value))
-        self._current_pwm_value = value
-        # convert to heater units:
-        value = int(value * 65535.0)
-        self._heater.set_pwm(pwm_bit=0, dc=value)
-
-    def wrap_set_pwm(self, value):
-        if self._current_mode is not Mode.FORCE_PWM:
-            raise RuntimeError(
-                "PWM cannot be forced if system is not in FORCE_PWM mode!"
-            )
         if self._simulation_mode:
-            self._current_pwm_value = float(value)
-        else:
-            self.set_pwm(value)
+            self._heater.set_pwm(pwm_bit=0, dc=0)
+            self._current_pwm_value = 0
+        elif self._current_mode in [Mode.IDLE, Mode.FORCE_PWM_OFF, Mode.PID_OFF]:
+            self._heater.set_pwm(pwm_bit=0, dc=0)
+            self._current_pwm_value = 0
+        elif self._current_mode in [Mode.FORCE_PWM_ON, Mode.PID_ON]:
+            value = float(value)
+            if not 0.0 <= value <= 1.0:
+                raise ValueError(
+                    "PWM value: {} has to be between 0 and 1".format(value)
+                )
+            # Safety check: If the flow is smaller than 20.0 slm, heating will not be allowed
+            if value != 0:
+                if self.measurement_buffer["Flow"]:
+                    if self.measurement_buffer["Flow"][-1] < FLOW_LIMIT_FOR_HEATING:
+                        value = 0
+                else:
+                    value = 0
+            # Register the newly set pwm value for later recording
+            self._current_pwm_value = value
+            # convert to heater units:
+            value = int(value * 65535.0)
+            self._heater.set_pwm(pwm_bit=0, dc=value)
 
     def set_setpoint(self, value):
         value = float(value)
@@ -229,35 +289,47 @@ class Setup(object):
         self._setpoint = value
         self.controller.setpoint = value
 
-    def set_Kp(self, Kp):
-        self.set_pid_parameters(Kp=float(Kp))
+    def set_Kp(self, kp):
+        self.set_pid_parameters(kp=float(kp))
 
-    def set_Ki(self, Ki):
-        self.set_pid_parameters(Ki=float(Ki))
+    def set_Ki(self, ki):
+        self.set_pid_parameters(ki=float(ki))
 
-    def set_Kd(self, Kd):
-        self.set_pid_parameters(Kd=float(Kd))
+    def set_Kd(self, kd):
+        self.set_pid_parameters(kd=float(kd))
 
-    def set_pid_parameters(self, Kp=None, Ki=None, Kd=None):
-        if Kp is None:
-            Kp = self.controller.Kp
-        if Ki is None:
-            Ki = self.controller.Ki
-        if Kd is None:
-            Kd = self.controller.Kd
-        self.controller.tunings = (Kp, Ki, Kd)
+    def set_pid_parameters(self, kp=None, ki=None, kd=None):
+        if kp is None:
+            kp = self.controller.Kp
+        if ki is None:
+            ki = self.controller.Ki
+        if kd is None:
+            kd = self.controller.Kd
+        self.controller.tunings = (kp, ki, kd)
 
     def start_pid_controller(self, setpoint=None):
-        self._current_mode = Mode.PID
+        self._current_mode = Mode.PID_OFF
         if setpoint is not None:
             self._setpoint = setpoint
 
     def start_direct_power_setting(self):
-        self._current_mode = Mode.FORCE_PWM
-        if self._simulation_mode:
-            pass
-        else:
-            self.set_pwm(value=0)
+        self._current_mode = Mode.FORCE_PWM_OFF
+        self.set_pwm(value=0)
+
+    def enable_output(self, desired_pwm_output=0):
+        self.controller.reset()
+        if self._current_mode is Mode.PID_OFF:
+            self._current_mode = Mode.PID_ON
+        elif self._current_mode is Mode.FORCE_PWM_OFF:
+            self._current_mode = Mode.FORCE_PWM_ON
+            self.set_pwm(desired_pwm_output)
+
+    def disable_output(self):
+        if self._current_mode is Mode.PID_ON:
+            self._current_mode = Mode.PID_OFF
+        elif self._current_mode is Mode.FORCE_PWM_ON:
+            self._current_mode = Mode.FORCE_PWM_OFF
+        self.set_pwm(0)
 
     @staticmethod
     def calculate_massflow_estimate(delta_t, pwm):

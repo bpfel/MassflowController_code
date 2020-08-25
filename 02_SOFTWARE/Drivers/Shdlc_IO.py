@@ -255,5 +255,3 @@ if __name__ == "__main__":
         h.set_pwm(pwm_bit=0, dc=1000)
         print(h.get_pwm(pwm_bit=0))
         h.set_pwm(pwm_bit=0, dc=0)
-
-    print("lölö")
