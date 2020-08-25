@@ -1,4 +1,4 @@
-from GUI.LivePlots import PlotWidgetFactory
+from GUI.CustomWidgets.LivePlots import PlotWidgetFactory
 from GUI.CustomWidgets.Widgets import *
 import logging
 
@@ -8,14 +8,17 @@ INDEX_COMPETITION_WIDGET = 1
 
 
 class ExperimentPage(QWidget):
-    def __init__(self, setup, start_action, stop_action, name):
+    def __init__(self, setup, start_action, stop_action, enable_output_action, name):
         super(ExperimentPage, self).__init__()
         self.setup = setup
         self.name = name
         self.mode = 0
         self.plot_widget_factory = PlotWidgetFactory(setup=setup)
         self.competition_widget = CompetitionWidget(
-            setup=setup, start_action=start_action, stop_action=stop_action
+            setup=setup,
+            start_action=start_action,
+            stop_action=stop_action,
+            enable_output_action=enable_output_action,
         )
         self.vertical_layout_controls = QVBoxLayout()
         self.vertical_layout_plots = QVBoxLayout()
@@ -24,11 +27,21 @@ class ExperimentPage(QWidget):
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addLayout(self.vertical_layout_controls, 1)
         self.horizontal_layout.addLayout(self.vertical_layout_plots, 3)
-        self.setLayout(self.horizontal_layout)
+        self.vertical_layout_title = QVBoxLayout()
+        self.title_label = QLabel(self.name)
+        self.title_label.setFont(QFont("Arial", 12, QFont.Bold))
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.vertical_layout_title.addWidget(self.title_label)
+        self.vertical_layout_title.addLayout(self.horizontal_layout)
+        self.setLayout(self.vertical_layout_title)
 
     def enter(self):
+        self.title_label.setText(self.name)
+        self.enter_individual()
+
+    def enter_individual(self):
         NotImplementedError(
-            "enter() sequence for page {} not implemented!".format(self.name)
+            "enter_individual() sequence for page {} not implemented!".format(self.name)
         )
 
     def leave(self):
@@ -79,13 +92,17 @@ class ExperimentPage(QWidget):
         self.vertical_layout_controls.removeWidget(self.competition_widget)
         self.competition_widget.setVisible(False)
 
+    def desired_pwm_output(self):
+        raise NotImplementedError()
+
 
 class PWMSetting(ExperimentPage):
-    def __init__(self, setup, start_action, stop_action):
+    def __init__(self, setup, start_action, stop_action, enable_output_action):
         super(PWMSetting, self).__init__(
             setup=setup,
             start_action=start_action,
             stop_action=stop_action,
+            enable_output_action=enable_output_action,
             name="PWM Setting Page",
         )
         # Create controls
@@ -102,31 +119,35 @@ class PWMSetting(ExperimentPage):
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.power())
 
     def set_pwm_value(self):
-        self.setup.wrap_set_pwm(value=self.pwm.value)
+        self.setup.set_pwm(value=self.pwm.value)
 
-    def enter(self):
+    def enter_individual(self):
         self.setup.start_direct_power_setting()
 
     def leave_individual(self):
-        self.setup.wrap_set_pwm(0)
+        self.setup.set_pwm(0)
 
     def pause(self):
         self.pwm.value = 0
 
+    def desired_pwm_output(self):
+        return self.pwm.value
+
 
 class PIDSetting(ExperimentPage):
-    def __init__(self, setup, start_action, stop_action):
+    def __init__(self, setup, start_action, stop_action, enable_output_action):
         super(PIDSetting, self).__init__(
             setup=setup,
             start_action=start_action,
             stop_action=stop_action,
+            enable_output_action=enable_output_action,
             name="PID Setting Page",
         )
 
         # Create controls
-        self.p_gain = AnnotatedSlider(min=0, max=0.1, title="K_p")
-        self.i_gain = AnnotatedSlider(min=0, max=0.1, title="K_i")
-        self.d_gain = AnnotatedSlider(min=0, max=0.1, title="K_d")
+        self.p_gain = AnnotatedSlider(min=0, max=0.3, title="K_p")
+        self.i_gain = AnnotatedSlider(min=0, max=0.3, title="K_i")
+        self.d_gain = AnnotatedSlider(min=0, max=0.3, title="K_d")
         self.p_gain.value = 0.0
         self.i_gain.value = 0.0
         self.d_gain.value = 0.0
@@ -153,7 +174,7 @@ class PIDSetting(ExperimentPage):
     def set_d_value(self):
         self.setup.set_Kd(self.d_gain.value)
 
-    def enter(self):
+    def enter_individual(self):
         logger.info("Start PID controller")
         self.setup.start_pid_controller()
 
@@ -164,3 +185,6 @@ class PIDSetting(ExperimentPage):
 
     def pause(self):
         pass
+
+    def desired_pwm_output(self):
+        return 0

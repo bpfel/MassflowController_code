@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GUI.ExperimentPages import *
+import os
 
 logger = logging.getLogger("root")
 
@@ -23,13 +24,14 @@ class MainWindow(QMainWindow):
         self.setup_tool_bar()
         self.setup_status_bar()
 
-        # Main stack
+        # Main layout
         self.stack = QStackedWidget()
         self.stack.addWidget(
             PWMSetting(
                 setup=self.setup,
                 start_action=self._start_recording,
                 stop_action=self._stop_recording,
+                enable_output_action=self._toggle_output,
             )
         )
         self.stack.addWidget(
@@ -37,6 +39,7 @@ class MainWindow(QMainWindow):
                 setup=self.setup,
                 start_action=self._start_recording,
                 stop_action=self._stop_recording,
+                enable_output_action=self._toggle_output,
             )
         )
         self.setCentralWidget(self.stack)
@@ -91,14 +94,52 @@ class MainWindow(QMainWindow):
 
         toolbar.addSeparator()
 
-        self.action_competition_mode = QPushButton(
-            QIcon("./GUI/Icons/smiley-money.png"), "", self
-        )
+        self.action_competition_mode = QPushButton("Competition Mode", self)
         self.action_competition_mode.setStatusTip("Win a guided tour at Sensirion!")
         self.action_competition_mode.setCheckable(True)
         self.action_competition_mode.setChecked(False)
         self.action_competition_mode.clicked.connect(self._change_competition_mode)
         toolbar.addWidget(self.action_competition_mode)
+
+        self.action_toggle_output = QPushButton("Toggle Output", self)
+        self.action_toggle_output.setStatusTip("Turn the heater on or off.")
+        self.action_toggle_output.setCheckable(True)
+        self.action_toggle_output.setStyleSheet(
+            """
+        QPushButton {
+            background: rgba(0, 102, 255, 50);
+        }
+        """
+        )
+        self.action_toggle_output.setChecked(False)
+        self.action_toggle_output.clicked.connect(self._toggle_output)
+        toolbar.addWidget(self.action_toggle_output)
+
+    def _toggle_output(self, state=None):
+        if state is not None:
+            self.action_toggle_output.setChecked(state)
+        if self.action_toggle_output.isChecked():
+            # Enable output
+            self.setup.enable_output(self.stack.currentWidget().desired_pwm_output())
+            # Change appearance of button
+            self.action_toggle_output.setStyleSheet(
+                """
+            QPushButton {
+                background: rgba(255, 51, 0, 100);
+            }
+            """
+            )
+        else:
+            # Disable output
+            self.setup.disable_output()
+            # Change appearance of button
+            self.action_toggle_output.setStyleSheet(
+                """
+            QPushButton {
+                background: rgba(0, 102, 255, 100);
+            }
+            """
+            )
 
     def _change_competition_mode(self):
         if self.action_competition_mode.isChecked():
