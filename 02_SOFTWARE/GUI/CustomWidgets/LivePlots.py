@@ -8,10 +8,10 @@ logger = logging.getLogger("root")
 
 
 class LivePlotSignal(object):
-    def __init__(self, name, identifier, color):
+    def __init__(self, name, identifier, color, width=1):
         self.name = name
         self.identifier = identifier
-        self.pen = pyqtgraph.mkPen(color=color)
+        self.pen = pyqtgraph.mkPen(color=color, width=width)
         self.data_line = None
 
 
@@ -56,12 +56,13 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
                     - self.setup.measurement_buffer["Time"][-1]
                     + self.setup.interval_s
                 )
+                n_entries = len(shifted_time_axis)
                 for signal in self.signals:
                     signal.data_line.setData(
                         numpy.asarray(shifted_time_axis).flatten(),
                         numpy.asarray(
                             self.setup.measurement_buffer[signal.identifier]
-                        ).flatten(),
+                        ).flatten()[0:n_entries],
                     )
             else:
                 # No signals added yet
@@ -117,10 +118,13 @@ class LivePlotWidgetCompetition(LivePlotWidget):
                     - self.setup.measurement_buffer["Time"][-1]
                     + self.setup.interval_s
                 )
+                n_entries = len(shifted_time_axis)
                 for signal in self.signals:
                     signal.data_line.setData(
                         numpy.asarray(shifted_time_axis).flatten(),
-                        numpy.asarray(self.setup.measurement_buffer[signal.identifier]),
+                        numpy.asarray(
+                            self.setup.measurement_buffer[signal.identifier]
+                        ).flatten()[0:n_entries],
                     )
                 self.fill_between.setCurves(
                     curve1=self.signals[0].data_line, curve2=self.signals[1].data_line
@@ -184,7 +188,7 @@ class PlotWidgetFactory:
         signal_i = LivePlotSignal(name="I", identifier="Controller Output I", color="g")
         signal_d = LivePlotSignal(name="D", identifier="Controller Output D", color="b")
         signal_pid = LivePlotSignal(
-            name="PID", identifier="Controller Output", color="k"
+            name="PID", identifier="Controller Output", color="k", width=2
         )
         graph_pid.add_signals([singal_p, signal_i, signal_d, signal_pid])
         return graph_pid

@@ -48,11 +48,14 @@ class FancyPointCounter(QLCDNumber):
 
 
 class CompetitionWidget(FramedWidget):
-    def __init__(self, setup, start_action, stop_action, *args, **kwargs):
+    def __init__(
+        self, setup, start_action, stop_action, enable_output_action, *args, **kwargs
+    ):
         super(CompetitionWidget, self).__init__(*args, **kwargs)
         self.setup = setup
         self.stop = stop_action
         self.start = start_action
+        self.output = enable_output_action
 
         self.fancy_counter = FancyPointCounter(setup=setup)
         self.start_button = QPushButton(
@@ -101,6 +104,7 @@ class CompetitionWidget(FramedWidget):
             self.progressbar.setValue(0)
             self.start()
             self.setup.measurement_buffer.clear()
+            self.output(True)
             self.start_button.setDisabled(True)
         else:
             self.error_message.showMessage(
@@ -116,6 +120,7 @@ class CompetitionWidget(FramedWidget):
             self.fancy_counter.stop()
             self.progressbar.setValue(self.progressbar.maximum())
             self.stop()
+            self.output(False)
             self.start_button.setEnabled(True)
             self.success_message.showMessage(
                 "Congratulations, you accumulated only {} points!".format(
