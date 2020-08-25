@@ -5,9 +5,12 @@ Contains all the code needed to set up the computing platform and interact with 
 
 1. [Install python 3.8](https://www.python.org/) or newer.
 2. Set your PATH variable such that it includes the `Scripts` folder of your python installation.
-3. Go to `01_SETUP/WINDOWS` and run py -m setup.py
+3. Go to `01_SETUP/WINDOWS` and run `py -m setup` in the cmd shell.
 4. Install [Sensirion Control Center](https://www.sensirion.com/de/controlcenter/) to allow the sensor bridge to communication with the computer. Important: Select yes when asked for driver installation at the end of the process.
 5. Find the finished executable at `02_SOFTWARE/disp'.
+
+## Debugging
+Installation via pyinstaller is configured via the `02_SOFTWARE/main.spec` file. Set `debug=True` and `console=True` to receive informative output+ on the cmd shell upon launching the program.
 
 
 # Acknowledgements
