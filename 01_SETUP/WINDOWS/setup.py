@@ -10,6 +10,8 @@ os.system('echo finished installing requirements')
 
 os.system('echo starting installation')
 
-os.system("pyinstaller ../../02_SOFTWARE/main.spec")
+os.chdir("../../02_SOFTWARE")
+
+os.system("pyinstaller main.spec")
 
 os.system('echo finished installation')
