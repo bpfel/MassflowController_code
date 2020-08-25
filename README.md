@@ -1,5 +1,14 @@
-# MassflowController_code
+# Air Massflow Sensor Setup
 Contains all the code needed to set up the computing platform and interact with the sensors for the mass flow experiment.
+
+# Setup on Windows 10
+
+1. [Install python 3.8](https://www.python.org/) or newer.
+2. Set your PATH variable such that it includes the `Scripts` folder of your python installation.
+3. Go to `01_SETUP/WINDOWS` and run py -m setup.py
+4. Install [Sensirion Control Center](https://www.sensirion.com/de/controlcenter/) to allow the sensor bridge to communication with the computer. Important: Select yes when asked for driver installation at the end of the process.
+5. Find the finished executable at `02_SOFTWARE/disp'.
+
 
 # Acknowledgements
 The icons in the GUI are made by [Yusuke Kamiyamane](https://p.yusukekamiyamane.com) and used under [CC BY 3.0](https://p.yusukekamiyamane.com).
