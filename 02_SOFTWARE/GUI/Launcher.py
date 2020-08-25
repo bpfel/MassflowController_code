@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GUI.ExperimentPages import *
-import os
+from GUI.Utils import resource_path
 
 logger = logging.getLogger("root")
 
@@ -52,14 +52,14 @@ class MainWindow(QMainWindow):
 
         # Set up actions
         self.action_stop_recording = QAction(
-            QIcon("./GUI/Icons/control-stop-square.png"), "Stop recording", self
+            QIcon(resource_path("Icons\\control-stop-square.png")), "Stop recording", self
         )
         self.action_stop_recording.setStatusTip("Stop recording measurements")
         self.action_stop_recording.triggered.connect(self._stop_recording)
         toolbar.addAction(self.action_stop_recording)
 
         self.action_start_recording = QAction(
-            QIcon("./GUI/Icons/control.png"), "Start recording", self
+            QIcon(resource_path("Icons\\control.png")), "Start recording", self
         )
         self.action_start_recording.setStatusTip("Start recording measurements")
         self.action_start_recording.triggered.connect(self._start_recording)
@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.action_previous_view = QAction(
-            QIcon("./GUI/Icons/arrow-180.png"), "Previous View", self
+            QIcon(resource_path("Icons\\arrow-180.png")), "Previous View", self
         )
         self.action_previous_view.setStatusTip("Go to previous view")
         self.action_previous_view.triggered.connect(self._go_to_previous_view)
@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.action_previous_view)
 
         self.action_next_view = QAction(
-            QIcon("./GUI/Icons/arrow.png"), "Next View", self
+            QIcon(resource_path("Icons\\arrow.png")), "Next View", self
         )
         self.action_next_view.setStatusTip("Go to next view")
         self.action_next_view.triggered.connect(self._go_to_next_view)
@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.action_reset_plots = QAction(
-            QIcon("./GUI/Icons/application-monitor.png"), "Reset Plots", self
+            QIcon(resource_path("Icons\\application-monitor.png")), "Reset Plots", self
         )
         self.action_reset_plots.setStatusTip("Reset plots to original axis limits")
         self.action_reset_plots.triggered.connect(self._reset_plots)
@@ -188,11 +188,11 @@ class MainWindow(QMainWindow):
         self.stack.currentWidget().reset_plots()
 
     def setup_status_bar(self):
-        sensirion_img = QPixmap("GUI/Icons/sensirion.png")
+        sensirion_img = QPixmap(resource_path("Icons\\sensirion.png"))
         sensirion_logo = QLabel(self)
         sensirion_logo.setPixmap(sensirion_img.scaledToHeight(32))
         sensirion_logo.setAlignment(Qt.AlignLeft)
-        eth_img = QPixmap("GUI/Icons/eth.png")
+        eth_img = QPixmap(resource_path("Icons\\eth.png"))
         eth_logo = QLabel(self)
         eth_logo.setPixmap(eth_img.scaledToHeight(32))
         eth_logo.setAlignment(Qt.AlignRight)
