@@ -10,7 +10,7 @@ Contains all the code needed to set up the computing platform and interact with 
 5. Find the finished executable at `02_SOFTWARE/disp'.
 
 ## Debugging
-Installation via pyinstaller is configured via the `02_SOFTWARE/main.spec` file. Set `debug=True` and `console=True` to receive informative output+ on the cmd shell upon launching the program.
+The installation is based on pyinstaller. It is configured via the `02_SOFTWARE/main.spec` file. Set `debug=True` and `console=True` to receive informative output+ on the cmd shell upon launching the program.
 
 
 # Acknowledgements
