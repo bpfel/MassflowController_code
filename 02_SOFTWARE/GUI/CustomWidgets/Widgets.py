@@ -1,4 +1,5 @@
 from GUI.CustomWidgets.Basis import *
+from GUI.Utils import resource_path
 import logging
 import numpy
 import time
@@ -59,7 +60,7 @@ class CompetitionWidget(FramedWidget):
 
         self.fancy_counter = FancyPointCounter(setup=setup)
         self.start_button = QPushButton(
-            QIcon("./GUI/Icons/control-record.png"), "", self
+            QIcon(resource_path("Icons\\control-record.png")), "", self
         )
         self.start_button.setFixedSize(32, 32)
         self.start_button.setStatusTip(
