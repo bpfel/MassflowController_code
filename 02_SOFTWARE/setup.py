@@ -1,4 +1,4 @@
-from Drivers.SHT31 import EKS
+from Drivers.SHT import EKS
 from Drivers.SFX5400 import SFX5400
 from Drivers.Shdlc_IO import ShdlcIoModule
 from Drivers.DeviceIdentifier import DeviceIdentifier
@@ -16,6 +16,15 @@ FLOW_LIMIT_FOR_HEATING = 20.0
 
 
 class Mode(Enum):
+    """
+    Defines a set of system modes.
+
+    1. IDLE: Before any of the experiment modes has been loaded the system is idle.
+    2. FORCE_PWM_OFF: In this mode the pwm can be set directly, but the output is currently turned off.
+    3. FORCE_PWM_ON: In this mode the pwm can be set directly.
+    4. PID_OFF: In this mode the pid parameters can be set, but the output is currently turned off.
+    5. PID_ON: In this mode the pid parameters can be set and the controller is allowed to set pwm values.
+    """
     IDLE = 0  # Not started yet
     FORCE_PWM_OFF = 1  # User defines PWM
     FORCE_PWM_ON = 2
@@ -24,15 +33,16 @@ class Mode(Enum):
 
 
 class Setup(object):
+    """
+    The Setup handles all interaction with the hardware of the experiment.
+
+    :param serials: Dictionary of device names and corresponding USB serials.
+    :param t_sampling_s: Measurement sampling time in seconds.
+    :param interval_s: Total buffered time interval in seconds, which in combination with the sampling time defines
+       the number of stored measurements.
+    """
+
     def __init__(self, serials: dict, t_sampling_s: float, interval_s: float):
-        """
-        Upon initialization the setup receives serials of the connected USB devices, the target sampling time
-           for measurements and the total buffered interval.
-        :param serials: Dictionary of device names and corresponding USB serials.
-        :param t_sampling_s: Measurement sampling time in seconds.
-        :param interval_s: Total buffered time interval in seconds, which in combination with the sampling time defines
-           the number of stored measurements.
-        """
         # allocate private member variables
         self._serials = serials
         self._t_sampling_s = t_sampling_s
@@ -95,8 +105,8 @@ class Setup(object):
     def open(self) -> None:
         """
         Finds and opens all the USB devices previously defined within self.serials by their serial number.
-           If one of the devices is not responsive or cannot be found, the setup is switching to simulation mode
-           in which all measurements are simulated. This allows to test the GUI without any attached devices.
+        If one of the devices is not responsive or cannot be found, the setup is switching to simulation mode
+        in which all measurements are simulated. This allows to test the GUI without any attached devices.
         """
         # todo: Link to DeviceIdentifier
         self._devices = DeviceIdentifier(serials=self._serials)
@@ -123,7 +133,10 @@ class Setup(object):
             self._simulation_mode = True
             logger.warning("Entering simulation mode.")
 
-    def close(self):
+    def close(self) -> None:
+        """
+        Closes all connected devices.
+        """
         self.stop_measurement_thread()
         if self._simulation_mode:
             pass
@@ -133,9 +146,19 @@ class Setup(object):
             self._heater.close()
 
     def __enter__(self):
+        """
+        Ensures compatibility with 'with' statement.
+        :return: Returns a reference to the current instance.
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Called when exiting the context established by the 'with' statement.
+
+        .. warning: Only use this class inside a 'with' statement to ensure calling the shut down procedure for every
+           connected platform even upon an unscheduled end of the program.
+        """
         if isinstance(exc_val, KeyboardInterrupt):
             logger.info("Experiment aborted with Keyboard-Interrupt!")
             self.close()
@@ -147,9 +170,19 @@ class Setup(object):
             )
             self.close()
         else:
+            logger.info("Experiment ended regularly.")
             self.close()
 
-    def measure(self):
+    def measure(self) -> None:
+        """
+        Handles measuring and storing signals depending on the system mode and handles updating the PID
+        controller output.
+
+        .. seealso::
+           :meth:`_measure_simulation_mode`
+           :meth:`_measure_normal_mode`
+           :mod:`Utility.MeasurementBuffer`
+        """
         # Retrieve all recorded signals depending on system mode
         if self._simulation_mode:
             results = self._measure_simulation_mode()
@@ -192,7 +225,12 @@ class Setup(object):
             # Buffer multiple measurements in the measurement buffer
             self.measurement_buffer.update(results)
 
-    def _measure_simulation_mode(self):
+    def _measure_simulation_mode(self) -> dict:
+        """
+        When no devices are connected random values are generated instead of actual measurements.
+
+        :return: A dictionary with all signals
+        """
         T_1 = 25 + np.random.rand()
         T_2 = 30 + np.random.rand()
         delta_T = T_2 - T_1
@@ -213,7 +251,12 @@ class Setup(object):
         }
         return results
 
-    def _measure_normal_mode(self):
+    def _measure_normal_mode(self) -> dict:
+        """
+        Measures all devices.
+
+        :return: A dictionary with all measured signals.
+        """
         logger.info("Measuring once...")
         results_eks = self._eks.measure()
         results_sfc = self._sfc.measure()
@@ -235,20 +278,32 @@ class Setup(object):
         }
         return results
 
-    def start_buffering(self):
+    def start_buffering(self) -> None:
+        """
+        Start recording measurements in the MeasurementBuffer and delete previously recorded measurements.
+        """
         if self._buffering:
             logger.error("Cannot start buffering, already recording to buffer!")
         else:
             self._buffering = True
             self.measurement_buffer.clear()
 
-    def stop_buffering(self):
+    def stop_buffering(self) -> None:
+        """
+        Stop recording measurements in the MeasurementBuffer.
+        """
         if not self._buffering:
             logger.error("Cannot stop buffering, not currenly recording to buffer!")
         else:
             self._buffering = False
 
-    def start_measurement_thread(self):
+    def start_measurement_thread(self) -> None:
+        """
+        Creates a thread.Timer that schedules future measurements at the desired sampling time.
+
+        .. seealso::
+           :mod:`Utility.Timer`
+        """
         if self._measurement_timer is None:
             self.measurement_buffer.clear()
             self._measurement_timer = RepeatTimer(
@@ -263,7 +318,10 @@ class Setup(object):
         else:
             logger.error("Measurement thread already running!")
 
-    def stop_measurement_thread(self):
+    def stop_measurement_thread(self) -> None:
+        """
+        Cancels the current measurement thread.
+        """
         if self._measurement_timer is not None:
             self.set_pwm(0)
             self.controller.reset()
@@ -273,7 +331,15 @@ class Setup(object):
         else:
             logger.error("Measurement thread not started yet!")
 
-    def set_pwm(self, value):
+    def set_pwm(self, value: float) -> None:
+        """
+        Safely sets the desired PWM value depending on the current system mode.
+
+        :param value: Desired PWM value as a normalized value between 0 and 1.
+
+        .. seealso::
+           :mod:`setup.Mode`
+        """
         if self._simulation_mode:
             self._current_pwm_value = 0
         elif self._current_mode in [Mode.IDLE, Mode.FORCE_PWM_OFF, Mode.PID_OFF]:
@@ -298,7 +364,11 @@ class Setup(object):
             value = int(value * 65535.0)
             self._heater.set_pwm(pwm_bit=0, dc=value)
 
-    def set_setpoint(self, value):
+    def set_setpoint(self, value: float) -> None:
+        """
+        Allows to define the temperature difference setpoint.
+        :param value: Positive value smaller 20 degrees.
+        """
         value = float(value)
         if value < 0:
             raise RuntimeError("This is a heating setup. Not a fridge, dummy!")
@@ -307,16 +377,34 @@ class Setup(object):
         self._setpoint = value
         self.controller.setpoint = value
 
-    def set_Kp(self, kp):
+    def set_Kp(self, kp: float) -> None:
+        """
+        Allows setting the Kp gain of the controller.
+        :param kp: Kp gain of the controller.
+        """
         self.set_pid_parameters(kp=float(kp))
 
-    def set_Ki(self, ki):
+    def set_Ki(self, ki) -> None:
+        """
+        Allows setting the Ki gain of the controller.
+        :param ki: Ki gain of the controller
+        """
         self.set_pid_parameters(ki=float(ki))
 
-    def set_Kd(self, kd):
+    def set_Kd(self, kd) -> None:
+        """
+        Allows setting the Kd gain of the controller.
+        :param kd: Kd gain of the controller
+        """
         self.set_pid_parameters(kd=float(kd))
 
-    def set_pid_parameters(self, kp=None, ki=None, kd=None):
+    def set_pid_parameters(self, kp=None, ki=None, kd=None) -> None:
+        """
+        Interface to the pid-setting functionality of simple_pid.
+        :param kp: Kp gain of the controller
+        :param ki: Ki gain of the controller
+        :param kd: Kd gain of the controller
+        """
         if kp is None:
             kp = self.controller.Kp
         if ki is None:
@@ -325,16 +413,27 @@ class Setup(object):
             kd = self.controller.Kd
         self.controller.tunings = (kp, ki, kd)
 
-    def start_pid_controller(self, setpoint=None):
+    def start_pid_controller(self, setpoint=None) -> None:
+        """
+        Start pid mode with the output set to off.
+        :param setpoint: Can be used to define a new temperature difference setpoint.
+        """
         self._current_mode = Mode.PID_OFF
         if setpoint is not None:
             self._setpoint = setpoint
 
-    def start_direct_power_setting(self):
+    def start_direct_power_setting(self) -> None:
+        """
+        Start pwm mode with the output set to off.
+        """
         self._current_mode = Mode.FORCE_PWM_OFF
         self.set_pwm(value=0)
 
-    def enable_output(self, desired_pwm_output=0):
+    def enable_output(self, desired_pwm_output=0) -> None:
+        """
+        Enables the output in either pwn or pid mode.
+        :param desired_pwm_output: Optionally enable pwm mode with a predefined nonzero output.
+        """
         self.controller.reset()
         if self._current_mode is Mode.PID_OFF:
             self._current_mode = Mode.PID_ON
@@ -342,7 +441,10 @@ class Setup(object):
             self._current_mode = Mode.FORCE_PWM_ON
             self.set_pwm(desired_pwm_output)
 
-    def disable_output(self):
+    def disable_output(self) -> None:
+        """
+        Disable the output for either pwm or pid mode.
+        """
         if self._current_mode is Mode.PID_ON:
             self._current_mode = Mode.PID_OFF
         elif self._current_mode is Mode.FORCE_PWM_ON:
@@ -350,7 +452,12 @@ class Setup(object):
         self.set_pwm(0)
 
     @staticmethod
-    def calculate_massflow_estimate(delta_t, pwm):
+    def calculate_massflow_estimate(delta_t, pwm) -> float:
+        """
+        Calculate the massflow estimate depending on the measured temperature difference and the current output power
+        :param delta_t: Measured temperature difference
+        :param pwm: Current output power
+        """
         c_p = 1006.0  # joule / kilogram / kelvin
         resistance = 11  # ohm
         voltage = 24  # volt

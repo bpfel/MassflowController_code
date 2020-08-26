@@ -8,7 +8,7 @@ logger = logging.getLogger("root")
 
 class DeviceIdentifier:
     """
-    DeviceIdentifier list all connected USB devices and tries to identify all devices listed in self.serials.
+    The DeviceIdentifier lists all connected USB devices and tries to identify all devices listed in self.serials.
 
     :param serials: Dictionary with USB names as keys and USB serials as values.
 

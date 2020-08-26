@@ -98,10 +98,12 @@ class SFX5400(SensorBase):
     def get_device_information(self, index: int) -> str:
         """
         Retrieves device information depending on the index given.
+
         :param index: Integer between 1 and 3 to request on of the data below:
             1. Product Name
             2. Article Code
             3. Serial number
+
         :return: String containing the requested information.
         """
         return self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))

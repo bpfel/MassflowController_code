@@ -24,6 +24,7 @@ class PlatformBase(ABC):
     def open(self) -> bool:
         """
         Attempts to connect the platform and reports success.
+
         :return: True if connected succesifully, False otherwise.
         """
         logger.info('Connecting platform "{}"...'.format(self.name))
@@ -63,6 +64,7 @@ class PlatformBase(ABC):
     def __enter__(self) -> PlatformBase:
         """
         Ensures compatibility with 'with' statement.
+
         :return: Returns a reference to the current instance.
         """
         return self

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Mass Flow Sensor's documentation!
+Software Documentation: Air Mass Flow Sensor
 ============================================
 
 .. toctree::
@@ -11,6 +11,8 @@ Welcome to Mass Flow Sensor's documentation!
    :caption: Contents:
 
    setup
+   drivers
+   GUI
 
 
 

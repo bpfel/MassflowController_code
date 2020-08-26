@@ -1,16 +1,14 @@
-.. Mass Flow Sensor documentation master file, created by
-   sphinx-quickstart on Tue Aug 11 07:59:03 2020.
+.. Air Massflow Sensor documentation master file, created by
+   sphinx-quickstart on Wed Aug 26 15:15:52 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Mass Flow Sensor's documentation!
-============================================
+Welcome to Air Massflow Sensor's documentation!
+===============================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-   setup
 
 
 

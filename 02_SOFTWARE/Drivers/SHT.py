@@ -159,7 +159,8 @@ class SHT(SensorBase):
     def connect_sensor(self, supply_voltage, frequency) -> None:
         """
         Connection of a sensor attached to the sensirion sensor bridge according to
-           the quick start guide to sensirion-shdlc-sensorbridge.
+        the quick start guide to sensirion-shdlc-sensorbridge.
+
         :param supply_voltage: Desired supply voltage in Volts.
         :param frequency: I2C frequency in Hz
         """
