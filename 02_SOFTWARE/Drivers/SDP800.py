@@ -18,6 +18,7 @@ class SDP800(SensorBase):
        The SDP800 driver is not working correctly yet! Connection to the sensor works, but the return measurements
        appear to be wrongly interpreted.
     """
+
     def __init__(self, serial_port, device_port="TWO", name="Sdp800") -> None:
         super(SDP800, self).__init__(name)
         self.port = serial_port
@@ -69,7 +70,9 @@ class SDP800(SensorBase):
 
     def is_connected(self):
         # todo: implement this
-        raise NotImplementedError("This device does not yet work correctly. Driver needs work.")
+        raise NotImplementedError(
+            "This device does not yet work correctly. Driver needs work."
+        )
 
     def disconnect(self) -> None:
         """

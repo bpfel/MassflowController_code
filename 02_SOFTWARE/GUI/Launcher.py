@@ -1,7 +1,4 @@
 from setup import Setup
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from GUI.ExperimentPages import *
 from GUI.Utils import resource_path
 
@@ -9,7 +6,13 @@ logger = logging.getLogger("root")
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, setup: Setup, *args, **kwargs):
+    """
+    Defines the main window of the application.
+
+    :param setup: Instance of Setup to allow access to sensors and actuators.
+    """
+
+    def __init__(self, setup: Setup, *args, **kwargs) -> None:
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setup = setup
         self.setStyleSheet(
@@ -29,30 +32,35 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(
             PWMSetting(
                 setup=self.setup,
-                start_action=self._start_recording,
-                stop_action=self._stop_recording,
+                start_recording_action=self._start_recording,
+                stop_recording_action=self._stop_recording,
                 enable_output_action=self._toggle_output,
             )
         )
         self.stack.addWidget(
             PIDSetting(
                 setup=self.setup,
-                start_action=self._start_recording,
-                stop_action=self._stop_recording,
+                start_recording_action=self._start_recording,
+                stop_recording_action=self._stop_recording,
                 enable_output_action=self._toggle_output,
             )
         )
         self.setCentralWidget(self.stack)
         self.stack.currentWidget().enter()
 
-    def setup_tool_bar(self):
+    def setup_tool_bar(self) -> None:
+        """
+        Adds a toolbar to the main window and defines a set of actions for it.
+        """
         toolbar = QToolBar("MyMainToolbar")
         toolbar.setIconSize(QSize(24, 24))
         self.addToolBar(toolbar)
 
         # Set up actions
         self.action_stop_recording = QAction(
-            QIcon(resource_path("Icons\\control-stop-square.png")), "Stop recording", self
+            QIcon(resource_path("Icons\\control-stop-square.png")),
+            "Stop recording",
+            self,
         )
         self.action_stop_recording.setStatusTip("Stop recording measurements")
         self.action_stop_recording.triggered.connect(self._stop_recording)
@@ -115,7 +123,11 @@ class MainWindow(QMainWindow):
         self.action_toggle_output.clicked.connect(self._toggle_output)
         toolbar.addWidget(self.action_toggle_output)
 
-    def _toggle_output(self, state=None):
+    def _toggle_output(self, state=None) -> None:
+        """
+        Toolbar action; Allows to turn the pwm output on or off.
+        :param state: Set True to turn the output state to on, or False vice versa.
+        """
         if state is not None:
             self.action_toggle_output.setChecked(state)
         if self.action_toggle_output.isChecked():
@@ -141,7 +153,10 @@ class MainWindow(QMainWindow):
             """
             )
 
-    def _change_competition_mode(self):
+    def _change_competition_mode(self) -> None:
+        """
+        Toolbar action; Allows to set the current view to competition mode.
+        """
         if self.action_competition_mode.isChecked():
             # enter competition mode
             self.stack.currentWidget().switch_to_competition_mode()
@@ -149,18 +164,28 @@ class MainWindow(QMainWindow):
             # leave competition mode
             self.stack.currentWidget().switch_to_normal_mode()
 
-    def _stop_recording(self):
+    def _stop_recording(self) -> None:
+        """
+        Toolbar action; Allows to stop recording measurements and thus freeze the plots.
+        :return:
+        """
         self.action_stop_recording.setDisabled(True)
         self.setup.stop_buffering()
         self.stack.currentWidget().pause()
         self.action_start_recording.setEnabled(True)
 
-    def _start_recording(self):
+    def _start_recording(self) -> None:
+        """
+        Toolbar action; Allows to restart recording measurements. Clears the buffer.
+        """
         self.action_start_recording.setDisabled(True)
         self.setup.start_buffering()
         self.action_stop_recording.setEnabled(True)
 
-    def _go_to_previous_view(self):
+    def _go_to_previous_view(self) -> None:
+        """
+        Toolbar action; Switches to the previous view in the main layout stack.
+        """
         if self.stack.currentIndex() == 0:
             pass
         else:
@@ -172,7 +197,10 @@ class MainWindow(QMainWindow):
                 self.action_previous_view.setDisabled(True)
                 self.action_next_view.setEnabled(True)
 
-    def _go_to_next_view(self):
+    def _go_to_next_view(self) -> None:
+        """
+        Toolbar action; Switches to the next view in the main layout stack.
+        """
         if self.stack.currentIndex() == self.stack.count() - 1:
             pass
         else:
@@ -184,10 +212,16 @@ class MainWindow(QMainWindow):
                 self.action_next_view.setDisabled(True)
                 self.action_previous_view.setEnabled(True)
 
-    def _reset_plots(self):
+    def _reset_plots(self) -> None:
+        """
+        Toolbar action; Allows to reset all visible plots to their original view.
+        """
         self.stack.currentWidget().reset_plots()
 
-    def setup_status_bar(self):
+    def setup_status_bar(self) -> None:
+        """
+        Sets up a status bar displaying sponsor layouts and tips for hovered over widgets.
+        """
         sensirion_img = QPixmap(resource_path("Icons\\sensirion.png"))
         sensirion_logo = QLabel(self)
         sensirion_logo.setPixmap(sensirion_img.scaledToHeight(32))
@@ -203,6 +237,11 @@ class MainWindow(QMainWindow):
 
 
 class Launcher(object):
+    """
+    Wrapper for the main window, simply launches the Qt application.
+    :param setup: Instance of Setup to allow access to sensors and actuators.
+    """
+
     def __init__(self, setup: Setup):
         self.setup = setup
 

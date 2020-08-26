@@ -27,7 +27,9 @@ class ShdlcIoModule(PlatformBase):
     :param input_pins: list of integers of the input pins
     """
 
-    def __init__(self, serial_port: str, baudrate=115200, slave_address=0, input_pins=None) -> None:
+    def __init__(
+        self, serial_port: str, baudrate=115200, slave_address=0, input_pins=None
+    ) -> None:
         self.ShdlcDevice = None
         self._serial_port = serial_port
         self._baudrate = baudrate

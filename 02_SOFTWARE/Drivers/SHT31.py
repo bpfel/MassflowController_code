@@ -92,7 +92,12 @@ class SHT(SensorBase):
     :param name: Name of the sensor.
     """
 
-    def __init__(self, device_port: SensorBridgePort, shdlc_device: SensorBridgeShdlcDevice, name="SHT") -> None:
+    def __init__(
+        self,
+        device_port: SensorBridgePort,
+        shdlc_device: SensorBridgeShdlcDevice,
+        name="SHT",
+    ) -> None:
         super(SHT, self).__init__(name)
         self.ShdlcDevice = shdlc_device
         self.i2c_address = 0x44
@@ -104,9 +109,7 @@ class SHT(SensorBase):
             self.sensor_bridge_port = SensorBridgePort.TWO
         else:
             logger.error("Incorrect device_port chosen. Select either 0 or 1.")
-            raise ValueError(
-                "Incorrect device_port chosen. Select either 0 or 1."
-            )
+            raise ValueError("Incorrect device_port chosen. Select either 0 or 1.")
 
     def connect(self) -> bool:
         """

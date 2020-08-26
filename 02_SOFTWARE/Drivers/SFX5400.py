@@ -88,8 +88,10 @@ class SFX5400(SensorBase):
         try:
             self.ShdlcDevice.execute(Sfc5400ShdlcCmdSetSetpoint(setpoint_normalized))
         except Exception as e:
-            logger.error("Could not set the mass flow. Make sure there is a mass "
-                         "flow controller connected: {}".format(e))
+            logger.error(
+                "Could not set the mass flow. Make sure there is a mass "
+                "flow controller connected: {}".format(e)
+            )
             return False
         return True
 

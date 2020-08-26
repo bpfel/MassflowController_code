@@ -6,17 +6,18 @@ logger = logging.getLogger("root")
 
 class RepeatTimer(Timer):
     """
-    This class allows to run a timer repeatedly.
+    RepeatTimer allows to run a timer repeatedly.
 
-    Usage:
+    .. note:
+       Usage::
 
-        def dummyfn(msg="foo"):
-            print(msg)
+       def dummyfn(msg="foo"):
+           print(msg)
 
-        timer = RepeatTimer(1, dummyfn)
-        timer.start()
-        time.sleep(5)
-        timer.cancel()
+       timer = RepeatTimer(1, dummyfn)
+       timer.start()
+       time.sleep(5)
+       timer.cancel()
     """
 
     def run(self):

@@ -1,6 +1,7 @@
 import pyqtgraph
 from setup import Setup
 from PyQt5.QtCore import QTimer
+from typing import Tuple
 import numpy
 import logging
 
@@ -8,7 +9,16 @@ logger = logging.getLogger("root")
 
 
 class LivePlotSignal(object):
-    def __init__(self, name, identifier, color, width=1):
+    """
+    A LivePlotSignal stores all the information needed identify and plot a single signal.
+
+    :param name: Name of the signal, to be displayed on the legend of the plot the signal is shown on
+    :param identifier: Identifiert of the signal, used to retrieve the signal from the measurement buffer of the setup
+    :param color: Color of the plotted line used to instantiate the corresponding pen
+    :param width: Width of the plotted line used to instantiate the corresponding pen
+    """
+
+    def __init__(self, name: str, identifier: str, color: str, width=1):
         self.name = name
         self.identifier = identifier
         self.pen = pyqtgraph.mkPen(color=color, width=width)
@@ -16,7 +26,18 @@ class LivePlotSignal(object):
 
 
 class LivePlotWidget(pyqtgraph.PlotWidget):
-    def __init__(self, setup: Setup, title, ylabel, ylims, *args, **kwargs):
+    """
+    The LivePlotWidget makes use of pyqtgraph to allow plotting a number of signals. It automatically updates.
+
+    :param setup: Instance of the current setup to allow access to the measurement buffer
+    :param title: Title of the plot
+    :param ylabel: Label of the y-axis
+    :param ylims: Limits of the y-axis
+    """
+
+    def __init__(
+        self, setup: Setup, title: str, ylabel: str, ylims: Tuple, *args, **kwargs
+    ) -> None:
         super(LivePlotWidget, self).__init__(*args, **kwargs)
         self.setup = setup
         self.signals = []
@@ -37,7 +58,11 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 
-    def add_signals(self, signals):
+    def add_signals(self, signals: list) -> None:
+        """
+        Add a list of signals to the plot.
+        :param signals: List of LivePlotSignals
+        """
         self.addLegend()
         for signal in signals:
             # Create a line in the plot
@@ -49,6 +74,9 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
             self.addItem(signal.data_line)
 
     def update_plot_data(self):
+        """
+        Handles the updating of a LivePLotWidget.
+        """
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
                 shifted_time_axis = (
@@ -71,7 +99,10 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
             # No signals recorded yet
             pass
 
-    def reset_plot_layout(self):
+    def reset_plot_layout(self) -> None:
+        """
+        Allows to reset the plot layout to the original view
+        """
         if self.ylims is not None:
             self.setYRange(self.ylims[0], self.ylims[1])
         else:
@@ -84,6 +115,11 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
 
 
 class LivePlotWidgetCompetition(LivePlotWidget):
+    """
+    Specialized LivePLotWidget allowing only two signals and adding color between the two corresponding lines.
+    Used to visualize the integral of the control error.
+    """
+
     def __init__(self, setup: Setup, title, ylabel, ylims, *args, **kwargs):
         super(LivePlotWidgetCompetition, self).__init__(
             setup=setup, title=title, ylabel=ylabel, ylims=ylims, *args, **kwargs
@@ -132,6 +168,10 @@ class LivePlotWidgetCompetition(LivePlotWidget):
 
 
 class PlotWidgetFactory:
+    """
+    The PlotWidgetFactory defines a sipmle interface to create instances of previously defined LivePlotWidgets.
+    """
+
     def __init__(self, setup):
         self.setup = setup
 

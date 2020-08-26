@@ -44,15 +44,21 @@ class PlatformBase(ABC):
 
     @abstractmethod
     def disconnect(self):
-        raise NotImplementedError("'disconnect' not implemented for platform {}".format(self.name))
+        raise NotImplementedError(
+            "'disconnect' not implemented for platform {}".format(self.name)
+        )
 
     @abstractmethod
     def connect(self):
-        raise NotImplementedError("'connect' not implemented for platform {}".format(self.name))
+        raise NotImplementedError(
+            "'connect' not implemented for platform {}".format(self.name)
+        )
 
     @abstractmethod
     def is_connected(self):
-        raise NotImplementedError("'is_connected' not implemented for platform {}".format(self.name))
+        raise NotImplementedError(
+            "'is_connected' not implemented for platform {}".format(self.name)
+        )
 
     def __enter__(self) -> PlatformBase:
         """

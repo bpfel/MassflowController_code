@@ -1,5 +1,7 @@
 from GUI.CustomWidgets.LivePlots import PlotWidgetFactory
 from GUI.CustomWidgets.Widgets import *
+from setup import Setup
+from typing import Callable
 import logging
 
 logger = logging.getLogger("root")
@@ -8,7 +10,24 @@ INDEX_COMPETITION_WIDGET = 1
 
 
 class ExperimentPage(QWidget):
-    def __init__(self, setup, start_action, stop_action, enable_output_action, name):
+    """
+    Base class for the different experiment views. Defines all interfaces with the main layout / the tool bar.
+
+    :param setup: Instance of Setup to allow access to sensors and actuators.
+    :param start_recording_action: Toolbar action allowing to start measurement recording via the competition widget.
+    :param stop_recording_action: Toolbar action allowing to stop measurement recording via the competition widget.
+    :param enable_output_action: Toolbar action allowing to set output on or off via the competition widget.
+    :param name: Name of the inheriting experiment page.
+    """
+
+    def __init__(
+        self,
+        setup: Setup,
+        start_recording_action: Callable,
+        stop_recording_action: Callable,
+        enable_output_action: Callable,
+        name: str,
+    ) -> None:
         super(ExperimentPage, self).__init__()
         self.setup = setup
         self.name = name
@@ -16,10 +35,16 @@ class ExperimentPage(QWidget):
         self.plot_widget_factory = PlotWidgetFactory(setup=setup)
         self.competition_widget = CompetitionWidget(
             setup=setup,
-            start_action=start_action,
-            stop_action=stop_action,
+            start_recording_action=start_recording_action,
+            stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
         )
+        self.setup_basic_layout()
+
+    def setup_basic_layout(self) -> None:
+        """
+        Defines the basic layout of an experiment page
+        """
         self.vertical_layout_controls = QVBoxLayout()
         self.vertical_layout_plots = QVBoxLayout()
         self.vertical_layout_plots.setContentsMargins(10, 10, 10, 10)
@@ -35,35 +60,59 @@ class ExperimentPage(QWidget):
         self.vertical_layout_title.addLayout(self.horizontal_layout)
         self.setLayout(self.vertical_layout_title)
 
-    def enter(self):
+    def enter(self) -> None:
+        """
+        Defines the actions to be taken when this page is loaded. Split into a general set of actions and an
+           individual set defined by the inheriting class.
+        """
         self.title_label.setText(self.name)
         self.enter_individual()
 
-    def enter_individual(self):
+    def enter_individual(self) -> None:
+        """
+        Allows to implement a set of individual actions to be taken when the inheriting page is loaded.
+        """
         NotImplementedError(
             "enter_individual() sequence for page {} not implemented!".format(self.name)
         )
 
-    def leave(self):
+    def leave(self) -> None:
+        """
+        Defines the actions to be taken when this page is left. Split into a general set of actions and an
+           individual set defined by the inheriting class.
+        """
         if self.mode == 1:
             self.switch_to_normal_mode()
         self.leave_individual()
 
-    def leave_individual(self):
+    def leave_individual(self) -> None:
+        """
+        Allows to implement a set of individual actions to be taken when the inheriting page is left.
+        """
         NotImplementedError(
             "leave_individual() sequence for page {} not implemented!".format(self.name)
         )
 
-    def pause(self):
+    def pause(self) -> None:
+        """
+        Allows to define a set of actions to be taken when the inheriting page is paused.
+        """
         NotImplementedError(
             "pause() sequence for page {} not implemented!".format(self.name)
         )
 
-    def reset_plots(self):
+    def reset_plots(self) -> None:
+        """
+        Resets all plots within the plot layout of the inheriting page to their initial view.
+        """
         for i in range(self.vertical_layout_plots.count()):
             self.vertical_layout_plots.itemAt(i).widget().reset_plot_layout()
 
-    def switch_to_competition_mode(self):
+    def switch_to_competition_mode(self) -> None:
+        """
+        Loads the competition widget and changes the behaviour of the temperature difference plot to show
+        the integral of the current control error.
+        """
         self.mode = 1
         # Change plot behaviour
         delta_t_plot_widget = self.vertical_layout_plots.itemAt(0).widget()
@@ -80,7 +129,10 @@ class ExperimentPage(QWidget):
         self.competition_widget.reset()
         self.competition_widget.setVisible(True)
 
-    def switch_to_normal_mode(self):
+    def switch_to_normal_mode(self) -> None:
+        """
+        Unloads the competition widget and changes the behaviour of the temperature difference plot back to normal.
+        """
         # Change plot behaviour
         self.mode = 0
         delta_t_plot_widget = self.vertical_layout_plots.itemAt(0).widget()
@@ -93,15 +145,28 @@ class ExperimentPage(QWidget):
         self.competition_widget.setVisible(False)
 
     def desired_pwm_output(self):
-        raise NotImplementedError()
+        """
+        Allows each inheriting page to return the current desired PWM output, such that the actual output can be
+           updated.
+        """
+        raise NotImplementedError(
+            "'desired_pwm_output' not implemented for page {}!".format(self.name)
+        )
 
 
 class PWMSetting(ExperimentPage):
-    def __init__(self, setup, start_action, stop_action, enable_output_action):
+    """
+    First experiment page allowing the students to set the current pwm output manually and attempt to control
+       the temperature difference themselves.
+    """
+
+    def __init__(
+        self, setup, start_recording_action, stop_recording_action, enable_output_action
+    ):
         super(PWMSetting, self).__init__(
             setup=setup,
-            start_action=start_action,
-            stop_action=stop_action,
+            start_recording_action=start_recording_action,
+            stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
             name="PWM Setting Page",
         )
@@ -135,11 +200,17 @@ class PWMSetting(ExperimentPage):
 
 
 class PIDSetting(ExperimentPage):
-    def __init__(self, setup, start_action, stop_action, enable_output_action):
+    """
+    Second experiment page allowing the students to define the gains of a PID controller and testing it on the system.
+    """
+
+    def __init__(
+        self, setup, start_recording_action, stop_recording_action, enable_output_action
+    ):
         super(PIDSetting, self).__init__(
             setup=setup,
-            start_action=start_action,
-            stop_action=stop_action,
+            start_recording_action=start_recording_action,
+            stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
             name="PID Setting Page",
         )

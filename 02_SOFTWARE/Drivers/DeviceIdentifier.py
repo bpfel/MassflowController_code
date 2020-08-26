@@ -38,12 +38,16 @@ class DeviceIdentifier:
         # todo: Link to tty_setup.sh
         if platform.system() == "Windows":
             logger.debug("Platform identified as Windows.")
-            logger.debug("Appending supplied USB serials with 'A' to make them compatible with Windows.")
+            logger.debug(
+                "Appending supplied USB serials with 'A' to make them compatible with Windows."
+            )
             for device in self.serials.keys():
                 self.serials[device] = "{}A".format(self.serials[device])
         elif platform.system() == "Linux":
             logger.debug("Platform identified as Windows")
-            logger.debug("Running '01_SETUP/tty_setup.sh' to allow detection of all devices.")
+            logger.debug(
+                "Running '01_SETUP/tty_setup.sh' to allow detection of all devices."
+            )
             # Setup tty
             dirname = os.path.dirname(__file__)
             filename = os.path.join(dirname, "../../01_SETUP/tty_setup.sh")
@@ -71,11 +75,19 @@ class DeviceIdentifier:
             # If device is not found on any comport log that
             if not found:
                 any_not_found = True
-                logger.warning("Device {} with serial {} not found!".format(device, self.serials[device]))
+                logger.warning(
+                    "Device {} with serial {} not found!".format(
+                        device, self.serials[device]
+                    )
+                )
         # If any device is missing give information on available devices
         if any_not_found:
             logger.warning("Available devices:")
             for port in ports:
-                logger.warning("description: {}, serial: {}".format(port.description, port.serial_number))
+                logger.warning(
+                    "description: {}, serial: {}".format(
+                        port.description, port.serial_number
+                    )
+                )
 
         return not any_not_found
