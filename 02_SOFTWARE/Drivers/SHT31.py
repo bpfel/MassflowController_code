@@ -13,14 +13,24 @@ HUMIDITY_MEASUREMENT_NAME = "Humidity"
 
 
 class EKS(PlatformBase):
-    def __init__(self, serial_port):
+    """
+    EKS represents a Sensirion Sensor Bridge (EKS) which is used to communicate to a range of sensor via I2C.
+
+    :param serial_port: Name of the port to which the EKS is connected.
+    """
+
+    def __init__(self, serial_port: str) -> None:
         super(EKS, self).__init__(name="EKS")
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
         self.sensors = []
 
-    def connect(self):
+    def connect(self) -> bool:
+        """
+        Attempts to connect to the EKS.
+        :return: True if connected sucessifully, otherwise the encountered exception will be returned.
+        """
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
             self.ShdlcDevice = SensorBridgeShdlcDevice(
@@ -31,26 +41,40 @@ class EKS(PlatformBase):
             return e
         return True
 
-    def connect_sensors(self):
+    def connect_sensors(self) -> None:
+        """
+        Attempts to connect sensors at both EKS ports.
+        """
         # Scan both ports for sensors
         for i in range(2):
-            sensor = Sht3x(device_port=i, shdlc_device=self.ShdlcDevice)
+            sensor = SHT(device_port=i, shdlc_device=self.ShdlcDevice)
             sensor.open()
             if sensor.is_connected():
                 self.sensors.append(sensor)
 
-    def measure(self):
+    def measure(self) -> list:
+        """
+        Measures both channels if a sensor is attached
+        :return: A list of measured values.
+        """
         result = []
         for sensor in self.sensors:
             result.append(sensor.measure())
         return result
 
-    def disconnect(self):
+    def disconnect(self) -> None:
+        """
+        Closes all connected sensors.
+        """
         for sensor in self.sensors:
             sensor.close()
         self.ShdlcPort.close()
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
+        """
+        Tests if the EKS is responsive.
+        :return: True if the EKs serial number can be read, False otherwise.
+        """
         try:
             self.ShdlcDevice.get_serial_number()
         except (TimeoutError, ShdlcTimeoutError, AttributeError):
@@ -58,9 +82,18 @@ class EKS(PlatformBase):
         return True
 
 
-class Sht3x(SensorBase):
-    def __init__(self, device_port, shdlc_device, name="Sht3x"):
-        super(Sht3x, self).__init__(name)
+class SHT(SensorBase):
+    """
+    SHT represents either a SHT85 or an STH31 of the Sensirion Humidity Temperature (SHT) sensor range, connected via
+    the Sensirion Sensor Bridge (EKS).
+
+    :param device_port: EKS port, either ONE or TWO.
+    :param shdlc_device: Instance of the controlling EKS.
+    :param name: Name of the sensor.
+    """
+
+    def __init__(self, device_port: SensorBridgePort, shdlc_device: SensorBridgeShdlcDevice, name="SHT") -> None:
+        super(SHT, self).__init__(name)
         self.ShdlcDevice = shdlc_device
         self.i2c_address = 0x44
 
@@ -70,11 +103,17 @@ class Sht3x(SensorBase):
         elif device_port == 1:
             self.sensor_bridge_port = SensorBridgePort.TWO
         else:
+            logger.error("Incorrect device_port chosen. Select either 0 or 1.")
             raise ValueError(
-                "Incorrect device_port chosen. Select either 'ONE' or 'TWO'."
+                "Incorrect device_port chosen. Select either 0 or 1."
             )
 
-    def connect(self):
+    def connect(self) -> bool:
+        """
+        Attempts to connect the sensor and signals success by blinking the corresponding port's LEDs.
+
+        :return: Returns True if connected successifully, False otherwise.
+        """
         try:
             self.connect_sensor(supply_voltage=3.3, frequency=400000)
             self.ShdlcDevice.blink_led(port=self.sensor_bridge_port)
@@ -82,13 +121,10 @@ class Sht3x(SensorBase):
             return False
         return True
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """
         Check if the sensor operates correctly
-        Returns
-        -------
-        bool
-            True if everything is fine
+        :return: True if the status register can be read, False otherwise
         """
         try:
             self.read_status_reg()
@@ -96,13 +132,10 @@ class Sht3x(SensorBase):
             return False
         return True
 
-    def read_status_reg(self):
+    def read_status_reg(self) -> bytearray:
         """
-        Read status register
-        Returns
-        -------
-        bytearray
-            status register value
+        Reads status register
+        :return: Status register value as bytearray.
         """
         with self._lock:
             data = self.ShdlcDevice.transceive_i2c(
@@ -114,22 +147,18 @@ class Sht3x(SensorBase):
             )
         return data[0]
 
-    def disconnect(self):
-        """Called by SensorBase.close upon deletion of this class.
-
+    def disconnect(self) -> None:
+        """
+        Called by SensorBase.close upon deletion of this class. Switches supply off.
         """
         self.ShdlcDevice.switch_supply_off(port=self.sensor_bridge_port)
 
-    def connect_sensor(self, supply_voltage, frequency):
-        """Connection of a sensor attached to the sensirion sensor bridge according to
-        the quick start guide to sensirion-shdlc-sensorbridge.
-
-        Parameters
-        ----------
-        supply_voltage : float
-            Desired supply voltage in Volts.
-        frequency : int
-            I2C frequency
+    def connect_sensor(self, supply_voltage, frequency) -> None:
+        """
+        Connection of a sensor attached to the sensirion sensor bridge according to
+           the quick start guide to sensirion-shdlc-sensorbridge.
+        :param supply_voltage: Desired supply voltage in Volts.
+        :param frequency: I2C frequency in Hz
         """
         self.ShdlcDevice.set_i2c_frequency(
             port=self.sensor_bridge_port, frequency=frequency
@@ -139,17 +168,13 @@ class Sht3x(SensorBase):
         )
         self.ShdlcDevice.switch_supply_on(port=self.sensor_bridge_port)
 
-    def measure(self):
-        """Implementation of a single shot measurement according to the SHT3x datasheet.
-
+    def measure(self) -> dict:
+        """
+        Implementats a single shot measurement according to the SHT3x datasheet.
         A high repeatability measurement with clock stretching enabled is performed.
 
-        Returns
-        -------
-        dict
-            Dictionary containing temperature in degrees Celsius and relative humiditiy
-             in percent.
-
+        :return: Dictionary containing temperature in degrees Celsius and relative humiditiy
+           in percent.
         """
         rx_data = self.ShdlcDevice.transceive_i2c(
             port=self.sensor_bridge_port,
@@ -165,39 +190,25 @@ class Sht3x(SensorBase):
             HUMIDITY_MEASUREMENT_NAME: result_humidity,
         }
 
-    def _convert_humidity(self, data):
+    def _convert_humidity(self, data: bytearray) -> float:
         """
         Converts the raw sensor data to the actual measured humidity according to the
-        data sheet Sensirion_Humidity_Sensors_SHT3x
-        Parameters
-        ----------
-        data : bytearray
-            2 bytes, namely number 4 (humidity MSB) and 5 (humidity LSB)
-            of the answer delivered by the sensor
+           data sheet Sensirion_Humidity_Sensors_SHT3x
 
-        Returns
-        -------
-        float
-            The relative humidity measured by the sensor
+        :param data: 2 bytes, namely number 4 (humidity MSB) and 5 (humidity LSB) of the answer delivered by the sensor.
+        :return: The relative humidity measured by the sensor in percent.
         """
         adc_out = data[0] << 8 | data[1]
         return 100.0 * adc_out / 0x10000
 
-    def _convert_temperature(self, data):
+    def _convert_temperature(self, data: bytearray) -> float:
         """
         Converts the raw sensor data to the actual measured temperature according to the
-        data sheet Sensirion_Humidity_Sensors_SHT3x
-        Parameters
-        ----------
-        data : bytearray
-            2 bytes, namely number 1 (temperature MSB) and 2 (humidity LSB)
-            of the answer delivered by the sensor
+           data sheet Sensirion_Humidity_Sensors_SHT3x
 
-        Returns
-        -------
-        float
-            The temperature measured by the sensor
-
+        :param data: 2 bytes, namely number 1 (temperature MSB) and 2 (humidity LSB) of the answer delivered by
+           the sensor.
+        :return: The temperature measured by the sensor in degrees Celsius.
         """
         adc_out = data[0] << 8 | data[1]
         return -45.0 + 175.0 * adc_out / 0x10000

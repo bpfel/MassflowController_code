@@ -1,5 +1,5 @@
 from Drivers.SHT31 import EKS
-from Drivers.SFC5400 import Sfc5400
+from Drivers.SFX5400 import SFX5400
 from Drivers.Shdlc_IO import ShdlcIoModule
 from Drivers.DeviceIdentifier import DeviceIdentifier
 from Utility.MeasurementBuffer import MeasurementBuffer
@@ -24,7 +24,15 @@ class Mode(Enum):
 
 
 class Setup(object):
-    def __init__(self, serials, t_sampling_s, interval_s):
+    def __init__(self, serials: dict, t_sampling_s: float, interval_s: float):
+        """
+        Upon initialization the setup receives serials of the connected USB devices, the target sampling time
+           for measurements and the total buffered interval.
+        :param serials: Dictionary of device names and corresponding USB serials.
+        :param t_sampling_s: Measurement sampling time in seconds.
+        :param interval_s: Total buffered time interval in seconds, which in combination with the sampling time defines
+           the number of stored measurements.
+        """
         # allocate private member variables
         self._serials = serials
         self._t_sampling_s = t_sampling_s
@@ -55,8 +63,14 @@ class Setup(object):
             output_limits=(0, 1),
         )
 
-    def _setup_measurement_buffer(self):
-        signals = {
+    def _setup_measurement_buffer(self) -> MeasurementBuffer:
+        """
+        Defines the set of recorded signals and creates a corresponding MeasurementBuffer.
+
+        :return: An instance of MeasurementBuffer containing a deque instance for every signal.
+        """
+        # todo: Link to MeasurementBuffer class
+        signals = [
             "Temperature 1",
             "Temperature 2",
             "Humidity 1",
@@ -71,22 +85,27 @@ class Setup(object):
             "Controller Output I",
             "Controller Output D",
             "Controller Output",
-        }
+        ]
         return MeasurementBuffer(
             signals=signals,
             buffer_interval_s=self.interval_s,
             sampling_time_s=self._t_sampling_s,
         )
 
-    def open(self):
-        # Find all USB devices and identify them
+    def open(self) -> None:
+        """
+        Finds and opens all the USB devices previously defined within self.serials by their serial number.
+           If one of the devices is not responsive or cannot be found, the setup is switching to simulation mode
+           in which all measurements are simulated. This allows to test the GUI without any attached devices.
+        """
+        # todo: Link to DeviceIdentifier
         self._devices = DeviceIdentifier(serials=self._serials)
 
         if self._devices.open():
             # Connect all sensors / actuators
             self._eks = EKS(serial_port=self._devices.serial_ports["EKS"])
             self._eks.open()
-            self._sfc = Sfc5400(serial_port=self._devices.serial_ports["SFC"])
+            self._sfc = SFX5400(serial_port=self._devices.serial_ports["SFC"])
             self._sfc.open()
             self._heater = ShdlcIoModule(
                 serial_port=self._devices.serial_ports["Heater"]

@@ -10,9 +10,16 @@ TIMEOUT_US = 10e5
 DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME = "Differential Pressure"
 
 
-class Sdp800(SensorBase):
-    def __init__(self, serial_port, device_port="TWO", name="Sdp800"):
-        super(Sdp800, self).__init__(name)
+class SDP800(SensorBase):
+    """
+    SDP800 represents a Sensirion Differential Pressure Sensor (SDP) connected via the Sensirion Sensor Bridge (EKS).
+
+    .. warning:
+       The SDP800 driver is not working correctly yet! Connection to the sensor works, but the return measurements
+       appear to be wrongly interpreted.
+    """
+    def __init__(self, serial_port, device_port="TWO", name="Sdp800") -> None:
+        super(SDP800, self).__init__(name)
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
@@ -27,7 +34,11 @@ class Sdp800(SensorBase):
                 "Incorrect device_port chosen. Select either 'ONE' or 'TWO'."
             )
 
-    def connect(self):
+    def connect(self) -> bool:
+        """
+        Attempts to connect the Sensor Bridge and subsequently connect the sensor.
+        :return: True if connected successifully, False otherwise.
+        """
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=460800)
             self.ShdlcDevice = SensorBridgeShdlcDevice(
@@ -40,16 +51,13 @@ class Sdp800(SensorBase):
             return False
         return True
 
-    def connect_sensor(self, supply_voltage, frequency):
-        """Connection of a sensor attached to the sensirion sensor bridge according to
-        the quick start guide to sensirion-shdlc-sensorbridge.
+    def connect_sensor(self, supply_voltage: float, frequency: float) -> None:
+        """
+        Connection of a sensor attached to the sensirion sensor bridge according to the quick start guide to
+           sensirion-shdlc-sensorbridge.
 
-        Parameters
-        ----------
-        supply_voltage : float
-            Desired supply voltage in Volts.
-        frequency : int
-            I2C frequency
+        :param supply_voltage: Desired supply voltage in Volts.
+        :param frequency: I2C frequency
         """
         self.ShdlcDevice.set_i2c_frequency(
             port=self.sensor_bridge_port, frequency=frequency
@@ -60,27 +68,25 @@ class Sdp800(SensorBase):
         self.ShdlcDevice.switch_supply_on(port=self.sensor_bridge_port)
 
     def is_connected(self):
-        # todo: implement check whether connected
-        pass
+        # todo: implement this
+        raise NotImplementedError("This device does not yet work correctly. Driver needs work.")
 
-    def disconnect(self):
-        """Called by SensorBase.close upon deletion of this class
-
+    def disconnect(self) -> None:
+        """
+        Called by SensorBase.close upon deletion of this class
         """
         self.ShdlcPort.close()
 
     def measure(self):
-        """Implementation of a triggered measurement according to the SDP8xx datasheet.
+        """
+        Implementation of a triggered measurement according to the SDP8xx datasheet.
 
         A measurement with temperature compensation set for differential pressure and
-        with clock stretching enabled is performed.
+           with clock stretching enabled is performed.
 
-        Returns
-        -------
-        dict
-            Dictionary containing
-
+        :return: Dictionary containing hitherto unknown measurement results.
         """
+        # todo: correct this
         rx_data = self.ShdlcDevice.transceive_i2c(
             port=self.sensor_bridge_port,
             address=self.i2c_address,
@@ -91,20 +97,14 @@ class Sdp800(SensorBase):
         result_differential_pressure = self._convert_differential_pressure(rx_data[0:2])
         return {DIFFERENTIAL_PRESSURE_MEASUREMENT_NAME: result_differential_pressure}
 
-    def _convert_differential_pressure(self, data):
+    def _convert_differential_pressure(self, data: bytearray) -> float:
         """
         Converts the raw sensor data to the actual measured differential pressure according
-        to the data sheet Sensirion_DifferentialPressure_Sensors_SDP800
-        Parameters
-        ----------
-        data : bytearray
-            2 bytes, namely number 1 (differential pressure MSB) and 2
-            (differential pressure LSB) of the answer delivered by the sensor
+           to the data sheet Sensirion_DifferentialPressure_Sensors_SDP800
 
-        Returns
-        -------
-        float
-            The differential pressured measured by the sensor
+        :param data: 2 bytes, namely number 1 (differential pressure MSB) and 2 (differential pressure LSB)
+           of the answer delivered by the sensor
+        :return: The differential pressured measured by the sensor
         """
         adc_out = data[0] << 8 | data[1]
         return adc_out / 60.0
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     )
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-    with Sdp800(serial_port="/dev/ttyUSB2", device_port="TWO") as sdp:
+    with SDP800(serial_port="/dev/ttyUSB2", device_port="TWO") as sdp:
         sdp.open()
         for i in range(0, 100):
             time.sleep(1)

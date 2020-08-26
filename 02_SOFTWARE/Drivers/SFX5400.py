@@ -37,14 +37,25 @@ class Sfc5400ShdlcCmdReadMeasuredFlow(ShdlcCommand):
         return unpack(">f", data)[0]
 
 
-class Sfc5400(SensorBase):
-    def __init__(self, serial_port, name="Sfc5400"):
-        super(Sfc5400, self).__init__(name)
+class SFX5400(SensorBase):
+    """
+    SFX5400 represents either a Sensirion Flow Controller (SFC) or a Sensirion Flow Meter (SFM) of type 5400.
+
+    :param serial_port: Name of the comport the SFX is connected to.
+    :param name: Name of the device.
+    """
+
+    def __init__(self, serial_port: str, name="Sfc5400"):
+        super(SFX5400, self).__init__(name)
         self.port = serial_port
         self.ShdlcPort = None
         self.ShdlcDevice = None
 
-    def connect(self):
+    def connect(self) -> bool:
+        """
+        Attempts to connect to the SFX and reports success.
+        :return: True if connected successifully, False otherwise.
+        """
         try:
             self.ShdlcPort = ShdlcSerialPort(port=self.port, baudrate=115200)
             self.ShdlcDevice = ShdlcDevice(
@@ -54,29 +65,50 @@ class Sfc5400(SensorBase):
             return e
         return True
 
-    def disconnect(self):
+    def disconnect(self) -> None:
+        """
+        Disconnects the device.
+        """
         self.ShdlcPort.close()
 
-    def measure(self):
+    def measure(self) -> dict:
+        """
+        Measures the current mass flow.
+        :return: Dictionary containing the measurement.
+        """
         result = self.ShdlcDevice.execute(Sfc5400ShdlcCmdReadMeasuredFlow())
         return {FLOW_MEASUREMENT_NAME: result}
 
-    def set_flow(self, setpoint_normalized):
-        self.ShdlcDevice.execute(Sfc5400ShdlcCmdSetSetpoint(setpoint_normalized))
-
-    def get_device_information(self, index):
+    def set_flow(self, setpoint_normalized) -> bool:
         """
-        Returns device information
-        Parameters
-        ----------
-        index
-            1 : Product Name
-            2 : Article Code
-            3 : Serial number
+        Sets the current desired mass flow if a flow controller is connected.
+        :param setpoint_normalized: Flow setpoint as normalized input between 0 and 1.
+        :return: True if set successifully, False if exception occured.
+        """
+        try:
+            self.ShdlcDevice.execute(Sfc5400ShdlcCmdSetSetpoint(setpoint_normalized))
+        except Exception as e:
+            logger.error("Could not set the mass flow. Make sure there is a mass "
+                         "flow controller connected: {}".format(e))
+            return False
+        return True
+
+    def get_device_information(self, index: int) -> str:
+        """
+        Retrieves device information depending on the index given.
+        :param index: Integer between 1 and 3 to request on of the data below:
+            1. Product Name
+            2. Article Code
+            3. Serial number
+        :return: String containing the requested information.
         """
         return self.ShdlcDevice.execute(Sfc5400ShdlcCmdGetDeviceInformation(index))
 
     def is_connected(self):
+        """
+        Checks if the device is connected by reading its serial number.
+        :return: True if connected, False if not.
+        """
         try:
             self.ShdlcDevice.get_serial_number()
         except (TimeoutError, ShdlcTimeoutError, AttributeError):
@@ -95,6 +127,6 @@ if __name__ == "__main__":
         "SFC": "FTVQSB5S",
     }
     devices = DeviceIdentifier(serials=serials)
-    with Sfc5400(serial_port=devices.serial_ports["SFC"]) as sfc:
+    with SFX5400(serial_port=devices.serial_ports["SFC"]) as sfc:
         sfc.open()
         print(sfc.measure())

@@ -8,10 +8,6 @@
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="C:\Users\gam19\Documents\MassflowController_code\02_SOFTWARE\requirements.txt" />
   </component>
-  <component name="PyDocumentationSettings">
-    <option name="format" value="NUMPY" />
-    <option name="myDocStringFormat" value="NumPy" />
-  </component>
   <component name="ReSTService">
     <option name="DOC_DIR" value="C:\Users\gam19\Documents\MassflowController_code\docs" />
   </component>
