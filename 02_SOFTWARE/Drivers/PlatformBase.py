@@ -73,7 +73,8 @@ class PlatformBase(ABC):
         """
         Called when exiting the context established by the 'with' statement.
 
-        .. warning: Only use this class inside a 'with' statement to ensure calling the shut down procedure for every
+        .. warning::
+           Only use this class inside a 'with' statement to ensure calling the shut down procedure for every
            connected platform even upon an unscheduled end of the program.
         """
         self.close()

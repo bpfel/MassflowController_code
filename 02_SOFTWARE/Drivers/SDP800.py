@@ -14,7 +14,7 @@ class SDP800(SensorBase):
     """
     SDP800 represents a Sensirion Differential Pressure Sensor (SDP) connected via the Sensirion Sensor Bridge (EKS).
 
-    .. warning:
+    .. warning::
        The SDP800 driver is not working correctly yet! Connection to the sensor works, but the return measurements
        appear to be wrongly interpreted.
     """

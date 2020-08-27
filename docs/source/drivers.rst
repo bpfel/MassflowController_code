@@ -5,6 +5,8 @@ Device Identifier
 *****************
 
 .. autoclass:: Drivers.DeviceIdentifier.DeviceIdentifier
+   :members:
+   :private_members:
 
 Platforms
 *********

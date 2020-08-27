@@ -8,7 +8,7 @@ class RepeatTimer(Timer):
     """
     RepeatTimer allows to run a timer repeatedly.
 
-    .. note:
+    .. note::
        Usage::
 
        def dummyfn(msg="foo"):

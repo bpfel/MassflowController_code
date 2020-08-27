@@ -181,7 +181,7 @@ class Setup(object):
         .. seealso::
            :meth:`_measure_simulation_mode`
            :meth:`_measure_normal_mode`
-           :mod:`Utility.MeasurementBuffer`
+           :mod:`Utility.MeasurementBuffer.MeasurementBuffer`
         """
         # Retrieve all recorded signals depending on system mode
         if self._simulation_mode:
@@ -302,7 +302,7 @@ class Setup(object):
         Creates a thread.Timer that schedules future measurements at the desired sampling time.
 
         .. seealso::
-           :mod:`Utility.Timer`
+           :mod:`Utility.Timer.RepeatTimer`
         """
         if self._measurement_timer is None:
             self.measurement_buffer.clear()

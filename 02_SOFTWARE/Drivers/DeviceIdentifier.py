@@ -8,18 +8,19 @@ logger = logging.getLogger("root")
 
 class DeviceIdentifier:
     """
-    The DeviceIdentifier lists all connected USB devices and tries to identify all devices listed in self.serials.
+    The DeviceIdentifier lists all connected USB devices and tries to identify all devices listed in `self.serials`
+    with their respective serial port, which are subsequently available as `self.serial_ports`
 
     :type serials: dict
     :param serials: Dictionary with USB names as keys and USB serials as values.
 
-    .. note:
+    .. note::
        If the USB serials are unknown when launching the program first simply supply a dictionary with placeholders.
        DeviceIdentifier supplies information on all available devices upon failing to find one of the devices in
        the serials dictionary.
 
 
-    .. warning:
+    .. warning::
        Windows detects USB serials differently than Linux. As experienced in the creating of this software,
        a serial read on a Linux system must be appended with the letter 'A' to be detected on a Windows system.
        To offer platform independence the serials must be given in 'Linux-Form' and are automatically appended
@@ -33,7 +34,8 @@ class DeviceIdentifier:
     def open(self):
         """
         Detects the current os. For Windows the letter 'A' is appended to the Linux-specific serial of the device.
-           For Linux an additional tty-setup script is executed to allow detection of all USB devices.
+        For Linux an additional tty-setup script is executed to allow detection of all USB devices.
+
         :return: Returns True if all devices listed in self.serials could be found.
         """
         # todo: Link to tty_setup.sh

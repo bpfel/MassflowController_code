@@ -119,7 +119,7 @@ class CompetitionWidget(FramedWidget):
         """
         Takes control of the whole setup and GUI to start the recording.
 
-        .. note:
+        .. note::
            This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
            This is necessary to prevent cheating.
         """
