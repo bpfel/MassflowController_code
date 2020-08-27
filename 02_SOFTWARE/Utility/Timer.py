@@ -6,11 +6,12 @@ logger = logging.getLogger("root")
 
 class RepeatTimer(Timer):
     """
-    RepeatTimer allows to run a timer repeatedly.
+    The RepeatTimer is a special type of timer thread that can be run indefinitely and executes a given function
+    each time a specified interval has passed.
 
     .. note::
 
-       The RepeatTimer can be used as follows:
+       Example of usage:
 
           .. code-block:: python
 

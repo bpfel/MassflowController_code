@@ -6,19 +6,44 @@
 Software Documentation: Air Mass Flow Sensor
 ============================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+This project contains the back and front end software for a student experiment at ETH Zürich based on sponsorship
+by Sensirion AG. The student experiment aims to illustrate the sensor principle of a calorimetric air mass flow meter,
+which is investigated mainly from the control point of view. The students are required to implement control algorithms
+for the regulation of the heater.
 
+The software provided here mainly does two things:
+
+#. Communication with all attached devices, which are
+
+   #. Sensirion SHT temperature sensors connected to a Sensirion Sensor Bridge
+   #. A Sensirion SFM massflow meter
+   #. A custom built heater being driven with a PWM signal
+
+   This task is taken over by the :ref:`setup` class. It handles all interactions with the hardware and
+   for this purpose makes use of the different drivers, as seen on page :ref:`drivers`.
+
+#. Allowing interaction
+
+   #. Displaying the current system status
+   #. Informing on possible interactions with the system
+   #. Walking the student through different steps of the experimentation
+   #. Handling interactions with the setup
+
+   These tasks are solved with a PyQt5 based graphical user interface as described in section :ref:`GUI`.
+
+Acknowledgements
+****************
+
+The icons in the GUI are made by `Yusuke Kamiyamane <https://p.yusukekamiyamane.com>`_ and used under
+`CC BY 3.0 <https://p.yusukekamiyamane.com>`_.
+
+The GUI frontend, `QT 5.0 <https://www.qt.io>`_ is used under `LGPL 3.0 <https://www.gnu.org/licenses/lgpl-3.0.html>`_.
+
+
+.. toctree::
+   :hidden:
+
+   installation
    setup
    drivers
    GUI
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
