@@ -49,6 +49,7 @@ class ShdlcIoModule(PlatformBase):
     def connect(self) -> bool:
         """
         Attempts to connect the ShdlcIoModule
+
         :return: True if connected successifully, False otherwise.
         """
         try:
@@ -67,6 +68,7 @@ class ShdlcIoModule(PlatformBase):
     def is_connected(self) -> bool:
         """
         Attempts to read the serial number of the device to check if it is connected.
+
         :return: True if connected, False otherwise.
         """
         try:
@@ -91,6 +93,7 @@ class ShdlcIoModule(PlatformBase):
     def __enter__(self):
         """
         Ensures compatibility with 'with' statement.
+
         :return: Returns a reference to the current instance.
         """
         return self

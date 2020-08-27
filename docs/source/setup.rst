@@ -24,13 +24,13 @@ Logging Facility
 Measurement Buffer
 ------------------
 
-.. autoclass:: Utility.MeasurementBuffer
+.. autoclass:: Utility.MeasurementBuffer.MeasurementBuffer
    :members:
    :private-members:
 
 Timer
 -----
 
-.. autoclass:: Utility.Timer
+.. autoclass:: Utility.Timer.RepeatTimer
    :members:
    :private-members:

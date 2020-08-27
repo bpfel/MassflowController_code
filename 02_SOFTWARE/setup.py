@@ -367,6 +367,7 @@ class Setup(object):
     def set_setpoint(self, value: float) -> None:
         """
         Allows to define the temperature difference setpoint.
+
         :param value: Positive value smaller 20 degrees.
         """
         value = float(value)
@@ -380,6 +381,7 @@ class Setup(object):
     def set_Kp(self, kp: float) -> None:
         """
         Allows setting the Kp gain of the controller.
+
         :param kp: Kp gain of the controller.
         """
         self.set_pid_parameters(kp=float(kp))
@@ -387,6 +389,7 @@ class Setup(object):
     def set_Ki(self, ki) -> None:
         """
         Allows setting the Ki gain of the controller.
+
         :param ki: Ki gain of the controller
         """
         self.set_pid_parameters(ki=float(ki))
@@ -394,6 +397,7 @@ class Setup(object):
     def set_Kd(self, kd) -> None:
         """
         Allows setting the Kd gain of the controller.
+
         :param kd: Kd gain of the controller
         """
         self.set_pid_parameters(kd=float(kd))
@@ -401,6 +405,7 @@ class Setup(object):
     def set_pid_parameters(self, kp=None, ki=None, kd=None) -> None:
         """
         Interface to the pid-setting functionality of simple_pid.
+
         :param kp: Kp gain of the controller
         :param ki: Ki gain of the controller
         :param kd: Kd gain of the controller
@@ -416,6 +421,7 @@ class Setup(object):
     def start_pid_controller(self, setpoint=None) -> None:
         """
         Start pid mode with the output set to off.
+
         :param setpoint: Can be used to define a new temperature difference setpoint.
         """
         self._current_mode = Mode.PID_OFF
@@ -432,6 +438,7 @@ class Setup(object):
     def enable_output(self, desired_pwm_output=0) -> None:
         """
         Enables the output in either pwn or pid mode.
+
         :param desired_pwm_output: Optionally enable pwm mode with a predefined nonzero output.
         """
         self.controller.reset()
@@ -455,6 +462,7 @@ class Setup(object):
     def calculate_massflow_estimate(delta_t, pwm) -> float:
         """
         Calculate the massflow estimate depending on the measured temperature difference and the current output power
+
         :param delta_t: Measured temperature difference
         :param pwm: Current output power
         """
