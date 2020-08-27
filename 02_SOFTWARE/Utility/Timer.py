@@ -9,17 +9,25 @@ class RepeatTimer(Timer):
     RepeatTimer allows to run a timer repeatedly.
 
     .. note::
-       Usage::
 
-       def dummyfn(msg="foo"):
-           print(msg)
+       The RepeatTimer can be used as follows:
 
-       timer = RepeatTimer(1, dummyfn)
-       timer.start()
-       time.sleep(5)
-       timer.cancel()
-    """
+          .. code-block:: python
 
-    def run(self):
+             def dummyfn(msg="foo"):
+                 print(msg)
+
+             timer = RepeatTimer(interval=1, function=dummyfn)
+             timer.start()
+             time.sleep(5)  # During which 5 calls of dummyfn will happen.
+             timer.cancel()
+          """
+
+    def run(self) -> None:
+        """
+        Method representing the thread’s activity.
+
+        Overrides `Timer.run` such that we have a repeated timer.
+        """
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)

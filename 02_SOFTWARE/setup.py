@@ -104,7 +104,7 @@ class Setup(object):
 
     def open(self) -> None:
         """
-        Finds and opens all the USB devices previously defined within self.serials by their serial number.
+        Finds and opens all the USB devices previously defined within `self.serials` by their serial number.
         If one of the devices is not responsive or cannot be found, the setup is switching to simulation mode
         in which all measurements are simulated. This allows to test the GUI without any attached devices.
         """

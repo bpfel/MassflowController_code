@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../../02_SOFTWARE"))
 
 master_doc = 'index'
+html_favicon = '../../02_SOFTWARE/GUI/Icons/icon.ico'
 
 # -- Project information -----------------------------------------------------
 
