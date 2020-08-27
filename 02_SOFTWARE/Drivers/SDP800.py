@@ -38,6 +38,7 @@ class SDP800(SensorBase):
     def connect(self) -> bool:
         """
         Attempts to connect the Sensor Bridge and subsequently connect the sensor.
+
         :return: True if connected successifully, False otherwise.
         """
         try:
@@ -55,7 +56,7 @@ class SDP800(SensorBase):
     def connect_sensor(self, supply_voltage: float, frequency: float) -> None:
         """
         Connection of a sensor attached to the sensirion sensor bridge according to the quick start guide to
-           sensirion-shdlc-sensorbridge.
+        sensirion-shdlc-sensorbridge.
 
         :type supply_voltage: float
         :param supply_voltage: Desired supply voltage in Volts.
@@ -71,7 +72,14 @@ class SDP800(SensorBase):
         self.ShdlcDevice.switch_supply_on(port=self.sensor_bridge_port)
 
     def is_connected(self):
-        # todo: implement this
+        """
+        Checks if the device is connected by reading its serial number.
+
+        :return: True if connected, False if not.
+
+        .. todo::
+           Implement this.
+        """
         raise NotImplementedError(
             "This device does not yet work correctly. Driver needs work."
         )
@@ -87,11 +95,10 @@ class SDP800(SensorBase):
         Implementation of a triggered measurement according to the SDP8xx datasheet.
 
         A measurement with temperature compensation set for differential pressure and
-           with clock stretching enabled is performed.
+        with clock stretching enabled is performed.
 
         :return: Dictionary containing hitherto unknown measurement results.
         """
-        # todo: correct this
         rx_data = self.ShdlcDevice.transceive_i2c(
             port=self.sensor_bridge_port,
             address=self.i2c_address,
@@ -105,12 +112,15 @@ class SDP800(SensorBase):
     def _convert_differential_pressure(self, data: bytearray) -> float:
         """
         Converts the raw sensor data to the actual measured differential pressure according
-           to the data sheet Sensirion_DifferentialPressure_Sensors_SDP800
+        to the data sheet Sensirion_DifferentialPressure_Sensors_SDP800
 
         :type data: bytearray
         :param data: 2 bytes, namely number 1 (differential pressure MSB) and 2 (differential pressure LSB)
            of the answer delivered by the sensor
         :return: The differential pressured measured by the sensor
+
+        .. todo::
+           Correct the interpretation of received values.
         """
         adc_out = data[0] << 8 | data[1]
         return adc_out / 60.0

@@ -56,6 +56,7 @@ class SFX5400(SensorBase):
     def connect(self) -> bool:
         """
         Attempts to connect to the SFX and reports success.
+
         :return: True if connected successifully, False otherwise.
         """
         try:
@@ -76,6 +77,7 @@ class SFX5400(SensorBase):
     def measure(self) -> dict:
         """
         Measures the current mass flow.
+
         :return: Dictionary containing the measurement.
         """
         result = self.ShdlcDevice.execute(Sfc5400ShdlcCmdReadMeasuredFlow())
@@ -105,9 +107,10 @@ class SFX5400(SensorBase):
 
         :type index: int
         :param index: Integer between 1 and 3 to request on of the data below:
-            1. Product Name
-            2. Article Code
-            3. Serial number
+
+            #. Product Name
+            #. Article Code
+            #. Serial number
 
         :return: String containing the requested information.
         """
@@ -116,6 +119,7 @@ class SFX5400(SensorBase):
     def is_connected(self):
         """
         Checks if the device is connected by reading its serial number.
+
         :return: True if connected, False if not.
         """
         try:

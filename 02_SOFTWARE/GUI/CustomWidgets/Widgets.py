@@ -57,7 +57,7 @@ class FancyPointCounter(QLCDNumber):
 class CompetitionWidget(FramedWidget):
     """
     The CompetitionWidget allows to start a recording of the current performance and displays the number of points
-       reached.
+    reached.
     """
 
     def __init__(

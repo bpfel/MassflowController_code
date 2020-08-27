@@ -5,22 +5,22 @@ logger = logging.getLogger("root")
 
 
 class MeasurementBuffer(object):
+    """
+    The MeasurementBuffer holds a number of deque instances, one for each recorded signal and manages them as a
+    ring buffer, always keeping a record of the most up to date measurements, reaching back `buffer_interval_s` seconds.
+
+    :type signals: list
+    :param signals: List of signal names.
+    :type sampling_time_s: float
+    :param sampling_time_s: Measurement sampling time in seconds.
+    :type buffer_interval_s: float
+    :param buffer_interval_s: Total buffered time interval in seconds which together with the sampling time defines the
+       number of measurements to be stored.
+    """
+
     def __init__(
         self, signals: list, sampling_time_s: float, buffer_interval_s: float
     ) -> None:
-        """
-        Upon initialization the MeasurementBuffer receives a list of signals, the desired sampling time and the
-        total buffered interval. It sets up a dictionary of deque instances, one instance for each singal, that are
-        limited to the total length of the buffer. These essentially represent circular buffers.
-
-        :type signals: list
-        :param signals: List of signal names.
-        :type sampling_time_s: float
-        :param sampling_time_s: Measurement sampling time in seconds.
-        :type buffer_interval_s: float
-        :param buffer_interval_s: Total buffered time interval in seconds which together with the sampling time defines the
-           number of measurements to be stored.
-        """
         self._signals = signals
         self._data = dict()
         buffer_length = int(buffer_interval_s / sampling_time_s)

@@ -9,7 +9,7 @@ logger = logging.getLogger("root")
 
 class PlatformBase(ABC):
     """
-    Abstract base class for all sensors used in this project.
+    Abstract base class for all platforms used in this project.
 
     :type name: str
     :param name: Each platform must have a unique name.

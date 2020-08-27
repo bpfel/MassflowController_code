@@ -242,22 +242,22 @@ class PIDSetting(ExperimentPage):
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.pid())
 
     def set_p_value(self):
-        self.setup.set_Kp(self.p_gain.value)
+        self.setup.set_kp(self.p_gain.value)
 
     def set_i_value(self):
-        self.setup.set_Ki(self.i_gain.value)
+        self.setup.set_ki(self.i_gain.value)
 
     def set_d_value(self):
-        self.setup.set_Kd(self.d_gain.value)
+        self.setup.set_kd(self.d_gain.value)
 
     def enter_individual(self):
         logger.info("Start PID controller")
         self.setup.start_pid_controller()
 
     def leave_individual(self):
-        self.setup.set_Kp(0)
-        self.setup.set_Ki(0)
-        self.setup.set_Kd(0)
+        self.setup.set_kp(0)
+        self.setup.set_ki(0)
+        self.setup.set_kd(0)
 
     def pause(self):
         pass

@@ -34,11 +34,11 @@ class DeviceIdentifier:
     def open(self):
         """
         Detects the current os. For Windows the letter 'A' is appended to the Linux-specific serial of the device.
-        For Linux an additional tty-setup script is executed to allow detection of all USB devices.
+        For Linux an additional tty-setup script is executed to allow detection of all USB devices. After that the
+        serials of the available devices are compared and linked to `self.serials`.
 
-        :return: Returns True if all devices listed in self.serials could be found.
+        :return: Returns True if all devices listed in self.serials could be found, False otherwise.
         """
-        # todo: Link to tty_setup.sh
         if platform.system() == "Windows":
             logger.debug("Platform identified as Windows.")
             logger.debug(

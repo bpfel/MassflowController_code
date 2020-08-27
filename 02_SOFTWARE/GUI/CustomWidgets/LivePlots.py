@@ -10,7 +10,7 @@ logger = logging.getLogger("root")
 
 class LivePlotSignal(object):
     """
-    A LivePlotSignal stores all the information needed identify and plot a single signal.
+    A LivePlotSignal stores all the information needed to identify and plot a single signal.
 
     :type name: str
     :param name: Name of the signal, to be displayed on the legend of the plot the signal is shown on
@@ -182,7 +182,7 @@ class LivePlotWidgetCompetition(LivePlotWidget):
 
 class PlotWidgetFactory:
     """
-    The PlotWidgetFactory defines a sipmle interface to create instances of previously defined LivePlotWidgets.
+    The PlotWidgetFactory defines a simple interface for creating instances of previously defined LivePlotWidgets.
     """
 
     def __init__(self, setup):

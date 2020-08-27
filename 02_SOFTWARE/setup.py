@@ -25,6 +25,7 @@ class Mode(Enum):
     4. PID_OFF: In this mode the pid parameters can be set, but the output is currently turned off.
     5. PID_ON: In this mode the pid parameters can be set and the controller is allowed to set pwm values.
     """
+
     IDLE = 0  # Not started yet
     FORCE_PWM_OFF = 1  # User defines PWM
     FORCE_PWM_ON = 2
@@ -36,8 +37,11 @@ class Setup(object):
     """
     The Setup handles all interaction with the hardware of the experiment.
 
+    :type serials: dict
     :param serials: Dictionary of device names and corresponding USB serials.
+    :type t_sampling_s: float
     :param t_sampling_s: Measurement sampling time in seconds.
+    :type interval_s: float
     :param interval_s: Total buffered time interval in seconds, which in combination with the sampling time defines
        the number of stored measurements.
     """
@@ -335,6 +339,7 @@ class Setup(object):
         """
         Safely sets the desired PWM value depending on the current system mode.
 
+        :type value: float
         :param value: Desired PWM value as a normalized value between 0 and 1.
 
         .. seealso::
@@ -368,6 +373,7 @@ class Setup(object):
         """
         Allows to define the temperature difference setpoint.
 
+        :type value: float
         :param value: Positive value smaller 20 degrees.
         """
         value = float(value)
@@ -378,26 +384,29 @@ class Setup(object):
         self._setpoint = value
         self.controller.setpoint = value
 
-    def set_Kp(self, kp: float) -> None:
+    def set_kp(self, kp: float) -> None:
         """
         Allows setting the Kp gain of the controller.
 
+        :type kp: float
         :param kp: Kp gain of the controller.
         """
         self.set_pid_parameters(kp=float(kp))
 
-    def set_Ki(self, ki) -> None:
+    def set_ki(self, ki: float) -> None:
         """
         Allows setting the Ki gain of the controller.
 
+        :type ki: float
         :param ki: Ki gain of the controller
         """
         self.set_pid_parameters(ki=float(ki))
 
-    def set_Kd(self, kd) -> None:
+    def set_kd(self, kd: float) -> None:
         """
         Allows setting the Kd gain of the controller.
 
+        :type kd: float
         :param kd: Kd gain of the controller
         """
         self.set_pid_parameters(kd=float(kd))
@@ -406,8 +415,11 @@ class Setup(object):
         """
         Interface to the pid-setting functionality of simple_pid.
 
+        :type kp: float
         :param kp: Kp gain of the controller
+        :type ki: float
         :param ki: Ki gain of the controller
+        :type kd: float
         :param kd: Kd gain of the controller
         """
         if kp is None:
@@ -422,6 +434,7 @@ class Setup(object):
         """
         Start pid mode with the output set to off.
 
+        :type setpoint: float
         :param setpoint: Can be used to define a new temperature difference setpoint.
         """
         self._current_mode = Mode.PID_OFF
@@ -439,6 +452,7 @@ class Setup(object):
         """
         Enables the output in either pwn or pid mode.
 
+        :type desired_pwm_output: float
         :param desired_pwm_output: Optionally enable pwm mode with a predefined nonzero output.
         """
         self.controller.reset()
@@ -459,11 +473,13 @@ class Setup(object):
         self.set_pwm(0)
 
     @staticmethod
-    def calculate_massflow_estimate(delta_t, pwm) -> float:
+    def calculate_massflow_estimate(delta_t: float, pwm: float) -> float:
         """
         Calculate the massflow estimate depending on the measured temperature difference and the current output power
 
+        :type delta_t: float
         :param delta_t: Measured temperature difference
+        :type pwm: float
         :param pwm: Current output power
         """
         c_p = 1006.0  # joule / kilogram / kelvin

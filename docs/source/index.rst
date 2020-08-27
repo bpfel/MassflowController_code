@@ -13,7 +13,7 @@ for the regulation of the heater.
 
 The software provided here mainly does two things:
 
-#. Communication with all attached devices, which are
+#. Communication with all attached devices:
 
    #. Sensirion SHT temperature sensors connected to a Sensirion Sensor Bridge
    #. A Sensirion SFM massflow meter
@@ -22,10 +22,9 @@ The software provided here mainly does two things:
    This task is taken over by the :ref:`setup` class. It handles all interactions with the hardware and
    for this purpose makes use of the different drivers, as seen on page :ref:`drivers`.
 
-#. Allowing interaction
+#. Allowing interactions:
 
    #. Displaying the current system status
-   #. Informing on possible interactions with the system
    #. Walking the student through different steps of the experimentation
    #. Handling interactions with the setup
 

@@ -19,7 +19,7 @@ SHDLC_IO_ERROR_CODES = {
 
 class ShdlcIoModule(PlatformBase):
     """
-    ShdlcIoModule represents the custom Sensirion HDLC IO Box that allows driving the heater with a PWM output.
+    The ShdlcIoModule represents the custom Sensirion HDLC IO Box that allows driving the heater with a PWM output.
 
     :type serial_port: str
     :param serial_port: Comport the IO box is connected to
@@ -80,7 +80,7 @@ class ShdlcIoModule(PlatformBase):
 
     def disconnect(self) -> None:
         """
-        Sets all outputs of.
+        Sets all outputs off.
         """
         self.set_all_digital_io_off()
         time.sleep(0.1)
@@ -153,7 +153,7 @@ class ShdlcIoModule(PlatformBase):
 
     def get_analog_input(self) -> float:
         """
-        Measure actual voltage on ADC input
+        Measures actual voltage on ADC input
 
         :return: A voltage between 0-10V
         """
@@ -172,7 +172,7 @@ class ShdlcIoModule(PlatformBase):
 
     def get_analog_output(self) -> float:
         """
-        Get actual voltage for DAC output
+        Gets actual voltage for DAC output
 
         :return: A voltage between 0-10V
         """
@@ -191,7 +191,7 @@ class ShdlcIoModule(PlatformBase):
 
     def set_analog_output(self, value: int) -> None:
         """
-        Set the analog output
+        Sets the analog output
 
         :type value: int
         :param value: A voltage between 0-10V
@@ -207,7 +207,7 @@ class ShdlcIoModule(PlatformBase):
 
     def set_pwm(self, pwm_bit: int, dc: int) -> None:
         """
-        Set the pwm output
+        Sets the pwm output
 
         :type pwm_bit: int
         :param pwm_bit: The index of the PWM channel to be used (0, 1)
@@ -225,7 +225,7 @@ class ShdlcIoModule(PlatformBase):
 
     def get_pwm(self, pwm_bit: int) -> int:
         """
-        Read the current pwm setting.
+        Reads the current pwm setting.
 
         :type pwm_bit: int
         :param pwm_bit: The index of the PWM channel to be used (0, 1)

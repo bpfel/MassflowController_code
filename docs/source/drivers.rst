@@ -26,6 +26,7 @@ Shdlc IO Module - The Heater
 .. autoclass:: Drivers.Shdlc_IO.ShdlcIoModule
    :members:
    :private-members:
+   :show-inheritance:
 
 Sensirion Sensor Bridge (EKS)
 -----------------------------
@@ -33,6 +34,7 @@ Sensirion Sensor Bridge (EKS)
 .. autoclass:: Drivers.SHT.EKS
    :members:
    :private-members:
+   :show-inheritance:
 
 Sensors
 *******
@@ -50,6 +52,7 @@ Sensirion Humidity Temperature (STH)
 .. autoclass:: Drivers.SHT.SHT
    :members:
    :private-members:
+   :show-inheritance:
 
 Sensirion Mass Flow Meter / Controller (SFM / SFC)
 --------------------------------------------------
@@ -57,6 +60,7 @@ Sensirion Mass Flow Meter / Controller (SFM / SFC)
 .. autoclass:: Drivers.SFX5400.SFX5400
    :members:
    :private-members:
+   :show-inheritance:
 
 Sensirion Differential Pressure (SDP)
 -------------------------------------
@@ -64,3 +68,4 @@ Sensirion Differential Pressure (SDP)
 .. autoclass:: Drivers.SDP800.SDP800
    :members:
    :private-members:
+   :show-inheritance:

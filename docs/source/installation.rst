@@ -16,5 +16,5 @@ Debugging
 *********
 
 The installation is based on pyinstaller. It is configured via the `02_SOFTWARE/main.spec` file. Set `debug=True`
-and `console=True` to receive informative output+ on the cmd shell upon launching the program.
+and `console=True` to receive informative output on the cmd shell upon launching the program.
 

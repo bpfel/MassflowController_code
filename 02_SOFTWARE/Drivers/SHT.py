@@ -30,6 +30,7 @@ class EKS(PlatformBase):
     def connect(self) -> bool:
         """
         Attempts to connect to the EKS.
+
         :return: True if connected sucessifully, otherwise the encountered exception will be returned.
         """
         try:
@@ -56,7 +57,9 @@ class EKS(PlatformBase):
     def measure(self) -> list:
         """
         Measures both channels if a sensor is attached
+
         :return: A list of measured values.
+
         """
         result = []
         for sensor in self.sensors:
@@ -74,6 +77,7 @@ class EKS(PlatformBase):
     def is_connected(self) -> bool:
         """
         Tests if the EKS is responsive.
+
         :return: True if the EKs serial number can be read, False otherwise.
         """
         try:
@@ -85,7 +89,7 @@ class EKS(PlatformBase):
 
 class SHT(SensorBase):
     """
-    SHT represents either a SHT85 or an STH31 of the Sensirion Humidity Temperature (SHT) sensor range, connected via
+    SHT represents either an SHT85 or an STH31 of the Sensirion Humidity Temperature (SHT) sensor range, connected via
     the Sensirion Sensor Bridge (EKS).
 
     :type device_port: SensorBridgePort
@@ -131,6 +135,7 @@ class SHT(SensorBase):
     def is_connected(self) -> bool:
         """
         Check if the sensor operates correctly
+
         :return: True if the status register can be read, False otherwise
         """
         try:
@@ -141,7 +146,8 @@ class SHT(SensorBase):
 
     def read_status_reg(self) -> bytearray:
         """
-        Reads status register
+        Reads the status register
+
         :return: Status register value as bytearray.
         """
         with self._lock:
@@ -203,7 +209,7 @@ class SHT(SensorBase):
     def _convert_humidity(self, data: bytearray) -> float:
         """
         Converts the raw sensor data to the actual measured humidity according to the
-           data sheet Sensirion_Humidity_Sensors_SHT3x
+        data sheet Sensirion_Humidity_Sensors_SHT3x
 
         :type data: bytearray
         :param data: 2 bytes, namely number 4 (humidity MSB) and 5 (humidity LSB) of the answer delivered by the sensor.
@@ -215,11 +221,11 @@ class SHT(SensorBase):
     def _convert_temperature(self, data: bytearray) -> float:
         """
         Converts the raw sensor data to the actual measured temperature according to the
-           data sheet Sensirion_Humidity_Sensors_SHT3x
+        data sheet Sensirion_Humidity_Sensors_SHT3x
 
         :type data: bytearray
-        :param data: 2 bytes, namely number 1 (temperature MSB) and 2 (humidity LSB) of the answer delivered by
-           the sensor.
+        :param data: 2 bytes, namely number 1 (temperature MSB) and 2 (humidity LSB) of the answer delivered by the
+           sensor.
         :return: The temperature measured by the sensor in degrees Celsius.
         """
         adc_out = data[0] << 8 | data[1]
