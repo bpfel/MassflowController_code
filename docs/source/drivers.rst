@@ -36,7 +36,7 @@ Sensors
 Sensor Base
 -----------
 
-.. autoclass:: Drivers.SenorBase.SensorBase
+.. autoclass:: Drivers.SensorBase.SensorBase
    :members:
    :private-members:
 
