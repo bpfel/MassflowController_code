@@ -16,6 +16,7 @@ class EKS(PlatformBase):
     """
     EKS represents a Sensirion Sensor Bridge (EKS) which is used to communicate to a range of sensor via I2C.
 
+    :type serial_port: str
     :param serial_port: Name of the port to which the EKS is connected.
     """
 
@@ -87,8 +88,11 @@ class SHT(SensorBase):
     SHT represents either a SHT85 or an STH31 of the Sensirion Humidity Temperature (SHT) sensor range, connected via
     the Sensirion Sensor Bridge (EKS).
 
+    :type device_port: SensorBridgePort
     :param device_port: EKS port, either ONE or TWO.
+    :type shdlc_device: SensorBridgeShdlcDevice
     :param shdlc_device: Instance of the controlling EKS.
+    :type name: str
     :param name: Name of the sensor.
     """
 
@@ -156,12 +160,14 @@ class SHT(SensorBase):
         """
         self.ShdlcDevice.switch_supply_off(port=self.sensor_bridge_port)
 
-    def connect_sensor(self, supply_voltage, frequency) -> None:
+    def connect_sensor(self, supply_voltage: float, frequency: int) -> None:
         """
         Connection of a sensor attached to the sensirion sensor bridge according to
         the quick start guide to sensirion-shdlc-sensorbridge.
 
+        :type supply_voltage: float
         :param supply_voltage: Desired supply voltage in Volts.
+        :type frequency: int
         :param frequency: I2C frequency in Hz
         """
         self.ShdlcDevice.set_i2c_frequency(
@@ -199,6 +205,7 @@ class SHT(SensorBase):
         Converts the raw sensor data to the actual measured humidity according to the
            data sheet Sensirion_Humidity_Sensors_SHT3x
 
+        :type data: bytearray
         :param data: 2 bytes, namely number 4 (humidity MSB) and 5 (humidity LSB) of the answer delivered by the sensor.
         :return: The relative humidity measured by the sensor in percent.
         """
@@ -210,6 +217,7 @@ class SHT(SensorBase):
         Converts the raw sensor data to the actual measured temperature according to the
            data sheet Sensirion_Humidity_Sensors_SHT3x
 
+        :type data: bytearray
         :param data: 2 bytes, namely number 1 (temperature MSB) and 2 (humidity LSB) of the answer delivered by
            the sensor.
         :return: The temperature measured by the sensor in degrees Celsius.

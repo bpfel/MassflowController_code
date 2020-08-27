@@ -12,10 +12,17 @@ class LivePlotSignal(object):
     """
     A LivePlotSignal stores all the information needed identify and plot a single signal.
 
+    :type name: str
     :param name: Name of the signal, to be displayed on the legend of the plot the signal is shown on
-    :param identifier: Identifiert of the signal, used to retrieve the signal from the measurement buffer of the setup
+    :type identifier: str
+    :param identifier: Identifier of the signal, used to retrieve the signal from the measurement buffer of the setup
+    :type color: str
     :param color: Color of the plotted line used to instantiate the corresponding pen
+    :type width: float
     :param width: Width of the plotted line used to instantiate the corresponding pen
+
+    .. note::
+       Selecting integer values for the width parameter results in smoother plots.
     """
 
     def __init__(self, name: str, identifier: str, color: str, width=1):
@@ -29,9 +36,13 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
     """
     The LivePlotWidget makes use of pyqtgraph to allow plotting a number of signals. It automatically updates.
 
+    :type setup: Setup
     :param setup: Instance of the current setup to allow access to the measurement buffer
+    :type title: str
     :param title: Title of the plot
+    :type ylabel: str
     :param ylabel: Label of the y-axis
+    :type ylims: Tuple
     :param ylims: Limits of the y-axis
     """
 
@@ -61,6 +72,8 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
     def add_signals(self, signals: list) -> None:
         """
         Add a list of signals to the plot.
+
+        :type signals: list
         :param signals: List of LivePlotSignals
         """
         self.addLegend()

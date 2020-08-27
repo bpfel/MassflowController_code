@@ -9,6 +9,7 @@ class MainWindow(QMainWindow):
     """
     Defines the main window of the application.
 
+    :type setup: Setup
     :param setup: Instance of Setup to allow access to sensors and actuators.
     """
 
@@ -126,6 +127,8 @@ class MainWindow(QMainWindow):
     def _toggle_output(self, state=None) -> None:
         """
         Toolbar action; Allows to turn the pwm output on or off.
+
+        :type state: bool
         :param state: Set True to turn the output state to on, or False vice versa.
         """
         if state is not None:
@@ -239,6 +242,8 @@ class MainWindow(QMainWindow):
 class Launcher(object):
     """
     Wrapper for the main window, simply launches the Qt application.
+
+    :type setup: Setup
     :param setup: Instance of Setup to allow access to sensors and actuators.
     """
 

@@ -57,7 +57,9 @@ class SDP800(SensorBase):
         Connection of a sensor attached to the sensirion sensor bridge according to the quick start guide to
            sensirion-shdlc-sensorbridge.
 
+        :type supply_voltage: float
         :param supply_voltage: Desired supply voltage in Volts.
+        :type frequency: float
         :param frequency: I2C frequency
         """
         self.ShdlcDevice.set_i2c_frequency(
@@ -105,6 +107,7 @@ class SDP800(SensorBase):
         Converts the raw sensor data to the actual measured differential pressure according
            to the data sheet Sensirion_DifferentialPressure_Sensors_SDP800
 
+        :type data: bytearray
         :param data: 2 bytes, namely number 1 (differential pressure MSB) and 2 (differential pressure LSB)
            of the answer delivered by the sensor
         :return: The differential pressured measured by the sensor

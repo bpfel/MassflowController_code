@@ -13,10 +13,15 @@ class ExperimentPage(QWidget):
     """
     Base class for the different experiment views. Defines all interfaces with the main layout / the tool bar.
 
+    :type setup: Setup
     :param setup: Instance of Setup to allow access to sensors and actuators.
+    :type start_recording_action: Callable
     :param start_recording_action: Toolbar action allowing to start measurement recording via the competition widget.
+    :type stop_recording_action: Callable
     :param stop_recording_action: Toolbar action allowing to stop measurement recording via the competition widget.
+    :type enable_output_action: Callable
     :param enable_output_action: Toolbar action allowing to set output on or off via the competition widget.
+    :type name: str
     :param name: Name of the inheriting experiment page.
     """
 

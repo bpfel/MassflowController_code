@@ -10,6 +10,7 @@ class DeviceIdentifier:
     """
     The DeviceIdentifier lists all connected USB devices and tries to identify all devices listed in self.serials.
 
+    :type serials: dict
     :param serials: Dictionary with USB names as keys and USB serials as values.
 
     .. note:

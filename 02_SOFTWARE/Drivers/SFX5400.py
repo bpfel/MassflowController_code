@@ -41,7 +41,9 @@ class SFX5400(SensorBase):
     """
     SFX5400 represents either a Sensirion Flow Controller (SFC) or a Sensirion Flow Meter (SFM) of type 5400.
 
+    :type serial_port: str
     :param serial_port: Name of the comport the SFX is connected to.
+    :type name: str
     :param name: Name of the device.
     """
 
@@ -79,9 +81,11 @@ class SFX5400(SensorBase):
         result = self.ShdlcDevice.execute(Sfc5400ShdlcCmdReadMeasuredFlow())
         return {FLOW_MEASUREMENT_NAME: result}
 
-    def set_flow(self, setpoint_normalized) -> bool:
+    def set_flow(self, setpoint_normalized: float) -> bool:
         """
         Sets the current desired mass flow if a flow controller is connected.
+
+        :type setpoint_normalized: float
         :param setpoint_normalized: Flow setpoint as normalized input between 0 and 1.
         :return: True if set successifully, False if exception occured.
         """
@@ -99,6 +103,7 @@ class SFX5400(SensorBase):
         """
         Retrieves device information depending on the index given.
 
+        :type index: int
         :param index: Integer between 1 and 3 to request on of the data below:
             1. Product Name
             2. Article Code

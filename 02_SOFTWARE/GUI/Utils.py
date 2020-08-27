@@ -6,6 +6,7 @@ def resource_path(relative_path: str):
     """
     Get absolute path to resource, works for dev and for PyInstaller
 
+    :type relative_path: str
     :param relative_path: Relative path to the resource.
     """
     base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))

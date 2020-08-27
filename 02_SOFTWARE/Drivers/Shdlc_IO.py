@@ -21,9 +21,13 @@ class ShdlcIoModule(PlatformBase):
     """
     ShdlcIoModule represents the custom Sensirion HDLC IO Box that allows driving the heater with a PWM output.
 
+    :type serial_port: str
     :param serial_port: Comport the IO box is connected to
+    :type baudrate: int
     :param baudrate: Baudrate of the connection
+    :type slave_address: int
     :param slave_address: Slave address
+    :type input_pins: list
     :param input_pins: list of integers of the input pins
     """
 
@@ -103,6 +107,8 @@ class ShdlcIoModule(PlatformBase):
     def get_digital_io(self, io_bit: int) -> bool:
         """
         Reads a digital io pin.
+
+        :type io_bit: int
         :param io_bit: Output bit to read
         :return: True if digital bit is set.
         """
@@ -122,7 +128,9 @@ class ShdlcIoModule(PlatformBase):
         """
         Sets a digital output pin.
 
+        :type io_bit: int
         :param io_bit: The digital pin index to set
+        :type value: bool
         :param value: True if set to on
         """
         data = 1 if value else 0
@@ -182,6 +190,7 @@ class ShdlcIoModule(PlatformBase):
         """
         Set the analog output
 
+        :type value: int
         :param value: A voltage between 0-10V
         """
         adc_value = int(value / 10.0 * 65535)
@@ -195,8 +204,11 @@ class ShdlcIoModule(PlatformBase):
 
     def set_pwm(self, pwm_bit: int, dc: int) -> None:
         """
+        Set the pwm output
 
+        :type pwm_bit: int
         :param pwm_bit: The index of the PWM channel to be used (0, 1)
+        :type dc: int
         :param dc:
         :return: A duty cycle value between 0 - 65535
         """
@@ -212,6 +224,7 @@ class ShdlcIoModule(PlatformBase):
         """
         Read the current pwm setting.
 
+        :type pwm_bit: int
         :param pwm_bit: The index of the PWM channel to be used (0, 1)
         :return: A duty cycle value between 0 - 65535
         """

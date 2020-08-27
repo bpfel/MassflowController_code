@@ -10,10 +10,14 @@ class MeasurementBuffer(object):
     ) -> None:
         """
         Upon initialization the MeasurementBuffer receives a list of signals, the desired sampling time and the
-           total buffered interval. It sets up a dictionary of deque instances, one instance for each singal, that are
-           limited to the total length of the buffer. These essentially represent circular buffers.
+        total buffered interval. It sets up a dictionary of deque instances, one instance for each singal, that are
+        limited to the total length of the buffer. These essentially represent circular buffers.
+
+        :type signals: list
         :param signals: List of signal names.
+        :type sampling_time_s: float
         :param sampling_time_s: Measurement sampling time in seconds.
+        :type buffer_interval_s: float
         :param buffer_interval_s: Total buffered time interval in seconds which together with the sampling time defines the
            number of measurements to be stored.
         """
@@ -26,8 +30,9 @@ class MeasurementBuffer(object):
     def update(self, measurement: dict) -> None:
         """
         A buffer update is done by adding an entry to each signal buffer. Before the buffer is full this leads
-           to an increase in length, afterwards the deque instances automatically forget their oldest entry in favor
-           of the new one.
+        to an increase in length, afterwards the deque instances automatically forget their oldest entry in favor
+        of the new one.
+
         :type measurement: object
         :param measurement: Dictionary containing a value for each signal name
         """
@@ -40,7 +45,9 @@ class MeasurementBuffer(object):
     def __getitem__(self, item: str) -> deque:
         """
         Allows access of the individual signals via the __getitem__ operator.
-        :param item:
+
+        :type item: str
+        :param item: Identifier of the desired signal.
         :return: A deque instance containing the requested signal.
 
         :raises KeyError: If the supplied string is not a key in the _data dictionary a KeyError is raised.
