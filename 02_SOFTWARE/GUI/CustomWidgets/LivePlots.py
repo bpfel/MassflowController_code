@@ -56,6 +56,7 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
         self.title = title
 
         # Standard visual setup for plots:
+        self.showGrid(x=True, y=True, alpha=0.7)
         self.setBackground("w")
         self.setXRange(0, self.setup.interval_s)
         self.setYRange(ylims[0], ylims[1])

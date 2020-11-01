@@ -1,7 +1,7 @@
 .. Mass Flow Sensor documentation master file, created by
-   sphinx-quickstart on Tue Aug 11 07:59:03 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+sphinx-quickstart on Tue Aug 11 07:59:03 2020.
+You can adapt this file completely to your liking, but it should at least
+contain the root `toctree` directive.
 
 Software Documentation: Air Mass Flow Sensor
 ============================================
@@ -37,7 +37,6 @@ The icons in the GUI are made by `Yusuke Kamiyamane <https://p.yusukekamiyamane.
 `CC BY 3.0 <https://p.yusukekamiyamane.com>`_.
 
 The GUI frontend, `QT 5.0 <https://www.qt.io>`_ is used under `LGPL 3.0 <https://www.gnu.org/licenses/lgpl-3.0.html>`_.
-
 
 .. toctree::
    :hidden:

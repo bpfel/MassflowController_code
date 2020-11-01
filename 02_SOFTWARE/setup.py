@@ -59,8 +59,10 @@ class Setup(object):
         self._sdp = None
         self._simulation_mode = False
         self._current_pwm_value = 0
+        self._current_flow_value = 0
         self._current_mode = Mode.IDLE
-        self._setpoint = 6  # Temperature difference setpoint
+        self._setpoint = 15  # Temperature difference setpoint
+        self._delta_T = 0  # Static state temperature difference for calibration
 
         # allocate public member variables
         self.interval_s = (
@@ -265,10 +267,10 @@ class Setup(object):
         results_eks = self._eks.measure()
         results_sfc = self._sfc.measure()
         results_timestamp = time.time()
-        delta_T = results_eks[1]["Temperature"] - results_eks[0]["Temperature"]
+        delta_T = results_eks[1]["Temperature"] - results_eks[0]["Temperature"] - self._delta_T
         results = {
             "Temperature 1": results_eks[0]["Temperature"],
-            "Temperature 2": results_eks[1]["Temperature"],
+            "Temperature 2": results_eks[1]["Temperature"] - self._delta_T,
             "Humidity 1": results_eks[0]["Humidity"],
             "Humidity 2": results_eks[1]["Humidity"],
             "Flow": results_sfc["Flow"],
@@ -430,6 +432,17 @@ class Setup(object):
             kd = self.controller.Kd
         self.controller.tunings = (kp, ki, kd)
 
+    def set_flow(self, value):
+        """
+        Interface to the SFC5xxx drive for defining the current flow
+        setpoint
+
+        :type flow: float
+        :param flow: The desired massflow in normalized units, in [0, 1].
+        """
+        if 0.0 <= value <= 1:
+            self._sfc.set_flow(setpoint_normalized=value)
+
     def start_pid_controller(self, setpoint=None) -> None:
         """
         Start pid mode with the output set to off.
@@ -471,6 +484,23 @@ class Setup(object):
         elif self._current_mode is Mode.FORCE_PWM_ON:
             self._current_mode = Mode.FORCE_PWM_OFF
         self.set_pwm(0)
+
+    def set_temperature_calibration(self) -> None:
+        """
+        Record the current temperature offset, assuming steady state.
+        """
+        delta_T = self.results['Temperature Difference']
+        threshold = 0.5
+        if delta_T > threshold:
+            logger.warning("Calibration attempted, delta T: {} larger than threshold: {}".format(delta_T, threshold))
+        else:
+            self._delta_T = delta_T
+
+    def reset_temperature_calibration(self) -> None:
+        """
+        Reset the current temperature offset to zero.
+        """
+        self._delta_T = 0
 
     @staticmethod
     def calculate_massflow_estimate(delta_t: float, pwm: float) -> float:

@@ -180,9 +180,14 @@ class PWMSetting(ExperimentPage):
         self.pwm.value = self.setup._current_pwm_value
         self.pwm.slider.valueChanged.connect(self.set_pwm_value)
 
+        self.flow = AnnotatedSlider(min=0, max=1, title="Massflow")
+        self.flow.value = self.setup._current_flow_value
+        self.flow.slider.valueChanged.connect(self.set_flow_value)
+
         # Add widgets to layout
         self.vertical_layout_controls.addWidget(StatusWidget(setup=self.setup))
         self.vertical_layout_controls.addWidget(self.pwm)
+        self.vertical_layout_controls.addWidget(self.flow)
         # Placeholder to prevent spreading of widgets across vertical space
         self.vertical_layout_controls.addWidget(QLabel(), 1)
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
@@ -190,6 +195,9 @@ class PWMSetting(ExperimentPage):
 
     def set_pwm_value(self):
         self.setup.set_pwm(value=self.pwm.value)
+
+    def set_flow_value(self):
+        self.setup.set_flow(value=self.flow.value)
 
     def enter_individual(self):
         self.setup.start_direct_power_setting()

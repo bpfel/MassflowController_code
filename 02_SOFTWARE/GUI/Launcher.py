@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         self.action_competition_mode = QPushButton("Competition Mode", self)
-        self.action_competition_mode.setStatusTip("Win a guided tour at Sensirion!")
+        self.action_competition_mode.setStatusTip("Win a Sensirion Humi Gadget!")
         self.action_competition_mode.setCheckable(True)
         self.action_competition_mode.setChecked(False)
         self.action_competition_mode.clicked.connect(self._change_competition_mode)
@@ -123,6 +123,22 @@ class MainWindow(QMainWindow):
         self.action_toggle_output.setChecked(False)
         self.action_toggle_output.clicked.connect(self._toggle_output)
         toolbar.addWidget(self.action_toggle_output)
+
+        toolbar.addSeparator()
+
+        self.action_set_temp_calibration = QAction(
+            QIcon(resource_path("Icons\\thermometer--pencil.png")), "Set Temperature Calibration", self
+        )
+        self.action_set_temp_calibration.setStatusTip("Force the current delta T to be zero.")
+        self.action_set_temp_calibration.triggered.connect(self._calibrate_temperature)
+        toolbar.addAction(self.action_set_temp_calibration)
+
+        self.action_reset_temp_calibration = QAction(
+            QIcon(resource_path("Icons\\thermometer--exclamation.png")), "Reset Temperature Calibration", self
+        )
+        self.action_reset_temp_calibration.setStatusTip("Reset the temperature calibration.")
+        self.action_reset_temp_calibration.triggered.connect(self._reset_temperature_calibration)
+        toolbar.addAction(self.action_reset_temp_calibration)
 
     def _toggle_output(self, state=None) -> None:
         """
@@ -220,6 +236,19 @@ class MainWindow(QMainWindow):
         Toolbar action; Allows to reset all visible plots to their original view.
         """
         self.stack.currentWidget().reset_plots()
+
+    def _calibrate_temperature(self) -> None:
+        """
+        Toolbar action; Allows to set the current delta T to zero by saving the current
+        temperature difference and subtracting it from the second temperature measurement.
+        """
+        self.setup.set_temperature_calibration()
+
+    def _reset_temperature_calibration(self) -> None:
+        """
+        Toolbar action; Allows to reset the calibration temperature difference to zero.
+        """
+        self.setup.reset_temperature_calibration()
 
     def setup_status_bar(self) -> None:
         """

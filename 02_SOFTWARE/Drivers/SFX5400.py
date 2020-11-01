@@ -8,6 +8,7 @@ import logging
 logger = logging.getLogger("root")
 
 FLOW_UNIT = 1  # 0 = Normalized (0..1) / 1 = Physical / 2 = User Defined
+MAXIMUM_FLOW_SLM = 100
 FLOW_MEASUREMENT_NAME = "Flow"
 
 
@@ -72,6 +73,7 @@ class SFX5400(SensorBase):
         """
         Disconnects the device.
         """
+        self.set_flow(0)
         self.ShdlcPort.close()
 
     def measure(self) -> dict:
@@ -91,6 +93,8 @@ class SFX5400(SensorBase):
         :param setpoint_normalized: Flow setpoint as normalized input between 0 and 1.
         :return: True if set successifully, False if exception occured.
         """
+        if FLOW_UNIT == 1:
+            setpoint_normalized *= MAXIMUM_FLOW_SLM
         try:
             self.ShdlcDevice.execute(Sfc5400ShdlcCmdSetSetpoint(setpoint_normalized))
         except Exception as e:

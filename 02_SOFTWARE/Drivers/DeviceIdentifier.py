@@ -72,7 +72,11 @@ class DeviceIdentifier:
                 # Check if the currently searched devices is on the current port
                 if serial == self.serials[device]:
                     self.serial_ports.update({device: port.device})
-                    logger.debug()
+                    logger.debug(
+                        "Device {} found on port {}!".format(
+                            device, port.device
+                        )
+                    )
                     found = True
                     break
             # If device is not found on any comport log that
