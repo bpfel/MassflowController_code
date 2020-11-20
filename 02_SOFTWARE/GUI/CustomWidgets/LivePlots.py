@@ -194,7 +194,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperature Difference",
             ylabel="Temperature Difference [°C]",
-            ylims=(0, 10),
+            ylims=(0, self.setup.temperature_difference_setpoint+1),
         )
         signal_actual_delta_t = LivePlotSignal(
             name="Actual Delta T", identifier="Temperature Difference", color="b"

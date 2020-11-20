@@ -173,7 +173,7 @@ class PWMSetting(ExperimentPage):
             start_recording_action=start_recording_action,
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
-            name="PWM Setting Page",
+            name="Experiment Page 1: Human in the Loop",
         )
         # Create controls
         self.pwm = AnnotatedSlider(min=0, max=1, title="Heating Power")
@@ -225,7 +225,7 @@ class PIDSetting(ExperimentPage):
             start_recording_action=start_recording_action,
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
-            name="PID Setting Page",
+            name="Experiment Page 2: PID Controller",
         )
 
         # Create controls
