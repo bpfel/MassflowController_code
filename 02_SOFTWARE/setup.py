@@ -46,11 +46,10 @@ class Setup(object):
        the number of stored measurements.
     """
 
-    def __init__(self, serials: dict, t_sampling_s: float, interval_s: float, reverse_temp_sensors=False):
+    def __init__(self, serials: dict, t_sampling_s: float, interval_s: float):
         # allocate private member variables
         self._serials = serials
         self._t_sampling_s = t_sampling_s
-        self.reverse_temp_sensors = reverse_temp_sensors
         self._devices = None
         self._buffering = True
         self._measurement_timer = None
@@ -122,8 +121,6 @@ class Setup(object):
             # Connect all sensors / actuators
             self._eks = EKS(serial_port=self._devices.serial_ports["EKS"])
             self._eks.open()
-            if self.reverse_temp_sensors:
-                self._eks.reverse_sensor_order()
             self._sfc = SFX5400(serial_port=self._devices.serial_ports["SFC"])
             self._sfc.open()
             self._heater = ShdlcIoModule(
@@ -504,6 +501,12 @@ class Setup(object):
         Reset the current temperature offset to zero.
         """
         self._delta_T = 0
+
+    def reverse_temp_sensors(self) -> None:
+        """
+        Reverse the order of the temperature sensors if the have been set up wrongly.
+        """
+        self._eks.reverse_sensor_order()
 
     @staticmethod
     def calculate_massflow_estimate(delta_t: float, pwm: float) -> float:

@@ -7,7 +7,7 @@ logger = setup_custom_logger(name="root", level=getLevelName("DEBUG"))
 
 if __name__ == "__main__":
     serials = {"EKS": "EKS23Z50PQ", "SFC": "FT1PXV63", "Heater": "AM01ZB7J"}
-    with Setup(serials=serials, t_sampling_s=0.25, interval_s=120, reverse_temp_sensors=True) as setup:
+    with Setup(serials=serials, t_sampling_s=0.25, interval_s=120) as setup:
         setup.open()
         setup.start_measurement_thread()
         launcher = Launcher(setup=setup)

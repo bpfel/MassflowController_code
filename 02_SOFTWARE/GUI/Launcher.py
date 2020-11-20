@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
         )
 
         self.setWindowTitle("Mass Flow Sensor")
+        self.setup_menu_bar()
         self.setup_tool_bar()
         self.setup_status_bar()
 
@@ -48,6 +49,45 @@ class MainWindow(QMainWindow):
         )
         self.setCentralWidget(self.stack)
         self.stack.currentWidget().enter()
+
+    def setup_menu_bar(self) -> None:
+        bar = self.menuBar()
+        configuration = bar.addMenu("Configuration")
+
+        self.action_set_temp_calibration = QAction("Set Temperature Calibration", self)
+        self.action_set_temp_calibration.setStatusTip("Force the current delta T to be zero.")
+        self.action_set_temp_calibration.triggered.connect(self._calibrate_temperature)
+        configuration.addAction(self.action_set_temp_calibration)
+
+        self.action_reset_temp_calibration = QAction("Reset Temperature Calibration", self)
+        self.action_reset_temp_calibration.setStatusTip("Reset the temperature calibration.")
+        self.action_reset_temp_calibration.triggered.connect(self._reset_temperature_calibration)
+        configuration.addAction(self.action_reset_temp_calibration)
+
+        configuration.addSeparator()
+
+        self.action_reverse_temp_sensors = QAction("Reverse Temperature Sensors", self)
+        self.action_reverse_temp_sensors.setStatusTip(
+            "Changes the order of the temperature sensors in case they have been set up wrongly.")
+        self.action_reverse_temp_sensors.triggered.connect(self._reverse_temperature_sensors)
+        configuration.addAction(self.action_reverse_temp_sensors)
+
+    def setup_status_bar(self) -> None:
+        """
+        Sets up a status bar displaying sponsor layouts and tips for hovered over widgets.
+        """
+        sensirion_img = QPixmap(resource_path("Icons\\sensirion.png"))
+        sensirion_logo = QLabel(self)
+        sensirion_logo.setPixmap(sensirion_img.scaledToHeight(32))
+        sensirion_logo.setAlignment(Qt.AlignLeft)
+        eth_img = QPixmap(resource_path("Icons\\eth.png"))
+        eth_logo = QLabel(self)
+        eth_logo.setPixmap(eth_img.scaledToHeight(32))
+        eth_logo.setAlignment(Qt.AlignRight)
+        status_bar = QStatusBar(self)
+        status_bar.addPermanentWidget(sensirion_logo)
+        status_bar.addPermanentWidget(eth_logo)
+        self.setStatusBar(status_bar)
 
     def setup_tool_bar(self) -> None:
         """
@@ -123,22 +163,6 @@ class MainWindow(QMainWindow):
         self.action_toggle_output.setChecked(False)
         self.action_toggle_output.clicked.connect(self._toggle_output)
         toolbar.addWidget(self.action_toggle_output)
-
-        toolbar.addSeparator()
-
-        self.action_set_temp_calibration = QAction(
-            QIcon(resource_path("Icons\\thermometer--pencil.png")), "Set Temperature Calibration", self
-        )
-        self.action_set_temp_calibration.setStatusTip("Force the current delta T to be zero.")
-        self.action_set_temp_calibration.triggered.connect(self._calibrate_temperature)
-        toolbar.addAction(self.action_set_temp_calibration)
-
-        self.action_reset_temp_calibration = QAction(
-            QIcon(resource_path("Icons\\thermometer--exclamation.png")), "Reset Temperature Calibration", self
-        )
-        self.action_reset_temp_calibration.setStatusTip("Reset the temperature calibration.")
-        self.action_reset_temp_calibration.triggered.connect(self._reset_temperature_calibration)
-        toolbar.addAction(self.action_reset_temp_calibration)
 
     def _toggle_output(self, state=None) -> None:
         """
@@ -250,22 +274,11 @@ class MainWindow(QMainWindow):
         """
         self.setup.reset_temperature_calibration()
 
-    def setup_status_bar(self) -> None:
+    def _reverse_temperature_sensors(self) -> None:
         """
-        Sets up a status bar displaying sponsor layouts and tips for hovered over widgets.
+        Menu action; Allows to switch the order of the temperature sensors if the hardware setup is the wrong way around.
         """
-        sensirion_img = QPixmap(resource_path("Icons\\sensirion.png"))
-        sensirion_logo = QLabel(self)
-        sensirion_logo.setPixmap(sensirion_img.scaledToHeight(32))
-        sensirion_logo.setAlignment(Qt.AlignLeft)
-        eth_img = QPixmap(resource_path("Icons\\eth.png"))
-        eth_logo = QLabel(self)
-        eth_logo.setPixmap(eth_img.scaledToHeight(32))
-        eth_logo.setAlignment(Qt.AlignRight)
-        status_bar = QStatusBar(self)
-        status_bar.addPermanentWidget(sensirion_logo)
-        status_bar.addPermanentWidget(eth_logo)
-        self.setStatusBar(status_bar)
+        self.setup.reverse_temp_sensors()
 
 
 class Launcher(object):
