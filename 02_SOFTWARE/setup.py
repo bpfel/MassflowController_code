@@ -46,10 +46,10 @@ class Setup(object):
        the number of stored measurements.
     """
 
-    def __init__(self, serials: dict, t_sampling_s: float, interval_s: float):
+    def __init__(self, config: dict):
         # allocate private member variables
-        self._serials = serials
-        self._t_sampling_s = t_sampling_s
+        self._serials = config['serials']
+        self._t_sampling_s = config['t_sampling']
         self._devices = None
         self._buffering = True
         self._measurement_timer = None
@@ -61,20 +61,20 @@ class Setup(object):
         self._current_pwm_value = 0
         self._current_flow_value = 0
         self._current_mode = Mode.IDLE
-        self._setpoint = 15  # Temperature difference setpoint
+        self.temperature_difference_setpoint = config[
+            'temperature_difference_set_point']  # Temperature difference setpoint
         self._delta_T = 0  # Static state temperature difference for calibration
+        self.config = config
 
         # allocate public member variables
-        self.interval_s = (
-            interval_s  # Time interval over which measurements are buffered
-        )
+        self.interval_s = config['interval']
         self.measurement_buffer = self._setup_measurement_buffer()  # Measurement buffer
         self.results = None  # Storage for current measurement frame
         self.controller = PID(
             Kp=0.0,
             Ki=0.0,
             Kd=0.0,
-            setpoint=self._setpoint,
+            setpoint=self.temperature_difference_setpoint,
             sample_time=0.3,
             output_limits=(0, 1),
         )
@@ -253,7 +253,7 @@ class Setup(object):
             "Flow Estimate": self.calculate_massflow_estimate(
                 delta_t=delta_T, pwm=self._current_pwm_value
             ),
-            "Target Delta T": self._setpoint,
+            "Target Delta T": self.temperature_difference_setpoint,
         }
         return results
 
@@ -280,7 +280,7 @@ class Setup(object):
             "Flow Estimate": self.calculate_massflow_estimate(
                 delta_t=delta_T, pwm=self._current_pwm_value
             ),
-            "Target Delta T": self._setpoint,
+            "Target Delta T": self.temperature_difference_setpoint,
         }
         return results
 
@@ -383,7 +383,7 @@ class Setup(object):
             raise RuntimeError("This is a heating setup. Not a fridge, dummy!")
         if value > 20:
             raise RuntimeError("This a test setup. Not an oven, du Löli!")
-        self._setpoint = value
+        self.temperature_difference_setpoint = value
         self.controller.setpoint = value
 
     def set_kp(self, kp: float) -> None:
@@ -452,7 +452,7 @@ class Setup(object):
         """
         self._current_mode = Mode.PID_OFF
         if setpoint is not None:
-            self._setpoint = setpoint
+            self.temperature_difference_setpoint = setpoint
 
     def start_direct_power_setting(self) -> None:
         """

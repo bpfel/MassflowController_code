@@ -1,0 +1,11 @@
+nominal_mass_flow_rate: 60 #slm
+disturbance_deviation: 10 #slm
+disturbance_duration: 20 #s
+disturbance_delay: 20 #s
+temperature_difference_set_point: 15 #degree
+t_sampling: 0.25 #s
+interval: 120 #s
+serials:
+  EKS: EKS23Z50PQ
+  Heater: AM01ZB7J
+  SFC: FT1PXV63
