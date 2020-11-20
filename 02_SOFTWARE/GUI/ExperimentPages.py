@@ -261,6 +261,9 @@ class PIDSetting(ExperimentPage):
     def enter_individual(self):
         logger.info("Start PID controller")
         self.setup.start_pid_controller()
+        self.set_p_value()
+        self.set_i_value()
+        self.set_d_value()
 
     def leave_individual(self):
         self.setup.set_kp(0)
