@@ -54,6 +54,9 @@ class EKS(PlatformBase):
             if sensor.is_connected():
                 self.sensors.append(sensor)
 
+    def reverse_sensor_order(self) -> None:
+        self.sensors.reverse()
+
     def measure(self) -> list:
         """
         Measures both channels if a sensor is attached
