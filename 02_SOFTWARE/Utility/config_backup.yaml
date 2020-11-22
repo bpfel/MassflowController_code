@@ -1,0 +1,31 @@
+general:
+  nominal_mass_flow_rate: 60 #slm
+  temperature_difference_set_point: 15 #degree
+  t_sampling: 0.25 #s
+  interval: 120 #s
+safety:
+  lower_flow_limit: 15 #slm
+  upper_temperature_limit: 60 #deg Celsius
+measurement:
+  temperature:
+    maximum_calibration_offset: 0.5 #deg Celsius
+  massflow_estimate:
+    c_p: 1006.0 # joule / kilogram / kelvin
+    resistance: 11 # ohm
+    voltage: 24 # volt
+    massflow_SI2SLM: 46432 # kilogram/second / slm
+reference_tracking:
+  interval: 60 #s
+pid_controller:
+  sample_time: 0.3 #s
+  p_limit: 1
+  i_limit: 0.2
+  d_limit: 1
+disturbance_rejection:
+  deviation: 40 #slm
+  duration: 20 #s
+  delay: 15 #s
+serials:
+  EKS: EKS23Z50PQ
+  Heater: AM01ZB7J
+  SFC: FT1PXV63

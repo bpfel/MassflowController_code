@@ -4,6 +4,7 @@ from Drivers.Shdlc_IO import ShdlcIoModule
 from Drivers.DeviceIdentifier import DeviceIdentifier
 from Utility.MeasurementBuffer import MeasurementBuffer
 from Utility.Timer import RepeatTimer
+from Utility.ConfigurationHandler import ConfigurationHandler
 from simple_pid import PID
 import logging
 import time
@@ -44,7 +45,7 @@ class Setup(object):
        the number of stored measurements.
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: ConfigurationHandler):
         # allocate private member variables
         self._serials = config['serials']
         self._t_sampling_s = config['general']['t_sampling']
@@ -82,6 +83,10 @@ class Setup(object):
         self.safety_upper_temperature_limit = self.config['safety']['upper_temperature_limit']
         self.safety_lower_flow_limit = self.config['safety']['lower_flow_limit']
         self.nominal_massflow = self.config['general']['nominal_mass_flow_rate'] / 100
+
+        # switch the temperature sensors if necessary:
+        if self.config['general']['temp_sensors_switched']:
+            self.reverse_temp_sensors(update=False)
 
     def _setup_measurement_buffer(self) -> MeasurementBuffer:
         """
@@ -519,11 +524,18 @@ class Setup(object):
         """
         self._delta_T = 0
 
-    def reverse_temp_sensors(self) -> None:
+    def reverse_temp_sensors(self, update=True) -> None:
         """
         Reverse the order of the temperature sensors if the have been set up wrongly.
         """
         self._eks.reverse_sensor_order()
+        if update:
+            # switch the corresponding entry in the configuration file and save it
+            if self.config['general']['temp_sensors_switched'] == 1:
+                self.config['general']['temp_sensors_switched'] = 0
+            else :
+                self.config['general']['temp_sensors_switched'] = 1
+            self.config.write()
 
 
 class MassflowEstimator(object):

@@ -202,9 +202,9 @@ class PIDSetting(ExperimentPage):
         )
 
         # Create controls
-        self.p_gain = AnnotatedSlider(min=0, max=0.3, title="K_p")
-        self.i_gain = AnnotatedSlider(min=0, max=0.3, title="K_i")
-        self.d_gain = AnnotatedSlider(min=0, max=0.3, title="K_d")
+        self.p_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['p_limit'], title="K_p")
+        self.i_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['i_limit'], title="K_i")
+        self.d_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['d_limit'], title="K_d")
         self.p_gain.slider.valueChanged.connect(self.set_p_value)
         self.i_gain.slider.valueChanged.connect(self.set_i_value)
         self.d_gain.slider.valueChanged.connect(self.set_d_value)
@@ -265,9 +265,9 @@ class MassFlowEstimation(ExperimentPage):
             setup=setup,
             name="Experiment Page 3: Massflow Estimation",
         )
-        self.p_gain = AnnotatedSlider(min=0, max=0.3, title="K_p")
-        self.i_gain = AnnotatedSlider(min=0, max=0.3, title="K_i")
-        self.d_gain = AnnotatedSlider(min=0, max=0.3, title="K_d")
+        self.p_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['p_limit'], title="K_p")
+        self.i_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['i_limit'], title="K_i")
+        self.d_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['d_limit'], title="K_d")
         self.p_gain.slider.valueChanged.connect(self.set_p_value)
         self.i_gain.slider.valueChanged.connect(self.set_i_value)
         self.d_gain.slider.valueChanged.connect(self.set_d_value)
