@@ -46,9 +46,7 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
     :param ylims: Limits of the y-axis
     """
 
-    def __init__(
-        self, setup: Setup, title: str, ylabel: str, ylims: Tuple, *args, **kwargs
-    ) -> None:
+    def __init__(self, setup: Setup, title: str, ylabel: str, ylims: Tuple, *args, **kwargs) -> None:
         super(LivePlotWidget, self).__init__(*args, **kwargs)
         self.setup = setup
         self.signals = []
@@ -94,10 +92,10 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
                 shifted_time_axis = (
-                    numpy.array(self.setup.measurement_buffer["Time"])
-                    - self.setup.measurement_buffer["Time"][-1]
-                    + self.setup.interval_s
-                )
+                        numpy.array(self.setup.measurement_buffer["Time"])
+                        - self.setup.measurement_buffer["Time"][-1]
+                        + self.setup.interval_s
+            )
                 n_entries = len(shifted_time_axis)
                 for signal in self.signals:
                     signal.data_line.setData(
@@ -134,7 +132,7 @@ class LivePlotWidgetCompetition(LivePlotWidget):
     Used to visualize the integral of the control error.
     """
 
-    def __init__(self, setup: Setup, title, ylabel, ylims, *args, **kwargs):
+    def __init__(self, setup: Setup, title, ylabel, ylims, *args, **kwargs) -> None:
         super(LivePlotWidgetCompetition, self).__init__(
             setup=setup, title=title, ylabel=ylabel, ylims=ylims, *args, **kwargs
         )
@@ -164,9 +162,9 @@ class LivePlotWidgetCompetition(LivePlotWidget):
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
                 shifted_time_axis = (
-                    numpy.array(self.setup.measurement_buffer["Time"])
-                    - self.setup.measurement_buffer["Time"][-1]
-                    + self.setup.interval_s
+                        numpy.array(self.setup.measurement_buffer["Time"])
+                        - self.setup.measurement_buffer["Time"][-1]
+                        + self.setup.interval_s
                 )
                 n_entries = len(shifted_time_axis)
                 for signal in self.signals:
@@ -194,7 +192,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperature Difference",
             ylabel="Temperature Difference [°C]",
-            ylims=(0, self.setup.temperature_difference_setpoint+1),
+            ylims=(0, self.setup.temperature_difference_setpoint + 5),
         )
         signal_actual_delta_t = LivePlotSignal(
             name="Actual Delta T", identifier="Temperature Difference", color="b"
@@ -210,7 +208,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperatures",
             ylabel="Temperature [°C]°",
-            ylimes=(20, 40),
+            ylims=(20, 40),
         )
         signal_temperature_one = LivePlotSignal(
             name="Temperature 1", identifier="Temperature 1", color="b"
@@ -260,7 +258,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperature Difference",
             ylabel="Temperature Difference [°C]",
-            ylims=(0, 10),
+            ylims=(0, self.setup.temperature_difference_setpoint + 5),
         )
         signal_actual_delta_t = LivePlotSignal(
             name="Actual Delta T", identifier="Temperature Difference", color="b"
