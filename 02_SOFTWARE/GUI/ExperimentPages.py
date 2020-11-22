@@ -15,12 +15,6 @@ class ExperimentPage(QWidget):
 
     :type setup: Setup
     :param setup: Instance of Setup to allow access to sensors and actuators.
-    :type start_recording_action: Callable
-    :param start_recording_action: Toolbar action allowing to start measurement recording via the competition widget.
-    :type stop_recording_action: Callable
-    :param stop_recording_action: Toolbar action allowing to stop measurement recording via the competition widget.
-    :type enable_output_action: Callable
-    :param enable_output_action: Toolbar action allowing to set output on or off via the competition widget.
     :type name: str
     :param name: Name of the inheriting experiment page.
     """
@@ -29,7 +23,7 @@ class ExperimentPage(QWidget):
         super(ExperimentPage, self).__init__()
         self.setup = setup
         self.name = name
-        self.mode = 0
+        self.competition_mode = False
         self.plot_widget_factory = PlotWidgetFactory(setup=setup)
         self.setup_basic_layout()
 
@@ -73,7 +67,7 @@ class ExperimentPage(QWidget):
         Defines the actions to be taken when this page is left. Split into a general set of actions and an
            individual set defined by the inheriting class.
         """
-        if self.mode == 1:
+        if self.competition_mode:
             self.switch_to_normal_mode()
         self.leave_individual()
 
@@ -83,14 +77,6 @@ class ExperimentPage(QWidget):
         """
         NotImplementedError(
             "leave_individual() sequence for page {} not implemented!".format(self.name)
-        )
-
-    def pause(self) -> None:
-        """
-        Allows to define a set of actions to be taken when the inheriting page is paused.
-        """
-        NotImplementedError(
-            "pause() sequence for page {} not implemented!".format(self.name)
         )
 
     def reset_plots(self) -> None:
@@ -105,7 +91,7 @@ class ExperimentPage(QWidget):
         Loads the competition widget and changes the behaviour of the temperature difference plot to show
         the integral of the current control error.
         """
-        self.mode = 1
+        self.competition_mode = True
         # Change plot behaviour
         delta_t_plot_widget = self.vertical_layout_plots.itemAt(0).widget()
         self.vertical_layout_plots.removeWidget(delta_t_plot_widget)
@@ -126,7 +112,7 @@ class ExperimentPage(QWidget):
         Unloads the competition widget and changes the behaviour of the temperature difference plot back to normal.
         """
         # Change plot behaviour
-        self.mode = 0
+        self.competition_mode = False
         delta_t_plot_widget = self.vertical_layout_plots.itemAt(0).widget()
         self.vertical_layout_plots.removeWidget(delta_t_plot_widget)
         delta_t_plot_widget.setVisible(False)
@@ -170,33 +156,25 @@ class PWMSetting(ExperimentPage):
         self.pwm.value = self.setup._current_pwm_value
         self.pwm.slider.valueChanged.connect(self.set_pwm_value)
 
-        self.flow = AnnotatedSlider(min=0, max=1, title="Massflow")
-        self.flow.value = self.setup._current_flow_value
-        self.flow.slider.valueChanged.connect(self.set_flow_value)
 
         # Add widgets to layout
         self.vertical_layout_controls.addWidget(StatusWidget(setup=self.setup))
         self.vertical_layout_controls.addWidget(self.pwm)
-        self.vertical_layout_controls.addWidget(self.flow)
+
         # Placeholder to prevent spreading of widgets across vertical space
         self.vertical_layout_controls.addWidget(QLabel(), 1)
+
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.power())
 
     def set_pwm_value(self):
         self.setup.set_pwm(value=self.pwm.value)
 
-    def set_flow_value(self):
-        self.setup.set_flow(value=self.flow.value)
-
     def enter_individual(self):
         self.setup.start_direct_power_setting()
 
     def leave_individual(self):
         self.setup.set_pwm(0)
-
-    def pause(self):
-        self.pwm.value = 0
 
     def desired_pwm_output(self):
         return self.pwm.value
@@ -227,9 +205,6 @@ class PIDSetting(ExperimentPage):
         self.p_gain = AnnotatedSlider(min=0, max=0.3, title="K_p")
         self.i_gain = AnnotatedSlider(min=0, max=0.3, title="K_i")
         self.d_gain = AnnotatedSlider(min=0, max=0.3, title="K_d")
-        self.p_gain.value = 0.0
-        self.i_gain.value = 0.0
-        self.d_gain.value = 0.0
         self.p_gain.slider.valueChanged.connect(self.set_p_value)
         self.i_gain.slider.valueChanged.connect(self.set_i_value)
         self.d_gain.slider.valueChanged.connect(self.set_d_value)
@@ -241,6 +216,7 @@ class PIDSetting(ExperimentPage):
         self.vertical_layout_controls.addWidget(self.d_gain)
         # Placeholder to prevent spreading of widgets across vertical space
         self.vertical_layout_controls.addWidget(QLabel(), 1)
+
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
         self.vertical_layout_plots.addWidget(self.plot_widget_factory.pid())
 
@@ -254,19 +230,86 @@ class PIDSetting(ExperimentPage):
         self.setup.set_kd(self.d_gain.value)
 
     def enter_individual(self):
-        logger.info("Start PID controller")
         self.setup.start_pid_controller()
+        self.p_gain.value = self.setup.controller.Kp
+        self.i_gain.value = self.setup.controller.Ki
+        self.d_gain.value = self.setup.controller.Kd
         self.set_p_value()
         self.set_i_value()
         self.set_d_value()
 
     def leave_individual(self):
-        self.setup.set_kp(0)
-        self.setup.set_ki(0)
-        self.setup.set_kd(0)
-
-    def pause(self):
         pass
 
     def desired_pwm_output(self):
         return 0
+
+
+class MassFlowEstimation(ExperimentPage):
+    """
+    Third experiment page allowing the students to analyze the performance of the mass flow estimation
+
+    This page assumes that a working controller is in place and hands over mass flow control to the user
+    """
+
+    def __init__(
+            self, setup, enable_competition_mode, disable_competition_mode,
+            enable_massflow_setting, disable_massflow_setting
+    ):
+        self.enable_competition_mode = enable_competition_mode
+        self.disable_competition_mode = disable_competition_mode
+        self.enable_massflow_setting = enable_massflow_setting
+        self.disable_massflow_setting = disable_massflow_setting
+
+        super(MassFlowEstimation, self).__init__(
+            setup=setup,
+            name="Experiment Page 3: Massflow Estimation",
+        )
+        self.p_gain = AnnotatedSlider(min=0, max=0.3, title="K_p")
+        self.i_gain = AnnotatedSlider(min=0, max=0.3, title="K_i")
+        self.d_gain = AnnotatedSlider(min=0, max=0.3, title="K_d")
+        self.p_gain.slider.valueChanged.connect(self.set_p_value)
+        self.i_gain.slider.valueChanged.connect(self.set_i_value)
+        self.d_gain.slider.valueChanged.connect(self.set_d_value)
+
+        self.flow = AnnotatedSlider(min=0.2, max=1, title="Massflow")
+        self.flow.value = self.setup._current_flow_value
+        self.flow.slider.valueChanged.connect(self.set_flow_value)
+
+        self.vertical_layout_controls.addWidget(StatusWidget(setup=self.setup))
+        self.vertical_layout_controls.addWidget(self.flow)
+        self.vertical_layout_controls.addWidget(self.p_gain)
+        self.vertical_layout_controls.addWidget(self.i_gain)
+        self.vertical_layout_controls.addWidget(self.d_gain)
+        # Placeholder to prevent spreading of widgets across vertical space
+        self.vertical_layout_controls.addWidget(QLabel(), 1)
+
+        self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
+        self.vertical_layout_plots.addWidget(self.plot_widget_factory.flow())
+
+    def enter_individual(self):
+        self.p_gain.value = self.setup.controller.Kp
+        self.i_gain.value = self.setup.controller.Ki
+        self.d_gain.value = self.setup.controller.Kd
+        self.flow.value = self.setup.get_current_flow_value()
+        self.disable_competition_mode()
+        self.enable_massflow_setting()
+
+    def leave_individual(self):
+        self.enable_competition_mode()
+        self.disable_massflow_setting()
+
+    def set_flow_value(self):
+        self.setup.set_flow(value=self.flow.value)
+
+    def desired_pwm_output(self):
+        return 0
+
+    def set_p_value(self):
+        self.setup.set_kp(self.p_gain.value)
+
+    def set_i_value(self):
+        self.setup.set_ki(self.i_gain.value)
+
+    def set_d_value(self):
+        self.setup.set_kd(self.d_gain.value)

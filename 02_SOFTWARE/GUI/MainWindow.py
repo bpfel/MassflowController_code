@@ -48,8 +48,20 @@ class MainWindow(QMainWindow):
                 set_flow_action=self.setup.set_flow,
             )
         )
+        self.stack.addWidget(
+            MassFlowEstimation(
+                setup=self.setup,
+                enable_competition_mode=self._enable_competition_mode,
+                disable_competition_mode=self._disable_competition_mode,
+                enable_massflow_setting=self._enable_massflow_setting,
+                disable_massflow_setting=self._disable_massflow_setting,
+            )
+        )
+
         self.setCentralWidget(self.stack)
         self.stack.currentWidget().enter()
+
+        self.error_message = QErrorMessage()
 
     def setup_menu_bar(self) -> None:
         bar = self.menuBar()
@@ -165,6 +177,53 @@ class MainWindow(QMainWindow):
         self.action_toggle_output.clicked.connect(self._toggle_output)
         toolbar.addWidget(self.action_toggle_output)
 
+        self.action_toggle_massflow = QPushButton("Toggle Massflow", self)
+        self.action_toggle_massflow.setStatusTip("Turn the mass flow on or off.")
+        self.action_toggle_massflow.setCheckable(True)
+        self.action_toggle_massflow.setStyleSheet(
+            """
+        QPushButton {
+            background: rgba(0, 102, 255, 50);
+        }
+        """
+        )
+        self.action_toggle_massflow.setChecked(False)
+        self.action_toggle_massflow.clicked.connect(self._toggle_massflow)
+        toolbar.addWidget(self.action_toggle_massflow)
+
+    def _toggle_massflow(self, state=None) -> None:
+        """
+        Toolbar action; Allows to turn the massflow output on or off
+
+        :type state: bool
+        :param state: Set True to turn the output state to on, or False vice versa.
+        """
+        if state is not None:
+            self.action_toggle_massflow.setChecked(state)
+        if self.action_toggle_massflow.isChecked():
+            # Enable output
+            self.setup.set_flow(self.setup.nominal_massflow)
+            # Change appearance of button
+            self.action_toggle_massflow.setStyleSheet(
+                """
+            QPushButton {
+                background: rgba(255, 51, 0, 100);
+            }
+            """
+            )
+        else:
+            # Disable output
+            self.setup.set_flow(0)
+            self._toggle_output(state=False)
+            # Change appearance of button
+            self.action_toggle_massflow.setStyleSheet(
+                """
+            QPushButton {
+                background: rgba(0, 102, 255, 100);
+            }
+            """
+            )
+
     def _toggle_output(self, state=None) -> None:
         """
         Toolbar action; Allows to turn the pwm output on or off.
@@ -175,16 +234,22 @@ class MainWindow(QMainWindow):
         if state is not None:
             self.action_toggle_output.setChecked(state)
         if self.action_toggle_output.isChecked():
-            # Enable output
-            self.setup.enable_output(self.stack.currentWidget().desired_pwm_output())
-            # Change appearance of button
-            self.action_toggle_output.setStyleSheet(
+            if not self.action_toggle_massflow.isChecked():
+                self.error_message.showMessage(
+                    "Do not try to heat when there is no airflow!"
+                )
+                self.action_toggle_output.setChecked(False)
+            else:
+                # Enable output
+                self.setup.enable_output(self.stack.currentWidget().desired_pwm_output())
+                # Change appearance of button
+                self.action_toggle_output.setStyleSheet(
+                    """
+                QPushButton {
+                    background: rgba(255, 51, 0, 100);
+                }
                 """
-            QPushButton {
-                background: rgba(255, 51, 0, 100);
-            }
-            """
-            )
+                )
         else:
             # Disable output
             self.setup.disable_output()
@@ -240,6 +305,10 @@ class MainWindow(QMainWindow):
             if self.stack.currentIndex() == 0:
                 self.action_previous_view.setDisabled(True)
                 self.action_next_view.setEnabled(True)
+            else:
+                self.action_previous_view.setEnabled(True)
+                self.action_next_view.setEnabled(True)
+
 
     def _go_to_next_view(self) -> None:
         """
@@ -255,6 +324,10 @@ class MainWindow(QMainWindow):
             if self.stack.currentIndex() == self.stack.count() - 1:
                 self.action_next_view.setDisabled(True)
                 self.action_previous_view.setEnabled(True)
+            else:
+                self.action_next_view.setEnabled(True)
+                self.action_previous_view.setEnabled(True)
+
 
     def _reset_plots(self) -> None:
         """
@@ -281,6 +354,19 @@ class MainWindow(QMainWindow):
         """
         self.setup.reverse_temp_sensors()
 
+    def _enable_competition_mode(self) -> None:
+        self.action_competition_mode.setEnabled(True)
+
+    def _disable_competition_mode(self) -> None:
+        self.action_competition_mode.setDisabled(True)
+
+    def _enable_massflow_setting(self) -> None:
+        self.action_toggle_output.setDisabled(True)
+        self.action_toggle_massflow.setDisabled(True)
+
+    def _disable_massflow_setting(self) -> None:
+        self.action_toggle_output.setEnabled(True)
+        self.action_toggle_massflow.setEnabled(True)
 
 class Launcher(object):
     """

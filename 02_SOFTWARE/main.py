@@ -1,6 +1,6 @@
 from setup import Setup
 from Utility.Logger import setup_custom_logger
-from GUI.Launcher import Launcher
+from GUI.MainWindow import Launcher
 from logging import getLevelName
 from yaml import load, CLoader as Loader
 

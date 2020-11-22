@@ -81,6 +81,7 @@ class Setup(object):
         # allocate frequently accessed configuration constants
         self.safety_upper_temperature_limit = self.config['safety']['upper_temperature_limit']
         self.safety_lower_flow_limit = self.config['safety']['lower_flow_limit']
+        self.nominal_massflow = self.config['general']['nominal_mass_flow_rate'] / 100
 
     def _setup_measurement_buffer(self) -> MeasurementBuffer:
         """
@@ -446,6 +447,15 @@ class Setup(object):
         """
         if 0.0 <= value <= 1:
             self._sfc.set_flow(setpoint_normalized=value)
+            self._current_flow_value = value
+
+    def get_current_flow_value(self):
+        """
+        Getter for last set target flow value.
+
+        :return: Last set target flow value in normalized units.
+        """
+        return self._current_flow_value
 
     def start_pid_controller(self, setpoint=None) -> None:
         """
