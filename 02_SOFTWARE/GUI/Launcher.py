@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
                 start_recording_action=self._start_recording,
                 stop_recording_action=self._stop_recording,
                 enable_output_action=self._toggle_output,
+                set_flow_action=self.setup.set_flow,
             )
         )
         self.setCentralWidget(self.stack)
