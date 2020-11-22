@@ -1,3 +1,5 @@
+from abc import ABC
+
 from GUI.CustomWidgets.Basis import *
 from GUI.Utils import resource_path
 from setup import Setup
@@ -5,6 +7,7 @@ from typing import Callable
 import logging
 import numpy
 import time
+from abc import abstractmethod
 
 logger = logging.getLogger("root")
 
@@ -15,7 +18,7 @@ class FancyPointCounter(QLCDNumber):
     """
 
     def __init__(self, setup, *args, **kwargs):
-        super(FancyPointCounter, self).__init__(*args, **kwargs)
+        super(FancyPointCounter, self).__init__(*args)
         self.setup = setup
         self._value = 0
 
@@ -61,14 +64,13 @@ class CompetitionWidget(FramedWidget):
     """
 
     def __init__(
-        self,
-        setup: Setup,
-        start_recording_action: Callable,
-        stop_recording_action: Callable,
-        enable_output_action: Callable,
-        *args,
-        **kwargs
-    ) -> None:
+            self,
+            setup: Setup,
+            start_recording_action: Callable,
+            stop_recording_action: Callable,
+            enable_output_action: Callable,
+            *args,
+            **kwargs) -> None:
         super(CompetitionWidget, self).__init__(*args, **kwargs)
         self.setup = setup
         self.stop_recording = stop_recording_action
@@ -89,10 +91,8 @@ class CompetitionWidget(FramedWidget):
         self.error_message = QErrorMessage()
         self.success_message = QErrorMessage()
         # Set up time progress bar
-        self.wait_time_s = 50
         self.progressbar = QProgressBar()
         self.progressbar.setMinimum(0)
-        self.progressbar.setMaximum(50)
 
         # Set up layout
         self.horizontal_layout = QHBoxLayout()
@@ -115,36 +115,6 @@ class CompetitionWidget(FramedWidget):
         self.timer.timeout.connect(self._update_progress)
         self.initial_time = None
 
-    def _start_recording(self) -> None:
-        """
-        Takes control of the whole setup and GUI to start the recording.
-
-        .. note::
-           This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
-           This is necessary to prevent cheating.
-        """
-        if self.setup.results["Temperature Difference"] < 0.5:
-            # Set the initial time of the recording
-            self.initial_time = time.time()
-            # Start the QTimer that controls the update rate of the widget
-            self.timer.start()
-            # Start the internal QTimer of the point counter
-            self.fancy_counter.start()
-            # Set the progress bar to initial value 0
-            self.progressbar.setValue(0)
-            # Start the buffering of new measurements
-            self.start_recording()
-            # Clear the measurement buffer to get rid of old measurements
-            self.setup.measurement_buffer.clear()
-            # Set the pwm output to on
-            self.output(True)
-            # Disable the start button for the duration of the recording
-            self.start_button.setDisabled(True)
-        else:
-            self.error_message.showMessage(
-                "Recording a game is only possible if the current temperature difference is smaller 0.5°C!"
-            )
-
     def _update_progress(self) -> None:
         """
         Update the progressbar to show the current remaining time. If the recording interval has passed the process
@@ -152,7 +122,8 @@ class CompetitionWidget(FramedWidget):
         """
         running_time_s = time.time() - self.initial_time
         if running_time_s < self.wait_time_s:
-            self.progressbar.setValue(time.time() - self.initial_time)
+            self._update_process_values(running_time_s=running_time_s)
+            self.progressbar.setValue(running_time_s)
         else:
             # Stop the QTimer updating this widget
             self.timer.stop()
@@ -178,6 +149,141 @@ class CompetitionWidget(FramedWidget):
         Reset the competition widget upon reloading it.
         """
         self.fancy_counter.reset()
+
+    def _update_process_values(self, running_time_s) -> None:
+        """
+        Container function for updates that are specific to the inheriting widgets
+        """
+        pass
+
+    @abstractmethod
+    def _start_recording(self) -> None:
+        pass
+
+
+class CompetitionReferenceTrackingWidget(CompetitionWidget):
+    def __init__(self,
+                 setup: Setup,
+                 start_recording_action: Callable,
+                 stop_recording_action: Callable,
+                 enable_output_action: Callable,
+                 *args,
+                 **kwargs
+                 ) -> None:
+        super().__init__(setup=setup, start_recording_action=start_recording_action,
+                         stop_recording_action=stop_recording_action, enable_output_action=enable_output_action, *args,
+                         **kwargs)
+        self.wait_time_s = self.setup.config['reference_tracking']['interval']
+        self.progressbar.setMaximum(self.wait_time_s)
+
+    def _start_recording(self) -> None:
+        """
+        Takes control of the whole setup and GUI to start the recording.
+
+        .. note::
+           This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
+           This is necessary to prevent cheating.
+        """
+        if self.setup.state["Temperature Difference"] < 0.5:
+            # Set the initial time of the recording
+            self.initial_time = time.time()
+            # Start the QTimer that controls the update rate of the widget
+            self.timer.start()
+            # Start the internal QTimer of the point counter
+            self.fancy_counter.start()
+            # Set the progress bar to initial value 0
+            self.progressbar.setValue(0)
+            # Start the buffering of new measurements
+            self.start_recording()
+            # Clear the measurement buffer to get rid of old measurements
+            self.setup.measurement_buffer.clear()
+            # Set the pwm output to on
+            self.output(True)
+            # Disable the start button for the duration of the recording
+            self.start_button.setDisabled(True)
+        else:
+            self.error_message.showMessage(
+                "Recording a game is only possible if the current temperature difference is smaller 0.5°C!"
+            )
+
+
+class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
+    def __init__(self,
+                 setup: Setup,
+                 start_recording_action: Callable,
+                 stop_recording_action: Callable,
+                 enable_output_action: Callable,
+                 set_flow_action: Callable,
+                 *args,
+                 **kwargs
+                 ) -> None:
+        super().__init__(setup=setup, start_recording_action=start_recording_action,
+                         stop_recording_action=stop_recording_action, enable_output_action=enable_output_action,
+                         *args, **kwargs)
+        # Add set flow action
+        self.set_flow = set_flow_action
+        # divide by 100 to convert from slm to normalized units
+        self.nominal_flow = self.setup.config['general']['nominal_mass_flow_rate']/100
+        self.disturbance_high = self.nominal_flow + self.setup.config['disturbance_rejection']['deviation']/100
+        self.disturbance_low = self.nominal_flow - self.setup.config['disturbance_rejection']['deviation']/100
+        self.disturbance_duration = self.setup.config['disturbance_rejection']['duration']
+        self.disturbance_delay = self.setup.config['disturbance_rejection']['delay']
+        self.process_state = 0
+        # Configure progressbar and waiting time
+        self.wait_time_s = self.disturbance_delay*3 + self.disturbance_duration*2
+        self.progressbar.setMaximum(self.wait_time_s)
+
+    def _start_recording(self) -> None:
+        """
+        Takes control of the whole setup and GUI to start the recording.
+
+        .. note::
+           This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
+           This is necessary to prevent cheating.
+        """
+        if abs(self.setup.state["Temperature Difference"] -
+               self.setup.config['temperature_difference_set_point']) < 0.5:
+            # Set the initial time of the recording
+            self.initial_time = time.time()
+            # Start the QTimer that controls the update rate of the widget
+            self.timer.start()
+            # Start the internal QTimer of the point counter
+            self.fancy_counter.start()
+            # Set the progress bar to initial value 0
+            self.progressbar.setValue(0)
+            # Start the buffering of new measurements
+            self.start_recording()
+            # Clear the measurement buffer to get rid of old measurements
+            self.setup.measurement_buffer.clear()
+            # Set the mass flow to the initial value
+            self.set_flow(self.nominal_flow)
+            # Disable the start button for the duration of the recording
+            self.start_button.setDisabled(True)
+        else:
+            self.error_message.showMessage(
+                "Recording a game is only possible if the system is close to the temperature"
+                " difference setpoint (deviation smaller 0.5°C)!"
+            )
+
+    def _update_process_values(self, running_time_s) -> None:
+        """
+        Container function for updates that are specific to the inheriting widgets
+        """
+        if running_time_s > self.disturbance_delay and self.process_state == 0:
+            # Switch to disturbance high
+            self.set_flow(self.disturbance_high)
+            self.process_state = 1
+        elif running_time_s > self.disturbance_delay + self.disturbance_duration and self.process_state == 1:
+            self.set_flow(self.nominal_flow)
+            self.process_state = 2
+        elif running_time_s > 2*self.disturbance_delay + self.disturbance_duration and self.process_state == 2:
+            self.set_flow(self.disturbance_low)
+            self.process_state = 3
+        elif running_time_s > 2*self.disturbance_delay + 2*self.disturbance_delay and self.process_state == 3:
+            self.set_flow(self.nominal_flow)
+            self.process_state = 4
+        else:
+            pass
 
 
 class StatusWidget(FramedWidget):
@@ -242,6 +348,6 @@ class StatusWidget(FramedWidget):
         """
         for key, lcd in self.lcds.items():
             if key == "FL":
-                lcd.number.display("{:.1f}".format(self.setup.results[lcd.signal]))
+                lcd.number.display("{:.1f}".format(self.setup.state[lcd.signal]))
             else:
-                lcd.number.display("{:.2f}".format(self.setup.results[lcd.signal]))
+                lcd.number.display("{:.2f}".format(self.setup.state[lcd.signal]))
