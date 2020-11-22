@@ -64,13 +64,14 @@ class CompetitionWidget(FramedWidget):
     """
 
     def __init__(
-            self,
-            setup: Setup,
-            start_recording_action: Callable,
-            stop_recording_action: Callable,
-            enable_output_action: Callable,
-            *args,
-            **kwargs) -> None:
+        self,
+        setup: Setup,
+        start_recording_action: Callable,
+        stop_recording_action: Callable,
+        enable_output_action: Callable,
+        *args,
+        **kwargs
+    ) -> None:
         super(CompetitionWidget, self).__init__(*args, **kwargs)
         self.setup = setup
         self.stop_recording = stop_recording_action
@@ -133,8 +134,6 @@ class CompetitionWidget(FramedWidget):
             self.progressbar.setValue(self.progressbar.maximum())
             # Stop recording measurement values to allow the user to inspect the measurement plot
             self.stop_recording()
-            # Turn of the pwm output
-            self.output(False)
             # Re-enable the start button of this widget
             self.start_button.setEnabled(True)
             # Show the final number of points and declare success
@@ -162,18 +161,24 @@ class CompetitionWidget(FramedWidget):
 
 
 class CompetitionReferenceTrackingWidget(CompetitionWidget):
-    def __init__(self,
-                 setup: Setup,
-                 start_recording_action: Callable,
-                 stop_recording_action: Callable,
-                 enable_output_action: Callable,
-                 *args,
-                 **kwargs
-                 ) -> None:
-        super().__init__(setup=setup, start_recording_action=start_recording_action,
-                         stop_recording_action=stop_recording_action, enable_output_action=enable_output_action, *args,
-                         **kwargs)
-        self.wait_time_s = self.setup.config['reference_tracking']['interval']
+    def __init__(
+        self,
+        setup: Setup,
+        start_recording_action: Callable,
+        stop_recording_action: Callable,
+        enable_output_action: Callable,
+        *args,
+        **kwargs
+    ) -> None:
+        super().__init__(
+            setup=setup,
+            start_recording_action=start_recording_action,
+            stop_recording_action=stop_recording_action,
+            enable_output_action=enable_output_action,
+            *args,
+            **kwargs
+        )
+        self.wait_time_s = self.setup.config["reference_tracking"]["interval"]
         self.progressbar.setMaximum(self.wait_time_s)
 
     def _start_recording(self) -> None:
@@ -184,7 +189,10 @@ class CompetitionReferenceTrackingWidget(CompetitionWidget):
            This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
            This is necessary to prevent cheating.
         """
-        if self.setup.state["Temperature Difference"] < 0.5:
+        if (
+            self.setup.state["Temperature Difference"]
+            < self.setup.config["anti_cheat"]["pwm_setting_threshold"]
+        ):
             # Set the initial time of the recording
             self.initial_time = time.time()
             # Start the QTimer that controls the update rate of the widget
@@ -203,34 +211,50 @@ class CompetitionReferenceTrackingWidget(CompetitionWidget):
             self.start_button.setDisabled(True)
         else:
             self.error_message.showMessage(
-                "Recording a game is only possible if the current temperature difference is smaller 0.5°C!"
+                "Recording a game is only possible if the current temperature difference is smaller {}°C!".format(
+                    self.setup.config["anti_cheat"]["pwm_setting_threshold"]
+                )
             )
 
 
 class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
-    def __init__(self,
-                 setup: Setup,
-                 start_recording_action: Callable,
-                 stop_recording_action: Callable,
-                 enable_output_action: Callable,
-                 set_flow_action: Callable,
-                 *args,
-                 **kwargs
-                 ) -> None:
-        super().__init__(setup=setup, start_recording_action=start_recording_action,
-                         stop_recording_action=stop_recording_action, enable_output_action=enable_output_action,
-                         *args, **kwargs)
+    def __init__(
+        self,
+        setup: Setup,
+        start_recording_action: Callable,
+        stop_recording_action: Callable,
+        enable_output_action: Callable,
+        set_flow_action: Callable,
+        *args,
+        **kwargs
+    ) -> None:
+        super().__init__(
+            setup=setup,
+            start_recording_action=start_recording_action,
+            stop_recording_action=stop_recording_action,
+            enable_output_action=enable_output_action,
+            *args,
+            **kwargs
+        )
         # Add set flow action
         self.set_flow = set_flow_action
         # divide by 100 to convert from slm to normalized units
-        self.nominal_flow = self.setup.config['general']['nominal_mass_flow_rate']/100
-        self.disturbance_high = self.nominal_flow + self.setup.config['disturbance_rejection']['deviation']/100
-        self.disturbance_low = self.nominal_flow - self.setup.config['disturbance_rejection']['deviation']/100
-        self.disturbance_duration = self.setup.config['disturbance_rejection']['duration']
-        self.disturbance_delay = self.setup.config['disturbance_rejection']['delay']
+        self.nominal_flow = self.setup.config["general"]["nominal_mass_flow_rate"] / 100
+        self.disturbance_high = (
+            self.nominal_flow
+            + self.setup.config["disturbance_rejection"]["deviation"] / 100
+        )
+        self.disturbance_low = (
+            self.nominal_flow
+            - self.setup.config["disturbance_rejection"]["deviation"] / 100
+        )
+        self.disturbance_duration = self.setup.config["disturbance_rejection"][
+            "duration"
+        ]
+        self.disturbance_delay = self.setup.config["disturbance_rejection"]["delay"]
         self.process_state = 0
         # Configure progressbar and waiting time
-        self.wait_time_s = self.disturbance_delay*3 + self.disturbance_duration*2
+        self.wait_time_s = self.disturbance_delay * 3 + self.disturbance_duration * 2
         self.progressbar.setMaximum(self.wait_time_s)
 
     def _start_recording(self) -> None:
@@ -241,8 +265,13 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
            This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
            This is necessary to prevent cheating.
         """
-        if abs(self.setup.state["Temperature Difference"] -
-               self.setup.config['temperature_difference_set_point']) < 0.5:
+        if (
+            abs(
+                self.setup.state["Temperature Difference"]
+                - self.setup.config["general"]["temperature_difference_set_point"]
+            )
+            < self.setup.config["anti_cheat"]["pid_setting_threshold"]
+        ):
             # Set the initial time of the recording
             self.initial_time = time.time()
             # Start the QTimer that controls the update rate of the widget
@@ -262,7 +291,9 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         else:
             self.error_message.showMessage(
                 "Recording a game is only possible if the system is close to the temperature"
-                " difference setpoint (deviation smaller 0.5°C)!"
+                " difference setpoint (deviation smaller {})!".format(
+                    self.setup.config["anti_cheat"]["pid_setting_threshold"]
+                )
             )
 
     def _update_process_values(self, running_time_s) -> None:
@@ -273,13 +304,22 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
             # Switch to disturbance high
             self.set_flow(self.disturbance_high)
             self.process_state = 1
-        elif running_time_s > self.disturbance_delay + self.disturbance_duration and self.process_state == 1:
+        elif (
+            running_time_s > self.disturbance_delay + self.disturbance_duration
+            and self.process_state == 1
+        ):
             self.set_flow(self.nominal_flow)
             self.process_state = 2
-        elif running_time_s > 2*self.disturbance_delay + self.disturbance_duration and self.process_state == 2:
+        elif (
+            running_time_s > 2 * self.disturbance_delay + self.disturbance_duration
+            and self.process_state == 2
+        ):
             self.set_flow(self.disturbance_low)
             self.process_state = 3
-        elif running_time_s > 2*self.disturbance_delay + 2*self.disturbance_delay and self.process_state == 3:
+        elif (
+            running_time_s > 2 * self.disturbance_delay + 2 * self.disturbance_delay
+            and self.process_state == 3
+        ):
             self.set_flow(self.nominal_flow)
             self.process_state = 4
         else:

@@ -68,21 +68,32 @@ class MainWindow(QMainWindow):
         configuration = bar.addMenu("Configuration")
 
         self.action_set_temp_calibration = QAction("Set Temperature Calibration", self)
-        self.action_set_temp_calibration.setStatusTip("Force the current delta T to be zero.")
+        self.action_set_temp_calibration.setStatusTip(
+            "Force the current delta T to be zero."
+        )
         self.action_set_temp_calibration.triggered.connect(self._calibrate_temperature)
         configuration.addAction(self.action_set_temp_calibration)
 
-        self.action_reset_temp_calibration = QAction("Reset Temperature Calibration", self)
-        self.action_reset_temp_calibration.setStatusTip("Reset the temperature calibration.")
-        self.action_reset_temp_calibration.triggered.connect(self._reset_temperature_calibration)
+        self.action_reset_temp_calibration = QAction(
+            "Reset Temperature Calibration", self
+        )
+        self.action_reset_temp_calibration.setStatusTip(
+            "Reset the temperature calibration."
+        )
+        self.action_reset_temp_calibration.triggered.connect(
+            self._reset_temperature_calibration
+        )
         configuration.addAction(self.action_reset_temp_calibration)
 
         configuration.addSeparator()
 
         self.action_reverse_temp_sensors = QAction("Reverse Temperature Sensors", self)
         self.action_reverse_temp_sensors.setStatusTip(
-            "Changes the order of the temperature sensors in case they have been set up wrongly.")
-        self.action_reverse_temp_sensors.triggered.connect(self._reverse_temperature_sensors)
+            "Changes the order of the temperature sensors in case they have been set up wrongly."
+        )
+        self.action_reverse_temp_sensors.triggered.connect(
+            self._reverse_temperature_sensors
+        )
         configuration.addAction(self.action_reverse_temp_sensors)
 
     def setup_status_bar(self) -> None:
@@ -241,7 +252,9 @@ class MainWindow(QMainWindow):
                 self.action_toggle_output.setChecked(False)
             else:
                 # Enable output
-                self.setup.enable_output(self.stack.currentWidget().desired_pwm_output())
+                self.setup.enable_output(
+                    self.stack.currentWidget().desired_pwm_output()
+                )
                 # Change appearance of button
                 self.action_toggle_output.setStyleSheet(
                     """
@@ -280,7 +293,6 @@ class MainWindow(QMainWindow):
         """
         self.action_stop_recording.setDisabled(True)
         self.setup.stop_buffering()
-        self.stack.currentWidget().pause()
         self.action_start_recording.setEnabled(True)
 
     def _start_recording(self) -> None:
@@ -309,7 +321,6 @@ class MainWindow(QMainWindow):
                 self.action_previous_view.setEnabled(True)
                 self.action_next_view.setEnabled(True)
 
-
     def _go_to_next_view(self) -> None:
         """
         Toolbar action; Switches to the next view in the main layout stack.
@@ -327,7 +338,6 @@ class MainWindow(QMainWindow):
             else:
                 self.action_next_view.setEnabled(True)
                 self.action_previous_view.setEnabled(True)
-
 
     def _reset_plots(self) -> None:
         """
@@ -367,6 +377,7 @@ class MainWindow(QMainWindow):
     def _disable_massflow_setting(self) -> None:
         self.action_toggle_output.setEnabled(True)
         self.action_toggle_massflow.setEnabled(True)
+
 
 class Launcher(object):
     """

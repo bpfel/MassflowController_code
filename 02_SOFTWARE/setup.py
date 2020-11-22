@@ -10,6 +10,7 @@ import logging
 import time
 import numpy as np
 from enum import Enum
+from copy import deepcopy
 
 logger = logging.getLogger("root")
 
@@ -47,8 +48,8 @@ class Setup(object):
 
     def __init__(self, config: ConfigurationHandler):
         # allocate private member variables
-        self._serials = config['serials']
-        self._t_sampling_s = config['general']['t_sampling']
+        self._serials = deepcopy(config["serials"])
+        self._t_sampling_s = config["general"]["t_sampling"]
         self._devices = None
         self._buffering = True
         self._measurement_timer = None
@@ -60,14 +61,15 @@ class Setup(object):
         self._current_pwm_value = 0
         self._current_flow_value = 0
         self._current_mode = Mode.IDLE
-        self.temperature_difference_setpoint = config['general'][
-            'temperature_difference_set_point']  # Temperature difference setpoint
+        self.temperature_difference_setpoint = config["general"][
+            "temperature_difference_set_point"
+        ]  # Temperature difference setpoint
         self._delta_T = 0  # Static state temperature difference for calibration
         self.config = config
         self.massflow_estimator = MassflowEstimator(config=config)
 
         # allocate public member variables
-        self.interval_s = config['general']['interval']
+        self.interval_s = config["general"]["interval"]
         self.measurement_buffer = self._setup_measurement_buffer()  # Measurement buffer
         self.state = None  # Storage for current measurement frame
         self.controller = PID(
@@ -75,18 +77,16 @@ class Setup(object):
             Ki=0.0,
             Kd=0.0,
             setpoint=self.temperature_difference_setpoint,
-            sample_time=self.config['pid_controller']['sample_time'],
+            sample_time=self.config["pid_controller"]["sample_time"],
             output_limits=(0, 1),
         )
 
         # allocate frequently accessed configuration constants
-        self.safety_upper_temperature_limit = self.config['safety']['upper_temperature_limit']
-        self.safety_lower_flow_limit = self.config['safety']['lower_flow_limit']
-        self.nominal_massflow = self.config['general']['nominal_mass_flow_rate'] / 100
-
-        # switch the temperature sensors if necessary:
-        if self.config['general']['temp_sensors_switched']:
-            self.reverse_temp_sensors(update=False)
+        self.safety_upper_temperature_limit = self.config["safety"][
+            "upper_temperature_limit"
+        ]
+        self.safety_lower_flow_limit = self.config["safety"]["lower_flow_limit"]
+        self.nominal_massflow = self.config["general"]["nominal_mass_flow_rate"] / 100
 
     def _setup_measurement_buffer(self) -> MeasurementBuffer:
         """
@@ -147,6 +147,10 @@ class Setup(object):
         else:
             self._simulation_mode = True
             logger.warning("Entering simulation mode.")
+
+        # switch the temperature sensors if necessary:
+        if self.config["general"]["temp_sensors_switched"]:
+            self.reverse_temp_sensors(update=False)
 
     def close(self) -> None:
         """
@@ -224,9 +228,11 @@ class Setup(object):
 
         # Decide whether to set a new pwm value:
         # If the flow is too low or the temperatures too high stop heating immediately:
-        if results["Flow"] < self.safety_lower_flow_limit or \
-                results["Temperature 1"] > self.safety_upper_temperature_limit or \
-                results["Temperature 2"] > self.safety_upper_temperature_limit:
+        if (
+            results["Flow"] < self.safety_lower_flow_limit
+            or results["Temperature 1"] > self.safety_upper_temperature_limit
+            or results["Temperature 2"] > self.safety_upper_temperature_limit
+        ):
             self.set_pwm(0)
         # If we're in PID mode set the previously calculated value
         elif self._current_mode is Mode.PID_ON:
@@ -278,7 +284,11 @@ class Setup(object):
         results_eks = self._eks.measure()
         results_sfc = self._sfc.measure()
         results_timestamp = time.time()
-        delta_T = results_eks[1]["Temperature"] - results_eks[0]["Temperature"] - self._delta_T
+        delta_T = (
+            results_eks[1]["Temperature"]
+            - results_eks[0]["Temperature"]
+            - self._delta_T
+        )
         results = {
             "Temperature 1": results_eks[0]["Temperature"],
             "Temperature 2": results_eks[1]["Temperature"] - self._delta_T,
@@ -371,9 +381,11 @@ class Setup(object):
                 )
             # Safety check: If the flow is smaller than 20.0 slm, heating will not be allowed
             if value != 0:
-                if self.state["Flow"] < self.safety_lower_flow_limit or \
-                        self.state["Temperature 1"] > self.safety_upper_temperature_limit or \
-                        self.state["Temperature 2"] > self.safety_upper_temperature_limit:
+                if (
+                    self.state["Flow"] < self.safety_lower_flow_limit
+                    or self.state["Temperature 1"] > self.safety_upper_temperature_limit
+                    or self.state["Temperature 2"] > self.safety_upper_temperature_limit
+                ):
                     value = 0
             # Register the newly set pwm value for later recording
             self._current_pwm_value = value
@@ -391,7 +403,7 @@ class Setup(object):
         value = float(value)
         if value < 0:
             raise RuntimeError("This is a heating setup. Not a fridge, dummy!")
-        if value > self.config['safety']['maximum_temperature'] - 25:
+        if value > self.config["safety"]["maximum_temperature"] - 25:
             raise RuntimeError("This a test setup. Not an oven, du Löli!")
         self.temperature_difference_setpoint = value
         self.controller.setpoint = value
@@ -511,10 +523,16 @@ class Setup(object):
         # Reset first
         self.reset_temperature_calibration()
 
-        delta_T = self.state['Temperature Difference']
-        threshold = self.config['measurement']['temperature']['maximum_calibration_offset']
+        delta_T = self.state["Temperature Difference"]
+        threshold = self.config["measurement"]["temperature"][
+            "maximum_calibration_offset"
+        ]
         if delta_T > threshold:
-            logger.warning("Calibration attempted, delta T: {} larger than threshold: {}".format(delta_T, threshold))
+            logger.warning(
+                "Calibration attempted, delta T: {} larger than threshold: {}".format(
+                    delta_T, threshold
+                )
+            )
         else:
             self._delta_T = delta_T
 
@@ -531,19 +549,21 @@ class Setup(object):
         self._eks.reverse_sensor_order()
         if update:
             # switch the corresponding entry in the configuration file and save it
-            if self.config['general']['temp_sensors_switched'] == 1:
-                self.config['general']['temp_sensors_switched'] = 0
-            else :
-                self.config['general']['temp_sensors_switched'] = 1
+            if self.config["general"]["temp_sensors_switched"] == 1:
+                self.config["general"]["temp_sensors_switched"] = 0
+            else:
+                self.config["general"]["temp_sensors_switched"] = 1
             self.config.write()
 
 
 class MassflowEstimator(object):
     def __init__(self, config):
-        self.c_p = config['measurement']['massflow_estimate']['c_p']
-        self.resistance = config['measurement']['massflow_estimate']['resistance']
-        self.voltage = config['measurement']['massflow_estimate']['voltage']
-        self.massflow_SI2SLM = config['measurement']['massflow_estimate']['massflow_SI2SLM']
+        self.c_p = config["measurement"]["massflow_estimate"]["c_p"]
+        self.resistance = config["measurement"]["massflow_estimate"]["resistance"]
+        self.voltage = config["measurement"]["massflow_estimate"]["voltage"]
+        self.massflow_SI2SLM = config["measurement"]["massflow_estimate"][
+            "massflow_SI2SLM"
+        ]
 
     def calculate(self, delta_t: float, pwm: float) -> float:
         """
@@ -557,4 +577,6 @@ class MassflowEstimator(object):
         if delta_t == 0:
             return 0
         else:
-            return self.massflow_SI2SLM * (pwm * self.voltage ** 2 / (self.resistance * self.c_p * delta_t))
+            return self.massflow_SI2SLM * (
+                pwm * self.voltage ** 2 / (self.resistance * self.c_p * delta_t)
+            )

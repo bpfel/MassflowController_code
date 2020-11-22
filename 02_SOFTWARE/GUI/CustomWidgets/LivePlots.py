@@ -46,7 +46,9 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
     :param ylims: Limits of the y-axis
     """
 
-    def __init__(self, setup: Setup, title: str, ylabel: str, ylims: Tuple, *args, **kwargs) -> None:
+    def __init__(
+        self, setup: Setup, title: str, ylabel: str, ylims: Tuple, *args, **kwargs
+    ) -> None:
         super(LivePlotWidget, self).__init__(*args, **kwargs)
         self.setup = setup
         self.signals = []
@@ -92,10 +94,10 @@ class LivePlotWidget(pyqtgraph.PlotWidget):
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
                 shifted_time_axis = (
-                        numpy.array(self.setup.measurement_buffer["Time"])
-                        - self.setup.measurement_buffer["Time"][-1]
-                        + self.setup.interval_s
-            )
+                    numpy.array(self.setup.measurement_buffer["Time"])
+                    - self.setup.measurement_buffer["Time"][-1]
+                    + self.setup.interval_s
+                )
                 n_entries = len(shifted_time_axis)
                 for signal in self.signals:
                     signal.data_line.setData(
@@ -162,9 +164,9 @@ class LivePlotWidgetCompetition(LivePlotWidget):
         if self.setup.measurement_buffer["Time"]:
             if self.signals:
                 shifted_time_axis = (
-                        numpy.array(self.setup.measurement_buffer["Time"])
-                        - self.setup.measurement_buffer["Time"][-1]
-                        + self.setup.interval_s
+                    numpy.array(self.setup.measurement_buffer["Time"])
+                    - self.setup.measurement_buffer["Time"][-1]
+                    + self.setup.interval_s
                 )
                 n_entries = len(shifted_time_axis)
                 for signal in self.signals:

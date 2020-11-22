@@ -2,11 +2,11 @@ disturbance_rejection:
   delay: 15
   deviation: 40
   duration: 20
-  temp_sensors_switched: 1
 general:
   interval: 120
   nominal_mass_flow_rate: 60
   t_sampling: 0.25
+  temp_sensors_switched: 1
   temperature_difference_set_point: 15
 measurement:
   massflow_estimate:
@@ -26,6 +26,9 @@ reference_tracking:
 safety:
   lower_flow_limit: 15
   upper_temperature_limit: 60
+anti_cheat:
+  pwm_setting_threshold: 1.5
+  pid_setting_threshold: 0.5
 serials:
   EKS: EKS23Z50PQ
   Heater: AM01ZB7J

@@ -19,7 +19,7 @@ class ExperimentPage(QWidget):
     :param name: Name of the inheriting experiment page.
     """
 
-    def __init__(self, setup: Setup, name: str, ) -> None:
+    def __init__(self, setup: Setup, name: str,) -> None:
         super(ExperimentPage, self).__init__()
         self.setup = setup
         self.name = name
@@ -139,7 +139,7 @@ class PWMSetting(ExperimentPage):
     """
 
     def __init__(
-            self, setup, start_recording_action, stop_recording_action, enable_output_action
+        self, setup, start_recording_action, stop_recording_action, enable_output_action
     ):
         self.competition_widget = CompetitionReferenceTrackingWidget(
             setup=setup,
@@ -148,14 +148,12 @@ class PWMSetting(ExperimentPage):
             enable_output_action=enable_output_action,
         )
         super(PWMSetting, self).__init__(
-            setup=setup,
-            name="Experiment Page 1: Human in the Loop",
+            setup=setup, name="Experiment Page 1: Human in the Loop",
         )
         # Create controls
         self.pwm = AnnotatedSlider(min=0, max=1, title="Heating Power")
         self.pwm.value = self.setup._current_pwm_value
         self.pwm.slider.valueChanged.connect(self.set_pwm_value)
-
 
         # Add widgets to layout
         self.vertical_layout_controls.addWidget(StatusWidget(setup=self.setup))
@@ -186,7 +184,12 @@ class PIDSetting(ExperimentPage):
     """
 
     def __init__(
-            self, setup, start_recording_action, stop_recording_action, enable_output_action, set_flow_action
+        self,
+        setup,
+        start_recording_action,
+        stop_recording_action,
+        enable_output_action,
+        set_flow_action,
     ):
         # Create competition widget
         self.competition_widget = CompetitionDisturbanceRejectionWidget(
@@ -194,17 +197,22 @@ class PIDSetting(ExperimentPage):
             start_recording_action=start_recording_action,
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
-            set_flow_action=set_flow_action
+            set_flow_action=set_flow_action,
         )
         super(PIDSetting, self).__init__(
-            setup=setup,
-            name="Experiment Page 2: PID Controller",
+            setup=setup, name="Experiment Page 2: PID Controller",
         )
 
         # Create controls
-        self.p_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['p_limit'], title="K_p")
-        self.i_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['i_limit'], title="K_i")
-        self.d_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['d_limit'], title="K_d")
+        self.p_gain = AnnotatedSlider(
+            min=0, max=self.setup.config["pid_controller"]["p_limit"], title="K_p"
+        )
+        self.i_gain = AnnotatedSlider(
+            min=0, max=self.setup.config["pid_controller"]["i_limit"], title="K_i"
+        )
+        self.d_gain = AnnotatedSlider(
+            min=0, max=self.setup.config["pid_controller"]["d_limit"], title="K_d"
+        )
         self.p_gain.slider.valueChanged.connect(self.set_p_value)
         self.i_gain.slider.valueChanged.connect(self.set_i_value)
         self.d_gain.slider.valueChanged.connect(self.set_d_value)
@@ -253,8 +261,12 @@ class MassFlowEstimation(ExperimentPage):
     """
 
     def __init__(
-            self, setup, enable_competition_mode, disable_competition_mode,
-            enable_massflow_setting, disable_massflow_setting
+        self,
+        setup,
+        enable_competition_mode,
+        disable_competition_mode,
+        enable_massflow_setting,
+        disable_massflow_setting,
     ):
         self.enable_competition_mode = enable_competition_mode
         self.disable_competition_mode = disable_competition_mode
@@ -262,18 +274,24 @@ class MassFlowEstimation(ExperimentPage):
         self.disable_massflow_setting = disable_massflow_setting
 
         super(MassFlowEstimation, self).__init__(
-            setup=setup,
-            name="Experiment Page 3: Massflow Estimation",
+            setup=setup, name="Experiment Page 3: Massflow Estimation",
         )
-        self.p_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['p_limit'], title="K_p")
-        self.i_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['i_limit'], title="K_i")
-        self.d_gain = AnnotatedSlider(min=0, max=self.setup.config['pid_controller']['d_limit'], title="K_d")
+        self.p_gain = AnnotatedSlider(
+            min=0, max=self.setup.config["pid_controller"]["p_limit"], title="K_p"
+        )
+        self.i_gain = AnnotatedSlider(
+            min=0, max=self.setup.config["pid_controller"]["i_limit"], title="K_i"
+        )
+        self.d_gain = AnnotatedSlider(
+            min=0, max=self.setup.config["pid_controller"]["d_limit"], title="K_d"
+        )
         self.p_gain.slider.valueChanged.connect(self.set_p_value)
         self.i_gain.slider.valueChanged.connect(self.set_i_value)
         self.d_gain.slider.valueChanged.connect(self.set_d_value)
 
         self.flow = AnnotatedSlider(min=0.2, max=1, title="Massflow")
-        self.flow.value = self.setup._current_flow_value
+        if self.setup.get_current_flow_value() >= 0.2:
+            self.flow.value = self.setup.get_current_flow_value()
         self.flow.slider.valueChanged.connect(self.set_flow_value)
 
         self.vertical_layout_controls.addWidget(StatusWidget(setup=self.setup))
@@ -291,7 +309,8 @@ class MassFlowEstimation(ExperimentPage):
         self.p_gain.value = self.setup.controller.Kp
         self.i_gain.value = self.setup.controller.Ki
         self.d_gain.value = self.setup.controller.Kd
-        self.flow.value = self.setup.get_current_flow_value()
+        if self.setup.get_current_flow_value() >= 0.2:
+            self.flow.value = self.setup.get_current_flow_value()
         self.disable_competition_mode()
         self.enable_massflow_setting()
 

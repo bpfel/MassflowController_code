@@ -73,9 +73,7 @@ class DeviceIdentifier:
                 if serial == self.serials[device]:
                     self.serial_ports.update({device: port.device})
                     logger.debug(
-                        "Device {} found on port {}!".format(
-                            device, port.device
-                        )
+                        "Device {} found on port {}!".format(device, port.device)
                     )
                     found = True
                     break

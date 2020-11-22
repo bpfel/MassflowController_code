@@ -12,7 +12,8 @@ def setup_custom_logger(name: str, level: int) -> logging.log:
     :return: Returns a log.
     """
     formatter = logging.Formatter(
-        fmt="%(asctime)s - %(levelname)s - %(module)s - %(message)s"
+        fmt="[%(asctime)s.%(msecs)03d %(filename)6s:%(lineno)s - %(levelname)s - %(module)s - %(funcName)s()] - %(message)s",
+        datefmt="%H:%M:%S",
     )
 
     handler = logging.StreamHandler()
