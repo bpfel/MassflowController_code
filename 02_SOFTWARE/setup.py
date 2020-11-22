@@ -12,8 +12,6 @@ from enum import Enum
 
 logger = logging.getLogger("root")
 
-FLOW_LIMIT_FOR_HEATING = 20.0
-
 
 class Mode(Enum):
     """
@@ -49,7 +47,7 @@ class Setup(object):
     def __init__(self, config: dict):
         # allocate private member variables
         self._serials = config['serials']
-        self._t_sampling_s = config['t_sampling']
+        self._t_sampling_s = config['general']['t_sampling']
         self._devices = None
         self._buffering = True
         self._measurement_timer = None
@@ -61,23 +59,28 @@ class Setup(object):
         self._current_pwm_value = 0
         self._current_flow_value = 0
         self._current_mode = Mode.IDLE
-        self.temperature_difference_setpoint = config[
+        self.temperature_difference_setpoint = config['general'][
             'temperature_difference_set_point']  # Temperature difference setpoint
         self._delta_T = 0  # Static state temperature difference for calibration
         self.config = config
+        self.massflow_estimator = MassflowEstimator(config=config)
 
         # allocate public member variables
-        self.interval_s = config['interval']
+        self.interval_s = config['general']['interval']
         self.measurement_buffer = self._setup_measurement_buffer()  # Measurement buffer
-        self.results = None  # Storage for current measurement frame
+        self.state = None  # Storage for current measurement frame
         self.controller = PID(
             Kp=0.0,
             Ki=0.0,
             Kd=0.0,
             setpoint=self.temperature_difference_setpoint,
-            sample_time=0.3,
+            sample_time=self.config['pid_controller']['sample_time'],
             output_limits=(0, 1),
         )
+
+        # allocate frequently accessed configuration constants
+        self.safety_upper_temperature_limit = self.config['safety']['upper_temperature_limit']
+        self.safety_lower_flow_limit = self.config['safety']['lower_flow_limit']
 
     def _setup_measurement_buffer(self) -> MeasurementBuffer:
         """
@@ -214,8 +217,10 @@ class Setup(object):
             ) = (0, 0, 0, 0)
 
         # Decide whether to set a new pwm value:
-        # If the flow is too low do not heat!
-        if results["Flow"] < FLOW_LIMIT_FOR_HEATING:
+        # If the flow is too low or the temperatures too high stop heating immediately:
+        if results["Flow"] < self.safety_lower_flow_limit or \
+                results["Temperature 1"] > self.safety_upper_temperature_limit or \
+                results["Temperature 2"] > self.safety_upper_temperature_limit:
             self.set_pwm(0)
         # If we're in PID mode set the previously calculated value
         elif self._current_mode is Mode.PID_ON:
@@ -226,7 +231,7 @@ class Setup(object):
             pass
 
         # Store the current measurement
-        self.results = results
+        self.state = results
         if self._buffering:
             # Buffer multiple measurements in the measurement buffer
             self.measurement_buffer.update(results)
@@ -250,7 +255,7 @@ class Setup(object):
             "Time": results_timestamp,
             "Temperature Difference": delta_T,
             "PWM": self._current_pwm_value,
-            "Flow Estimate": self.calculate_massflow_estimate(
+            "Flow Estimate": self.massflow_estimator.calculate(
                 delta_t=delta_T, pwm=self._current_pwm_value
             ),
             "Target Delta T": self.temperature_difference_setpoint,
@@ -277,7 +282,7 @@ class Setup(object):
             "Time": results_timestamp,
             "Temperature Difference": delta_T,
             "PWM": self._current_pwm_value,
-            "Flow Estimate": self.calculate_massflow_estimate(
+            "Flow Estimate": self.massflow_estimator.calculate(
                 delta_t=delta_T, pwm=self._current_pwm_value
             ),
             "Target Delta T": self.temperature_difference_setpoint,
@@ -360,10 +365,9 @@ class Setup(object):
                 )
             # Safety check: If the flow is smaller than 20.0 slm, heating will not be allowed
             if value != 0:
-                if self.measurement_buffer["Flow"]:
-                    if self.measurement_buffer["Flow"][-1] < FLOW_LIMIT_FOR_HEATING:
-                        value = 0
-                else:
+                if self.state["Flow"] < self.safety_lower_flow_limit or \
+                        self.state["Temperature 1"] > self.safety_upper_temperature_limit or \
+                        self.state["Temperature 2"] > self.safety_upper_temperature_limit:
                     value = 0
             # Register the newly set pwm value for later recording
             self._current_pwm_value = value
@@ -381,7 +385,7 @@ class Setup(object):
         value = float(value)
         if value < 0:
             raise RuntimeError("This is a heating setup. Not a fridge, dummy!")
-        if value > 20:
+        if value > self.config['safety']['maximum_temperature'] - 25:
             raise RuntimeError("This a test setup. Not an oven, du Löli!")
         self.temperature_difference_setpoint = value
         self.controller.setpoint = value
@@ -489,8 +493,11 @@ class Setup(object):
         """
         Record the current temperature offset, assuming steady state.
         """
-        delta_T = self.results['Temperature Difference']
-        threshold = 0.5
+        # Reset first
+        self.reset_temperature_calibration()
+
+        delta_T = self.state['Temperature Difference']
+        threshold = self.config['measurement']['temperature']['maximum_calibration_offset']
         if delta_T > threshold:
             logger.warning("Calibration attempted, delta T: {} larger than threshold: {}".format(delta_T, threshold))
         else:
@@ -508,8 +515,15 @@ class Setup(object):
         """
         self._eks.reverse_sensor_order()
 
-    @staticmethod
-    def calculate_massflow_estimate(delta_t: float, pwm: float) -> float:
+
+class MassflowEstimator(object):
+    def __init__(self, config):
+        self.c_p = config['measurement']['massflow_estimate']['c_p']
+        self.resistance = config['measurement']['massflow_estimate']['resistance']
+        self.voltage = config['measurement']['massflow_estimate']['voltage']
+        self.massflow_SI2SLM = config['measurement']['massflow_estimate']['massflow_SI2SLM']
+
+    def calculate(self, delta_t: float, pwm: float) -> float:
         """
         Calculate the massflow estimate depending on the measured temperature difference and the current output power
 
@@ -518,11 +532,7 @@ class Setup(object):
         :type pwm: float
         :param pwm: Current output power
         """
-        c_p = 1006.0  # joule / kilogram / kelvin
-        resistance = 11  # ohm
-        voltage = 24  # volt
-        massflow_SI2SLM = 46432
         if delta_t == 0:
             return 0
         else:
-            return massflow_SI2SLM * (pwm * voltage ** 2 / (resistance * c_p * delta_t))
+            return self.massflow_SI2SLM * (pwm * self.voltage ** 2 / (self.resistance * self.c_p * delta_t))
