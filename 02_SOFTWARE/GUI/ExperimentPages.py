@@ -25,25 +25,12 @@ class ExperimentPage(QWidget):
     :param name: Name of the inheriting experiment page.
     """
 
-    def __init__(
-        self,
-        setup: Setup,
-        start_recording_action: Callable,
-        stop_recording_action: Callable,
-        enable_output_action: Callable,
-        name: str,
-    ) -> None:
+    def __init__(self, setup: Setup, name: str, ) -> None:
         super(ExperimentPage, self).__init__()
         self.setup = setup
         self.name = name
         self.mode = 0
         self.plot_widget_factory = PlotWidgetFactory(setup=setup)
-        self.competition_widget = CompetitionWidget(
-            setup=setup,
-            start_recording_action=start_recording_action,
-            stop_recording_action=stop_recording_action,
-            enable_output_action=enable_output_action,
-        )
         self.setup_basic_layout()
 
     def setup_basic_layout(self) -> None:
@@ -166,13 +153,16 @@ class PWMSetting(ExperimentPage):
     """
 
     def __init__(
-        self, setup, start_recording_action, stop_recording_action, enable_output_action
+            self, setup, start_recording_action, stop_recording_action, enable_output_action
     ):
-        super(PWMSetting, self).__init__(
+        self.competition_widget = CompetitionReferenceTrackingWidget(
             setup=setup,
             start_recording_action=start_recording_action,
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
+        )
+        super(PWMSetting, self).__init__(
+            setup=setup,
             name="Experiment Page 1: Human in the Loop",
         )
         # Create controls
@@ -218,13 +208,18 @@ class PIDSetting(ExperimentPage):
     """
 
     def __init__(
-        self, setup, start_recording_action, stop_recording_action, enable_output_action
+            self, setup, start_recording_action, stop_recording_action, enable_output_action, set_flow_action
     ):
-        super(PIDSetting, self).__init__(
+        # Create competition widget
+        self.competition_widget = CompetitionDisturbanceRejectionWidget(
             setup=setup,
             start_recording_action=start_recording_action,
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
+            set_flow_action=set_flow_action
+        )
+        super(PIDSetting, self).__init__(
+            setup=setup,
             name="Experiment Page 2: PID Controller",
         )
 
