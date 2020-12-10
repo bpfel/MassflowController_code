@@ -30,6 +30,7 @@ anti_cheat:
   pwm_setting_threshold: 1.5
   pid_setting_threshold: 0.5
 serials:
-  EKS: EKS23Z50PQ
+  EKS_ONE: EKS23Z8C1I
+  EKS_TWO: EKS23Z50PQ
   Heater: AM01ZB7J
   SFC: FT1PXV63

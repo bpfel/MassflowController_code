@@ -128,7 +128,7 @@ class Setup(object):
 
         if self._devices.open():
             # Connect all sensors / actuators
-            self._eks = EKS(serial_port=self._devices.serial_ports["EKS"])
+            self._eks = EKS(serial_port=self._devices.serial_ports["EKS_ONE"])
             self._eks.open()
             self._sfc = SFX5400(serial_port=self._devices.serial_ports["SFC"])
             self._sfc.open()
