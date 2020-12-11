@@ -1,9 +1,9 @@
-from yaml import load, dump, CLoader as Loader, CDumper as Dumper
+import json
 
 
 class ConfigurationHandler(object):
     def __init__(self):
-        self.data = load(open("Utility/config.yaml"), Loader=Loader)
+        self.data = json.load(open("Utility/config.json"))
 
     def __getitem__(self, item):
         if type(item) == str:
@@ -19,4 +19,4 @@ class ConfigurationHandler(object):
 
     def write(self):
         with open("Utility/config.yaml", "w") as file:
-            file.write(dump(self.data, Dumper=Dumper))
+            file.write(json.dumps(self.data, indent=2))
