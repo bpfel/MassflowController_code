@@ -1,9 +1,10 @@
 import json
+from GUI.Utils import resource_path
 
 
 class ConfigurationHandler(object):
     def __init__(self):
-        self.data = json.load(open("Utility/config.json"))
+        self.data = json.load(open(resource_path("Utility/config.json")))
 
     def __getitem__(self, item):
         if type(item) == str:
@@ -18,5 +19,5 @@ class ConfigurationHandler(object):
             raise KeyError("Key has to be of type string!")
 
     def write(self):
-        with open("Utility/config.yaml", "w") as file:
+        with open(resource_path("Utility/config.yaml"), "w") as file:
             file.write(json.dumps(self.data, indent=2))
