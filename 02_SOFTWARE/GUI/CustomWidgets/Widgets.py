@@ -230,7 +230,7 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         stop_recording_action: Callable,
         enable_output_action: Callable,
         set_flow_action: Callable,
-        pid_sliders: list,
+        pid_sliders=None,
         *args,
         **kwargs
     ) -> None:
@@ -244,7 +244,6 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         )
         # Add set flow action
         self.set_flow = set_flow_action
-        # Add reference to pid sliders
         self.pid_sliders = pid_sliders
         # divide by 100 to convert from slm to normalized units
         self.nominal_flow = self.setup.config["general"]["nominal_mass_flow_rate"] / 100
@@ -297,8 +296,9 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
             # Disable the start button for the duration of the recording
             self.start_button.setDisabled(True)
             # Disable pid sliders
-            for pid_slider in self.pid_sliders:
-                pid_slider.setDisabled(True)
+            if self.pid_sliders is not None:
+                for pid_slider in self.pid_sliders:
+                    pid_slider.setDisabled(True)
         else:
             self.error_message.showMessage(
                 "Recording a game is only possible if the system is close to the temperature"
@@ -338,8 +338,9 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
 
     def _stop_recording(self) -> None:
         # Enable pid sliders
-        for pid_slider in self.pid_sliders:
-            pid_slider.setEnabled(True)
+        if self.pid_sliders is not None:
+            for pid_slider in self.pid_sliders:
+                pid_slider.setEnabled(True)
 
 
 class StatusWidget(FramedWidget):

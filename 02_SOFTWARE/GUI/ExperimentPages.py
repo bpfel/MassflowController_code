@@ -150,13 +150,26 @@ class PWMSetting(ExperimentPage):
     """
 
     def __init__(
-        self, setup, start_recording_action, stop_recording_action, enable_output_action
+        self,
+        setup,
+        start_recording_action,
+        stop_recording_action,
+        enable_output_action,
+        set_flow_action,
     ):
-        self.competition_widget = CompetitionReferenceTrackingWidget(
+        # self.competition_widget = CompetitionReferenceTrackingWidget(
+        #     setup=setup,
+        #     start_recording_action=start_recording_action,
+        #     stop_recording_action=stop_recording_action,
+        #     enable_output_action=enable_output_action,
+        # )
+        # Create competition widget
+        self.competition_widget = CompetitionDisturbanceRejectionWidget(
             setup=setup,
             start_recording_action=start_recording_action,
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
+            set_flow_action=set_flow_action,
         )
         super(PWMSetting, self).__init__(
             setup=setup, name="Experiment Page 1: Human in the Loop",

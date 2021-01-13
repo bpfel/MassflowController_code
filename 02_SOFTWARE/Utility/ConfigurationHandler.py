@@ -19,5 +19,5 @@ class ConfigurationHandler(object):
             raise KeyError("Key has to be of type string!")
 
     def write(self):
-        with open(resource_path("..\\Utility\\config.yaml"), "w") as file:
+        with open(resource_path("..\\Utility\\config.json"), "w") as file:
             file.write(json.dumps(self.data, indent=2))
