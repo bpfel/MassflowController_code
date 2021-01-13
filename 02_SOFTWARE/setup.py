@@ -149,7 +149,7 @@ class Setup(object):
             logger.warning("Entering simulation mode.")
 
         # switch the temperature sensors if necessary:
-        if self.config["general"]["temp_sensors_switched"]:
+        if not self._simulation_mode and self.config["general"]["temp_sensors_switched"]:
             self.reverse_temp_sensors(update=False)
 
     def close(self) -> None:

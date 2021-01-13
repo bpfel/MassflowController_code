@@ -22,11 +22,13 @@ class FramedWidget(QFrame):
 
 
 class AnnotatedSlider(FramedWidget):
-    def __init__(self, min, max, title):
+    def __init__(self, min, max, title, label_factor=1):
         super(AnnotatedSlider, self).__init__()
 
         self.min = min
         self.max = max
+        self.label_factor = label_factor
+
         # Configure slider
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(0)
@@ -44,13 +46,13 @@ class AnnotatedSlider(FramedWidget):
         # Define labels
         label_minimum = QLabel()
         label_minimum.setAlignment(Qt.AlignLeft)
-        label_minimum.setNum(min)
+        label_minimum.setText("{} W".format(min*label_factor))
         label_maximum = QLabel()
         label_maximum.setAlignment(Qt.AlignRight)
-        label_maximum.setNum(max)
+        label_maximum.setText("{} W".format(max*label_factor))
         self.label_current = QLabel()
         self.label_current.setAlignment(Qt.AlignCenter)
-        self.label_current.setNum(self.min)
+        self.label_current.setText("{} W".format(self.min))
         label_title = QLabel()
         label_title.setAlignment(Qt.AlignCenter)
         label_title.setText(title)
@@ -65,7 +67,7 @@ class AnnotatedSlider(FramedWidget):
         self.setLayout(vbox)
 
     def set_label_value(self):
-        self.label_current.setNum(self.value)
+        self.label_current.setText("{0:.2f} W".format(self.value*self.label_factor))
 
     @property
     def value(self):

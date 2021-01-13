@@ -151,7 +151,7 @@ class PWMSetting(ExperimentPage):
             setup=setup, name="Experiment Page 1: Human in the Loop",
         )
         # Create controls
-        self.pwm = AnnotatedSlider(min=0, max=1, title="Heating Power")
+        self.pwm = AnnotatedSlider(min=0, max=1, label_factor=48, title="Heating Power")
         self.pwm.value = self.setup._current_pwm_value
         self.pwm.slider.valueChanged.connect(self.set_pwm_value)
 
