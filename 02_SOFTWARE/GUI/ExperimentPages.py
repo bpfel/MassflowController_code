@@ -151,7 +151,13 @@ class PWMSetting(ExperimentPage):
             setup=setup, name="Experiment Page 1: Human in the Loop",
         )
         # Create controls
-        self.pwm = AnnotatedSlider(min=0, max=1, label_factor=48, title="Heating Power")
+        self.pwm = AnnotatedSlider(
+            min=0,
+            max=1,
+            label_factor=48,
+            title="Heating Power",
+            label_string="{0:.2f} W",
+        )
         self.pwm.value = self.setup._current_pwm_value
         self.pwm.slider.valueChanged.connect(self.set_pwm_value)
 
@@ -191,14 +197,6 @@ class PIDSetting(ExperimentPage):
         enable_output_action,
         set_flow_action,
     ):
-        # Create competition widget
-        self.competition_widget = CompetitionDisturbanceRejectionWidget(
-            setup=setup,
-            start_recording_action=start_recording_action,
-            stop_recording_action=stop_recording_action,
-            enable_output_action=enable_output_action,
-            set_flow_action=set_flow_action,
-        )
         super(PIDSetting, self).__init__(
             setup=setup, name="Experiment Page 2: PID Controller",
         )
@@ -216,6 +214,16 @@ class PIDSetting(ExperimentPage):
         self.p_gain.slider.valueChanged.connect(self.set_p_value)
         self.i_gain.slider.valueChanged.connect(self.set_i_value)
         self.d_gain.slider.valueChanged.connect(self.set_d_value)
+
+        # Create competition widget
+        self.competition_widget = CompetitionDisturbanceRejectionWidget(
+            setup=setup,
+            start_recording_action=start_recording_action,
+            stop_recording_action=stop_recording_action,
+            enable_output_action=enable_output_action,
+            set_flow_action=set_flow_action,
+            pid_sliders=[self.p_gain, self.i_gain, self.d_gain],
+        )
 
         # Add widgets to layout
         self.vertical_layout_controls.addWidget(StatusWidget(setup=self.setup))

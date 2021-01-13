@@ -140,11 +140,7 @@ if __name__ == "__main__":
 
     logger = setup_custom_logger(name="root", level=getLevelName("DEBUG"))
 
-    serials = {
-        "EKS": "EKS23Z50PQ",
-        "Heater": "AM01ZB7J",
-        "SFC": "FT1PXV63"
-    }
+    serials = {"EKS": "EKS23Z50PQ", "Heater": "AM01ZB7J", "SFC": "FT1PXV63"}
     devices = DeviceIdentifier(serials=serials)
     devices.open()
     with SFX5400(serial_port=devices.serial_ports["SFC"]) as sfc:

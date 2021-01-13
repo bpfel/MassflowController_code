@@ -57,10 +57,10 @@ class Setup(object):
         self._sfc = None
         self._heater = None
         self._sdp = None
-        self._simulation_mode = False
         self._current_pwm_value = 0
         self._current_flow_value = 0
         self._current_mode = Mode.IDLE
+        self.simulation_mode = False
         self.temperature_difference_setpoint = config["general"][
             "temperature_difference_set_point"
         ]  # Temperature difference setpoint
@@ -142,14 +142,14 @@ class Setup(object):
             heater_online = self._heater.is_connected()
 
             if not all([eks_online, sfc_online, heater_online]):
-                self._simulation_mode = True
+                self.simulation_mode = True
                 logger.warning("Entering simulation mode.")
         else:
-            self._simulation_mode = True
+            self.simulation_mode = True
             logger.warning("Entering simulation mode.")
 
         # switch the temperature sensors if necessary:
-        if not self._simulation_mode and self.config["general"]["temp_sensors_switched"]:
+        if not self.simulation_mode and self.config["general"]["temp_sensors_switched"]:
             self.reverse_temp_sensors(update=False)
 
     def close(self) -> None:
@@ -157,7 +157,7 @@ class Setup(object):
         Closes all connected devices.
         """
         self.stop_measurement_thread()
-        if self._simulation_mode:
+        if self.simulation_mode:
             pass
         else:
             self._eks.close()
@@ -203,7 +203,7 @@ class Setup(object):
            :mod:`Utility.MeasurementBuffer.MeasurementBuffer`
         """
         # Retrieve all recorded signals depending on system mode
-        if self._simulation_mode:
+        if self.simulation_mode:
             results = self._measure_simulation_mode()
         else:
             results = self._measure_normal_mode()
@@ -254,8 +254,8 @@ class Setup(object):
 
         :return: A dictionary with all signals
         """
-        T_1 = 25 + np.random.rand()
-        T_2 = 30 + np.random.rand()
+        T_1 = 25 + 0.1 * np.random.rand()
+        T_2 = 30 + 0.1 * np.random.rand()
         delta_T = T_2 - T_1
         results_timestamp = time.time()
         results = {
@@ -368,7 +368,7 @@ class Setup(object):
         .. seealso::
            :mod:`setup.Mode`
         """
-        if self._simulation_mode:
+        if self.simulation_mode:
             self._current_pwm_value = 0
         elif self._current_mode in [Mode.IDLE, Mode.FORCE_PWM_OFF, Mode.PID_OFF]:
             self._heater.set_pwm(pwm_bit=0, dc=0)
@@ -446,13 +446,16 @@ class Setup(object):
         :type kd: float
         :param kd: Kd gain of the controller
         """
-        if kp is None:
-            kp = self.controller.Kp
-        if ki is None:
-            ki = self.controller.Ki
-        if kd is None:
-            kd = self.controller.Kd
-        self.controller.tunings = (kp, ki, kd)
+        if self.simulation_mode:
+            pass
+        else:
+            if kp is None:
+                kp = self.controller.Kp
+            if ki is None:
+                ki = self.controller.Ki
+            if kd is None:
+                kd = self.controller.Kd
+            self.controller.tunings = (kp, ki, kd)
 
     def set_flow(self, value):
         """
@@ -462,9 +465,12 @@ class Setup(object):
         :type flow: float
         :param flow: The desired massflow in normalized units, in [0, 1].
         """
-        if 0.0 <= value <= 1:
-            self._sfc.set_flow(setpoint_normalized=value)
-            self._current_flow_value = value
+        if self.simulation_mode:
+            pass
+        else:
+            if 0.0 <= value <= 1:
+                self._sfc.set_flow(setpoint_normalized=value)
+                self._current_flow_value = value
 
     def get_current_flow_value(self):
         """

@@ -74,8 +74,8 @@ class CompetitionWidget(FramedWidget):
     ) -> None:
         super(CompetitionWidget, self).__init__(*args, **kwargs)
         self.setup = setup
-        self.stop_recording = stop_recording_action
-        self.start_recording = start_recording_action
+        self.setup_stop_recording = stop_recording_action
+        self.setup_start_recording = start_recording_action
         self.output = enable_output_action
 
         self.fancy_counter = FancyPointCounter(setup=setup)
@@ -133,7 +133,9 @@ class CompetitionWidget(FramedWidget):
             # Show the final value of the progressbar, process completed
             self.progressbar.setValue(self.progressbar.maximum())
             # Stop recording measurement values to allow the user to inspect the measurement plot
-            self.stop_recording()
+            self.setup_stop_recording()
+            # Reset anything else if necessary
+            self._stop_recording()
             # Re-enable the start button of this widget
             self.start_button.setEnabled(True)
             # Show the final number of points and declare success
@@ -157,6 +159,9 @@ class CompetitionWidget(FramedWidget):
 
     @abstractmethod
     def _start_recording(self) -> None:
+        pass
+
+    def _stop_recording(self) -> None:  # not abstract since not necessary in every case
         pass
 
 
@@ -192,7 +197,7 @@ class CompetitionReferenceTrackingWidget(CompetitionWidget):
         if (
             self.setup.state["Temperature Difference"]
             < self.setup.config["anti_cheat"]["pwm_setting_threshold"]
-        ):
+        ) or self.setup.simulation_mode:
             # Set the initial time of the recording
             self.initial_time = time.time()
             # Start the QTimer that controls the update rate of the widget
@@ -202,7 +207,7 @@ class CompetitionReferenceTrackingWidget(CompetitionWidget):
             # Set the progress bar to initial value 0
             self.progressbar.setValue(0)
             # Start the buffering of new measurements
-            self.start_recording()
+            self.setup_start_recording()
             # Clear the measurement buffer to get rid of old measurements
             self.setup.measurement_buffer.clear()
             # Set the pwm output to on
@@ -225,6 +230,7 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         stop_recording_action: Callable,
         enable_output_action: Callable,
         set_flow_action: Callable,
+        pid_sliders: list,
         *args,
         **kwargs
     ) -> None:
@@ -238,6 +244,8 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         )
         # Add set flow action
         self.set_flow = set_flow_action
+        # Add reference to pid sliders
+        self.pid_sliders = pid_sliders
         # divide by 100 to convert from slm to normalized units
         self.nominal_flow = self.setup.config["general"]["nominal_mass_flow_rate"] / 100
         self.disturbance_high = (
@@ -271,7 +279,7 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
                 - self.setup.config["general"]["temperature_difference_set_point"]
             )
             < self.setup.config["anti_cheat"]["pid_setting_threshold"]
-        ):
+        ) or self.setup.simulation_mode:
             # Set the initial time of the recording
             self.initial_time = time.time()
             # Start the QTimer that controls the update rate of the widget
@@ -281,13 +289,16 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
             # Set the progress bar to initial value 0
             self.progressbar.setValue(0)
             # Start the buffering of new measurements
-            self.start_recording()
+            self.setup_start_recording()
             # Clear the measurement buffer to get rid of old measurements
             self.setup.measurement_buffer.clear()
             # Set the mass flow to the initial value
             self.set_flow(self.nominal_flow)
             # Disable the start button for the duration of the recording
             self.start_button.setDisabled(True)
+            # Disable pid sliders
+            for pid_slider in self.pid_sliders:
+                pid_slider.setDisabled(True)
         else:
             self.error_message.showMessage(
                 "Recording a game is only possible if the system is close to the temperature"
@@ -324,6 +335,11 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
             self.process_state = 4
         else:
             pass
+
+    def _stop_recording(self) -> None:
+        # Enable pid sliders
+        for pid_slider in self.pid_sliders:
+            pid_slider.setEnabled(True)
 
 
 class StatusWidget(FramedWidget):

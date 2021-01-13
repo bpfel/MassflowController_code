@@ -104,10 +104,7 @@ class SHT(SensorBase):
     """
 
     def __init__(
-        self,
-        device_port: int,
-        shdlc_device: SensorBridgeShdlcDevice,
-        name="SHT",
+        self, device_port: int, shdlc_device: SensorBridgeShdlcDevice, name="SHT",
     ) -> None:
         super(SHT, self).__init__(name)
         self.ShdlcDevice = shdlc_device
