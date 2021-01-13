@@ -1,6 +1,6 @@
 from abc import ABC
 
-from GUI.CustomWidgets.Basis import *
+from GUI.CustomWidgets.BaseWidgets import *
 from GUI.Utils import resource_path
 from setup import Setup
 from typing import Callable

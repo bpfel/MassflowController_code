@@ -97,9 +97,14 @@ class ExperimentPage(QWidget):
         self.vertical_layout_plots.removeWidget(delta_t_plot_widget)
         delta_t_plot_widget.setVisible(False)
         del delta_t_plot_widget
-        self.vertical_layout_plots.insertWidget(
-            0, self.plot_widget_factory.delta_t_competition()
+
+        # get competition widget
+        delta_t_competition_plot_widget = self.plot_widget_factory.delta_t_competition()
+        # Link x-axes of the two plots again
+        self.vertical_layout_plots.itemAt(0).widget().setXLink(
+            delta_t_competition_plot_widget.getPlotItem()
         )
+        self.vertical_layout_plots.insertWidget(0, delta_t_competition_plot_widget)
         # Add competition_widget
         self.vertical_layout_controls.insertWidget(
             INDEX_COMPETITION_WIDGET, self.competition_widget
@@ -117,7 +122,13 @@ class ExperimentPage(QWidget):
         self.vertical_layout_plots.removeWidget(delta_t_plot_widget)
         delta_t_plot_widget.setVisible(False)
         del delta_t_plot_widget
-        self.vertical_layout_plots.insertWidget(0, self.plot_widget_factory.delta_t())
+        # Get delta t plot widget
+        delta_t_plot_widget = self.plot_widget_factory.delta_t()
+        self.vertical_layout_plots.itemAt(0).widget().setXLink(
+            delta_t_plot_widget.getPlotItem()
+        )
+
+        self.vertical_layout_plots.insertWidget(0, delta_t_plot_widget)
         # Remove counter widget
         self.vertical_layout_controls.removeWidget(self.competition_widget)
         self.competition_widget.setVisible(False)
@@ -168,8 +179,13 @@ class PWMSetting(ExperimentPage):
         # Placeholder to prevent spreading of widgets across vertical space
         self.vertical_layout_controls.addWidget(QLabel(), 1)
 
-        self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
-        self.vertical_layout_plots.addWidget(self.plot_widget_factory.power())
+        # Create plot widgets and link x-axes
+        delta_t_plot_widget = self.plot_widget_factory.delta_t()
+        power_plot_widget = self.plot_widget_factory.power()
+        power_plot_widget.setXLink(delta_t_plot_widget.getPlotItem())
+
+        self.vertical_layout_plots.addWidget(delta_t_plot_widget)
+        self.vertical_layout_plots.addWidget(power_plot_widget)
 
     def set_pwm_value(self):
         self.setup.set_pwm(value=self.pwm.value)
@@ -233,8 +249,13 @@ class PIDSetting(ExperimentPage):
         # Placeholder to prevent spreading of widgets across vertical space
         self.vertical_layout_controls.addWidget(QLabel(), 1)
 
-        self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
-        self.vertical_layout_plots.addWidget(self.plot_widget_factory.pid())
+        # Create plot widget and link their x axes
+        delta_t_plot_widget = self.plot_widget_factory.delta_t()
+        pid_plot_widget = self.plot_widget_factory.pid()
+        pid_plot_widget.setXLink(delta_t_plot_widget.getPlotItem())
+
+        self.vertical_layout_plots.addWidget(delta_t_plot_widget)
+        self.vertical_layout_plots.addWidget(pid_plot_widget)
 
     def set_p_value(self):
         self.setup.set_kp(self.p_gain.value)
@@ -310,8 +331,12 @@ class MassFlowEstimation(ExperimentPage):
         # Placeholder to prevent spreading of widgets across vertical space
         self.vertical_layout_controls.addWidget(QLabel(), 1)
 
-        self.vertical_layout_plots.addWidget(self.plot_widget_factory.delta_t())
-        self.vertical_layout_plots.addWidget(self.plot_widget_factory.flow())
+        delta_t_plot_widget = self.plot_widget_factory.delta_t()
+        flow_plot_widget = self.plot_widget_factory.flow()
+        flow_plot_widget.setXLink(delta_t_plot_widget.getPlotItem())
+
+        self.vertical_layout_plots.addWidget(delta_t_plot_widget)
+        self.vertical_layout_plots.addWidget(flow_plot_widget)
 
     def enter_individual(self):
         self.p_gain.value = self.setup.controller.Kp
