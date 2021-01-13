@@ -354,7 +354,7 @@ class StatusWidget(FramedWidget):
         # Widgets
         grid = QGridLayout()
         gbox_temp1 = QGroupBox("Temperature Sensor 1")
-        gbox_temp2 = QGroupBox("Temperature Senosr 2")
+        gbox_temp2 = QGroupBox("Temperature Sensor 2")
         gbox_flow = QGroupBox("Flow Sensor")
         gbox_delta_t = QGroupBox("Temperature Difference")
         # LCDs
