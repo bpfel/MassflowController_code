@@ -156,6 +156,8 @@ class PWMSetting(ExperimentPage):
         stop_recording_action,
         enable_output_action,
         set_flow_action,
+        enable_toggle_setpoint_action,
+        disable_toggle_setpoint_action
     ):
         # Create competition widget
         self.competition_widget = CompetitionDisturbanceRejectionWidget(
@@ -164,6 +166,8 @@ class PWMSetting(ExperimentPage):
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
             set_flow_action=set_flow_action,
+            enable_toggle_setpoint_action=enable_toggle_setpoint_action,
+            disable_toggle_setpoint_action=disable_toggle_setpoint_action
         )
         super(PWMSetting, self).__init__(
             setup=setup, name="Experiment Page 1: Human in the Loop",
@@ -221,6 +225,8 @@ class PIDSetting(ExperimentPage):
         stop_recording_action,
         enable_output_action,
         set_flow_action,
+        enable_toggle_setpoint_action,
+        disable_toggle_setpoint_action,
     ):
         super(PIDSetting, self).__init__(
             setup=setup, name="Experiment Page 2: PID Controller",
@@ -247,6 +253,8 @@ class PIDSetting(ExperimentPage):
             stop_recording_action=stop_recording_action,
             enable_output_action=enable_output_action,
             set_flow_action=set_flow_action,
+            enable_toggle_setpoint_action=enable_toggle_setpoint_action,
+            disable_toggle_setpoint_action=disable_toggle_setpoint_action,
             pid_sliders=[self.p_gain, self.i_gain, self.d_gain],
         )
 

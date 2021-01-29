@@ -165,63 +165,6 @@ class CompetitionWidget(FramedWidget):
         pass
 
 
-class CompetitionReferenceTrackingWidget(CompetitionWidget):
-    def __init__(
-        self,
-        setup: Setup,
-        start_recording_action: Callable,
-        stop_recording_action: Callable,
-        enable_output_action: Callable,
-        *args,
-        **kwargs
-    ) -> None:
-        super().__init__(
-            setup=setup,
-            start_recording_action=start_recording_action,
-            stop_recording_action=stop_recording_action,
-            enable_output_action=enable_output_action,
-            *args,
-            **kwargs
-        )
-        self.wait_time_s = self.setup.config["reference_tracking"]["interval"]
-        self.progressbar.setMaximum(self.wait_time_s)
-
-    def _start_recording(self) -> None:
-        """
-        Takes control of the whole setup and GUI to start the recording.
-
-        .. note::
-           This function can only be called successifully if the current temperature difference is smaller 0.5 degrees.
-           This is necessary to prevent cheating.
-        """
-        if (
-            self.setup.state["Temperature Difference"]
-            < self.setup.config["anti_cheat"]["pwm_setting_threshold"]
-        ) or self.setup.simulation_mode:
-            # Set the initial time of the recording
-            self.initial_time = time.time()
-            # Start the QTimer that controls the update rate of the widget
-            self.timer.start()
-            # Start the internal QTimer of the point counter
-            self.fancy_counter.start()
-            # Set the progress bar to initial value 0
-            self.progressbar.setValue(0)
-            # Start the buffering of new measurements
-            self.setup_start_recording()
-            # Clear the measurement buffer to get rid of old measurements
-            self.setup.measurement_buffer.clear()
-            # Set the pwm output to on
-            self.output(True)
-            # Disable the start button for the duration of the recording
-            self.start_button.setDisabled(True)
-        else:
-            self.error_message.showMessage(
-                "Recording a game is only possible if the current temperature difference is smaller {}°C!".format(
-                    self.setup.config["anti_cheat"]["pwm_setting_threshold"]
-                )
-            )
-
-
 class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
     def __init__(
         self,
@@ -230,6 +173,8 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         stop_recording_action: Callable,
         enable_output_action: Callable,
         set_flow_action: Callable,
+        enable_toggle_setpoint_action: Callable,
+        disable_toggle_setpoint_action: Callable,
         pid_sliders=None,
         *args,
         **kwargs
@@ -245,6 +190,9 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         # Add set flow action
         self.set_flow = set_flow_action
         self.pid_sliders = pid_sliders
+        # Add toggle setpoint actions
+        self.enable_toggle_setpoint = enable_toggle_setpoint_action
+        self.disable_toggle_setpoint = disable_toggle_setpoint_action
         # divide by 100 to convert from slm to normalized units
         self.nominal_flow = self.setup.config["general"]["nominal_mass_flow_rate"] / 100
         self.disturbance_high = (
@@ -299,6 +247,8 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
             if self.pid_sliders is not None:
                 for pid_slider in self.pid_sliders:
                     pid_slider.setDisabled(True)
+            # Disable toggling of setpoint
+            self.disable_toggle_setpoint()
         else:
             self.error_message.showMessage(
                 "Recording a game is only possible if the system is close to the temperature"
@@ -341,6 +291,8 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         if self.pid_sliders is not None:
             for pid_slider in self.pid_sliders:
                 pid_slider.setEnabled(True)
+        # Reenable toggle setpoint
+        self.enable_toggle_setpoint()
 
 
 class StatusWidget(FramedWidget):

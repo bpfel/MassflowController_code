@@ -38,6 +38,8 @@ class MainWindow(QMainWindow):
                 stop_recording_action=self._stop_recording,
                 enable_output_action=self._toggle_output,
                 set_flow_action=self.setup.set_flow,
+                enable_toggle_setpoint_action=self._enable_toggle_setpoint,
+                disable_toggle_setpoint_action=self._disable_toggle_setpoint,
             )
         )
         self.stack.addWidget(
@@ -47,6 +49,8 @@ class MainWindow(QMainWindow):
                 stop_recording_action=self._stop_recording,
                 enable_output_action=self._toggle_output,
                 set_flow_action=self.setup.set_flow,
+                enable_toggle_setpoint_action=self._enable_toggle_setpoint,
+                disable_toggle_setpoint_action=self._disable_toggle_setpoint,
             )
         )
         self.stack.addWidget(
@@ -427,6 +431,12 @@ class MainWindow(QMainWindow):
     def _disable_massflow_setting(self) -> None:
         self.action_toggle_output.setEnabled(True)
         self.action_toggle_massflow.setEnabled(True)
+
+    def _enable_toggle_setpoint(self) -> None:
+        self.action_toggle_setpoint.setEnabled(True)
+
+    def _disable_toggle_setpoint(self) -> None:
+        self.action_toggle_setpoint.setDisabled(True)
 
 
 class Launcher(object):
