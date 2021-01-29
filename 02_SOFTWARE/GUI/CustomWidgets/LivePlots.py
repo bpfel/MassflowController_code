@@ -236,7 +236,7 @@ class PlotWidgetFactory:
 
     def pid(self):
         graph_pid = LivePlotWidget(
-            setup=self.setup, title="PID Components", ylabel="Gain", ylims=(-1, 1)
+            setup=self.setup, title="PID Components", ylabel="Gain", ylims=(-0.5, 2.5)
         )
         singal_p = LivePlotSignal(name="P", identifier="Controller Output P", color="r")
         signal_i = LivePlotSignal(name="I", identifier="Controller Output I", color="g")
