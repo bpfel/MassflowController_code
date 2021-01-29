@@ -15,8 +15,8 @@
     "massflow_estimate": {
       "c_p": 1006.0,
       "massflow_SI2SLM": 46432,
-      "resistance": 11,
-      "voltage": 24
+      "resistance": 9,
+      "voltage": 23.35
     },
     "temperature": {
       "maximum_calibration_offset": 0.5
