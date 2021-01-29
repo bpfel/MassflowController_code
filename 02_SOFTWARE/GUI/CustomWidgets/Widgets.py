@@ -275,7 +275,7 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         if (
             abs(
                 self.setup.state["Temperature Difference"]
-                - self.setup.config["general"]["temperature_difference_set_point"]
+                - self.setup.temperature_difference_setpoint
             )
             < self.setup.config["anti_cheat"]["pid_setting_threshold"]
         ) or self.setup.simulation_mode:

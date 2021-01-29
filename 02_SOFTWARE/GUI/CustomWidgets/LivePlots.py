@@ -194,7 +194,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperature Difference",
             ylabel="Temperature Difference [°C]",
-            ylims=(0, self.setup.temperature_difference_setpoint + 5),
+            ylims=(0, self.setup.config['general']['temperature_difference_set_point_high'] + 5),
         )
         signal_actual_delta_t = LivePlotSignal(
             name="Actual Delta T", identifier="Temperature Difference", color="b"
@@ -210,7 +210,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperatures",
             ylabel="Temperature [°C]°",
-            ylims=(20, 40),
+            ylims=(20, 20 + self.setup.config['general']['temperature_difference_set_point_high'] + 5),
         )
         signal_temperature_one = LivePlotSignal(
             name="Temperature 1", identifier="Temperature 1", color="b"
@@ -260,7 +260,7 @@ class PlotWidgetFactory:
             setup=self.setup,
             title="Temperature Difference",
             ylabel="Temperature Difference [°C]",
-            ylims=(0, self.setup.temperature_difference_setpoint + 5),
+            ylims=(0, self.setup.config['general']['temperature_difference_set_point_high'] + 5),
         )
         signal_actual_delta_t = LivePlotSignal(
             name="Actual Delta T", identifier="Temperature Difference", color="b"

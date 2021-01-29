@@ -229,6 +229,29 @@ class MainWindow(QMainWindow):
         self.action_toggle_massflow.clicked.connect(self._toggle_massflow)
         toolbar.addWidget(self.action_toggle_massflow)
 
+        toolbar.addSeparator()
+
+        self.action_toggle_setpoint = QPushButton("Setpoint Change", self)
+        self.action_toggle_setpoint.setStatusTip("Perform a setpoint step.")
+        self.action_toggle_setpoint.clicked.connect(self._toggle_setpoint)
+        toolbar.addWidget(self.action_toggle_setpoint)
+
+    def _toggle_setpoint(self):
+        """
+        Toolbar action; Allows to change the temperature difference setpoint
+        """
+        if (
+            self.setup.temperature_difference_setpoint
+            == self.setup.config["general"]["temperature_difference_set_point_low"]
+        ):
+            self.setup.set_setpoint(
+                self.setup.config["general"]["temperature_difference_set_point_high"]
+            )
+        else:
+            self.setup.set_setpoint(
+                self.setup.config["general"]["temperature_difference_set_point_low"]
+            )
+
     def _toggle_massflow(self, state=None) -> None:
         """
         Toolbar action; Allows to turn the massflow output on or off

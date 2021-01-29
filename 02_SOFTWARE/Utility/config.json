@@ -9,7 +9,8 @@
     "nominal_mass_flow_rate": 60,
     "t_sampling": 0.25,
     "temp_sensors_switched": 1,
-    "temperature_difference_set_point": 15
+    "temperature_difference_set_point_high": 15,
+    "temperature_difference_set_point_low": 6
   },
   "measurement": {
     "massflow_estimate": {

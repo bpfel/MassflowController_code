@@ -62,7 +62,7 @@ class Setup(object):
         self._current_mode = Mode.IDLE
         self.simulation_mode = False
         self.temperature_difference_setpoint = config["general"][
-            "temperature_difference_set_point"
+            "temperature_difference_set_point_low"
         ]  # Temperature difference setpoint
         self._delta_T = 0  # Static state temperature difference for calibration
         self.config = config
@@ -414,7 +414,7 @@ class Setup(object):
         value = float(value)
         if value < 0:
             raise RuntimeError("This is a heating setup. Not a fridge, dummy!")
-        if value > self.config["safety"]["maximum_temperature"] - 25:
+        if value > self.config["safety"]["upper_temperature_limit"] - 25:
             raise RuntimeError("This a test setup. Not an oven, du Löli!")
         self.temperature_difference_setpoint = value
         self.controller.setpoint = value
