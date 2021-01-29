@@ -157,12 +157,6 @@ class PWMSetting(ExperimentPage):
         enable_output_action,
         set_flow_action,
     ):
-        # self.competition_widget = CompetitionReferenceTrackingWidget(
-        #     setup=setup,
-        #     start_recording_action=start_recording_action,
-        #     stop_recording_action=stop_recording_action,
-        #     enable_output_action=enable_output_action,
-        # )
         # Create competition widget
         self.competition_widget = CompetitionDisturbanceRejectionWidget(
             setup=setup,
@@ -200,6 +194,8 @@ class PWMSetting(ExperimentPage):
         self.vertical_layout_plots.addWidget(delta_t_plot_widget)
         self.vertical_layout_plots.addWidget(power_plot_widget)
 
+        self._enable_output_action = enable_output_action
+
     def set_pwm_value(self):
         self.setup.set_pwm(value=self.pwm.value)
 
@@ -207,7 +203,7 @@ class PWMSetting(ExperimentPage):
         self.setup.start_direct_power_setting()
 
     def leave_individual(self):
-        self.setup.set_pwm(0)
+        pass
 
     def desired_pwm_output(self):
         return self.pwm.value

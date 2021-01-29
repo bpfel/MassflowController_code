@@ -496,7 +496,6 @@ class Setup(object):
         Start pwm mode with the output set to off.
         """
         self._current_mode = Mode.FORCE_PWM_OFF
-        self.set_pwm(value=0)
 
     def enable_output(self, desired_pwm_output=0) -> None:
         """
