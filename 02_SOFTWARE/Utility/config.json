@@ -33,7 +33,7 @@
   },
   "safety": {
     "lower_flow_limit": 15,
-    "upper_temperature_limit": 60
+    "upper_temperature_limit": 80
   },
   "anti_cheat": {
     "pwm_setting_threshold": 1.5,

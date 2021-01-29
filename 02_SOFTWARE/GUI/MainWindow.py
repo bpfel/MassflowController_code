@@ -64,6 +64,32 @@ class MainWindow(QMainWindow):
 
         self.error_message = QErrorMessage()
 
+        # Set up timer for the setup error watchdog
+        self.timer = QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self._setup_error_watchdog)
+        self.timer.start()
+
+    def _setup_error_watchdog(self):
+        if self.setup.error_high_temperature:
+            # reset error
+            self.setup.error_high_temperature = False
+            # issue warning
+            self.error_message.showMessage(
+                "The output was turned off since a high temperature error was triggered when reaching {} °C".format(
+                    self.setup.config["safety"]["upper_temperature_limit"]
+                )
+            )
+        if self.setup.error_low_flow:
+            # reset error
+            self.setup.error_low_flow = False
+            # issue warning
+            self.error_message.showMessage(
+                "The output was turned off since a low flow error was triggered when going below {} slm".format(
+                    self.setup.config["safety"]["lower_flow_limit"]
+                )
+            )
+
     def setup_menu_bar(self) -> None:
         bar = self.menuBar()
         configuration = bar.addMenu("Configuration")

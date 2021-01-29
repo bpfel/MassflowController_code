@@ -88,6 +88,10 @@ class Setup(object):
         self.safety_lower_flow_limit = self.config["safety"]["lower_flow_limit"]
         self.nominal_massflow = self.config["general"]["nominal_mass_flow_rate"] / 100
 
+        # allocate error flags
+        self.error_high_temperature = False
+        self.error_low_flow = False
+
     def _setup_measurement_buffer(self) -> MeasurementBuffer:
         """
         Defines the set of recorded signals and creates a corresponding MeasurementBuffer.
@@ -230,10 +234,17 @@ class Setup(object):
         # If the flow is too low or the temperatures too high stop heating immediately:
         if (
             results["Flow"] < self.safety_lower_flow_limit
-            or results["Temperature 1"] > self.safety_upper_temperature_limit
-            or results["Temperature 2"] > self.safety_upper_temperature_limit
+            and self._current_flow_value > 0
+            and self._current_pwm_value > 0
         ):
             self.set_pwm(0)
+            self.error_low_flow = True
+        if (
+            results["Temperature 1"] > self.safety_upper_temperature_limit
+            or results["Temperature 2"] > self.safety_upper_temperature_limit
+        ) and self._current_pwm_value > 0:
+            self.set_pwm(0)
+            self.error_high_temperature = True
         # If we're in PID mode set the previously calculated value
         elif self._current_mode is Mode.PID_ON:
             self._current_pwm_value = desired_pwm
@@ -379,7 +390,7 @@ class Setup(object):
                 raise ValueError(
                     "PWM value: {} has to be between 0 and 1".format(value)
                 )
-            # Safety check: If the flow is smaller than 20.0 slm, heating will not be allowed
+            # Safety check: If the flow is smaller than x slm, heating will not be allowed
             if value != 0:
                 if (
                     self.state["Flow"] < self.safety_lower_flow_limit
