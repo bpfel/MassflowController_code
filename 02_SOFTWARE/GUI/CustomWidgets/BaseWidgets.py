@@ -22,7 +22,7 @@ class FramedWidget(QFrame):
 
 
 class AnnotatedSlider(FramedWidget):
-    def __init__(self, min, max, title, label_factor=1, label_string="{}"):
+    def __init__(self, min, max, title, label_factor=1, label_string="{:.2f}"):
         super(AnnotatedSlider, self).__init__()
 
         self.min = min
