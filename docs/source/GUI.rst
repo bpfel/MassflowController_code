@@ -3,11 +3,8 @@
 GUI
 ===
 
-The structure of the graphical user interface can be described as follows: The outermost layer is a simple launcher,
-that deploys the main Qt application and loads the main window.
-
-.. autoclass:: GUI.Launcher.Launcher
-   :members:
+The structure of the graphical user interface can be described as follows: The outermost layer is within the main file,
+which deploys the Qt application and loads the main window.
 
 The main window then controls the different experiment pages :py:class:`GUI.ExperimentPages.ExperimentPage`, one for
 each experimentation step, with a stacked layout and manages the switching between those pages. The pages are built up
@@ -16,7 +13,7 @@ from a series of widgets as defined in sections :ref:`widgets` and :ref:`liveplo
 Main Window
 ***********
 
-.. autoclass:: GUI.Launcher.MainWindow
+.. autoclass:: GUI.MainWindow
    :members:
    :private-members:
 
