@@ -95,6 +95,12 @@ class Setup(object):
         self.error_low_flow = False
 
     def save_measurement_buffer(self, folder, name, type='mat'):
+        """
+        Saves the current measurement buffer to a file.
+        :param folder: Destination folder.
+        :param name: Name of the file. A time tag will be appended for uniqueness.
+        :param type: To allow different export filetypes.
+        """
         if type == 'mat':
             # Save as matlab .mat file
             file_name = "{}_{}.mat".format(name, time.time())
@@ -113,8 +119,10 @@ class Setup(object):
         Defines the set of recorded signals and creates a corresponding MeasurementBuffer.
 
         :return: An instance of MeasurementBuffer containing a deque instance for every signal.
+
+        .. seealso::
+           Module :mod:`Utility.MeasurementBuffer.MeasurementBuffer`
         """
-        # todo: Link to MeasurementBuffer class
         signals = [
             "Temperature_1",
             "Temperature_2",
@@ -142,8 +150,10 @@ class Setup(object):
         Finds and opens all the USB devices previously defined within `self.serials` by their serial number.
         If one of the devices is not responsive or cannot be found, the setup is switching to simulation mode
         in which all measurements are simulated. This allows to test the GUI without any attached devices.
+
+        .. seealso::
+           Module :mod:`Drivers.DeviceIdentifier.DeviceIdentifier`
         """
-        # todo: Link to DeviceIdentifier
         self._devices = DeviceIdentifier(serials=self._serials)
 
         if self._devices.open():
