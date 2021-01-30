@@ -14,7 +14,7 @@ HUMIDITY_MEASUREMENT_NAME = "Humidity"
 
 class EKS(PlatformBase):
     """
-    EKS represents a Sensirion Sensor Bridge (EKS) which is used to communicate to a range of sensor via I2C.
+    EKS represents a Sensirion Sensor Bridge which is used to communicate to a range of sensor via I2C.
 
     :type serial_port: str
     :param serial_port: Name of the port to which the EKS is connected.

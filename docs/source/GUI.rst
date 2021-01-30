@@ -13,7 +13,7 @@ from a series of widgets as defined in sections :ref:`widgets` and :ref:`liveplo
 Main Window
 ***********
 
-.. autoclass:: GUI.MainWindow
+.. autoclass:: GUI.MainWindow.MainWindow
    :members:
    :private-members:
 
