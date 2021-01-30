@@ -77,8 +77,7 @@ class SDP800(SensorBase):
 
         :return: True if connected, False if not.
 
-        .. todo::
-           Implement this.
+        .. todo:: Implement this.
         """
         raise NotImplementedError(
             "This device does not yet work correctly. Driver needs work."
