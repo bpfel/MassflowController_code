@@ -61,11 +61,3 @@ Sensirion Mass Flow Meter / Controller (SFM / SFC)
    :members:
    :private-members:
    :show-inheritance:
-
-Sensirion Differential Pressure (SDP)
--------------------------------------
-
-.. autoclass:: Drivers.SDP800.SDP800
-   :members:
-   :private-members:
-   :show-inheritance:

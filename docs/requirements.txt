@@ -38,8 +38,10 @@ pyserial==3.4
 python-dateutil==2.8.1
 pytz==2020.1
 pywin32-ctypes==0.2.0
+PyYAML==5.3.1
 regex==2020.7.14
 requests==2.24.0
+scipy==1.6.0
 sensirion-shdlc-driver==0.1.4
 sensirion-shdlc-sensorbridge==0.1.1
 simple-pid==0.2.4
