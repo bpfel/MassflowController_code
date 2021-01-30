@@ -11,6 +11,8 @@ import time
 import numpy as np
 from enum import Enum
 from copy import deepcopy
+from scipy.io import savemat
+import os
 
 logger = logging.getLogger("root")
 
@@ -92,6 +94,20 @@ class Setup(object):
         self.error_high_temperature = False
         self.error_low_flow = False
 
+    def save_measurement_buffer(self, folder, name, type='mat'):
+        if type == 'mat':
+            # Save as matlab .mat file
+            file_name = "{}_{}.mat".format(name, time.time())
+            file_name = os.path.join(folder, file_name)
+            # Check if the folder exists
+            if os.path.exists(folder):
+                pass
+            else:
+                os.mkdir(path=folder)
+            savemat(file_name=file_name, mdict=self.measurement_buffer.data)
+        else:
+            raise NotImplementedError("File type {} not implemented yet".format(type))
+
     def _setup_measurement_buffer(self) -> MeasurementBuffer:
         """
         Defines the set of recorded signals and creates a corresponding MeasurementBuffer.
@@ -100,20 +116,20 @@ class Setup(object):
         """
         # todo: Link to MeasurementBuffer class
         signals = [
-            "Temperature 1",
-            "Temperature 2",
-            "Humidity 1",
-            "Humidity 2",
+            "Temperature_1",
+            "Temperature_2",
+            "Humidity_1",
+            "Humidity_2",
             "Flow",
             "Time",
-            "Temperature Difference",
+            "Temperature_Difference",
             "PWM",
-            "Flow Estimate",
-            "Target Delta T",
-            "Controller Output P",
-            "Controller Output I",
-            "Controller Output D",
-            "Controller Output",
+            "Flow_Estimate",
+            "Target_Delta_T",
+            "Controller_Output_P",
+            "Controller_Output_I",
+            "Controller_Output_D",
+            "Controller_Output",
         ]
         return MeasurementBuffer(
             signals=signals,
@@ -214,20 +230,20 @@ class Setup(object):
 
         # Calculate control related signals depending on whether the controller is active
         if self._current_mode is Mode.PID_ON:
-            desired_pwm = self.controller(input_=results["Temperature Difference"])
+            desired_pwm = self.controller(input_=results["Temperature_Difference"])
             (
-                results["Controller Output P"],
-                results["Controller Output I"],
-                results["Controller Output D"],
+                results["Controller_Output_P"],
+                results["Controller_Output_I"],
+                results["Controller_Output_D"],
             ) = self.controller.components
-            results["Controller Output"] = self.controller._last_output
+            results["Controller_Output"] = self.controller._last_output
         else:
             desired_pwm = 0
             (
-                results["Controller Output P"],
-                results["Controller Output I"],
-                results["Controller Output D"],
-                results["Controller Output"],
+                results["Controller_Output_P"],
+                results["Controller_Output_I"],
+                results["Controller_Output_D"],
+                results["Controller_Output"],
             ) = (0, 0, 0, 0)
 
         # Decide whether to set a new pwm value:
@@ -240,8 +256,8 @@ class Setup(object):
             self.set_pwm(0)
             self.error_low_flow = True
         if (
-            results["Temperature 1"] > self.safety_upper_temperature_limit
-            or results["Temperature 2"] > self.safety_upper_temperature_limit
+            results["Temperature_1"] > self.safety_upper_temperature_limit
+            or results["Temperature_2"] > self.safety_upper_temperature_limit
         ) and self._current_pwm_value > 0:
             self.set_pwm(0)
             self.error_high_temperature = True
@@ -270,18 +286,18 @@ class Setup(object):
         delta_T = T_2 - T_1
         results_timestamp = time.time()
         results = {
-            "Temperature 1": T_1,
-            "Temperature 2": T_2,
-            "Humidity 1": 50 + np.random.rand(),
-            "Humidity 2": 30 + np.random.rand(),
+            "Temperature_1": T_1,
+            "Temperature_2": T_2,
+            "Humidity_1": 50 + np.random.rand(),
+            "Humidity_2": 30 + np.random.rand(),
             "Flow": 50 + np.random.rand(),
             "Time": results_timestamp,
-            "Temperature Difference": delta_T,
+            "Temperature_Difference": delta_T,
             "PWM": self._current_pwm_value,
-            "Flow Estimate": self.massflow_estimator.calculate(
+            "Flow_Estimate": self.massflow_estimator.calculate(
                 delta_t=delta_T, pwm=self._current_pwm_value
             ),
-            "Target Delta T": self.temperature_difference_setpoint,
+            "Target_Delta_T": self.temperature_difference_setpoint,
         }
         return results
 
@@ -301,18 +317,18 @@ class Setup(object):
             - self._delta_T
         )
         results = {
-            "Temperature 1": results_eks[0]["Temperature"],
-            "Temperature 2": results_eks[1]["Temperature"] - self._delta_T,
-            "Humidity 1": results_eks[0]["Humidity"],
-            "Humidity 2": results_eks[1]["Humidity"],
+            "Temperature_1": results_eks[0]["Temperature"],
+            "Temperature_2": results_eks[1]["Temperature"] - self._delta_T,
+            "Humidity_1": results_eks[0]["Humidity"],
+            "Humidity_2": results_eks[1]["Humidity"],
             "Flow": results_sfc["Flow"],
             "Time": results_timestamp,
-            "Temperature Difference": delta_T,
+            "Temperature_Difference": delta_T,
             "PWM": self._current_pwm_value,
-            "Flow Estimate": self.massflow_estimator.calculate(
+            "Flow_Estimate": self.massflow_estimator.calculate(
                 delta_t=delta_T, pwm=self._current_pwm_value
             ),
-            "Target Delta T": self.temperature_difference_setpoint,
+            "Target_Delta_T": self.temperature_difference_setpoint,
         }
         return results
 
@@ -394,8 +410,8 @@ class Setup(object):
             if value != 0:
                 if (
                     self.state["Flow"] < self.safety_lower_flow_limit
-                    or self.state["Temperature 1"] > self.safety_upper_temperature_limit
-                    or self.state["Temperature 2"] > self.safety_upper_temperature_limit
+                    or self.state["Temperature_1"] > self.safety_upper_temperature_limit
+                    or self.state["Temperature_2"] > self.safety_upper_temperature_limit
                 ):
                     value = 0
             # Register the newly set pwm value for later recording
@@ -539,7 +555,7 @@ class Setup(object):
         # Reset first
         self.reset_temperature_calibration()
 
-        delta_T = self.state["Temperature Difference"]
+        delta_T = self.state["Temperature_Difference"]
         threshold = self.config["measurement"]["temperature"][
             "maximum_calibration_offset"
         ]

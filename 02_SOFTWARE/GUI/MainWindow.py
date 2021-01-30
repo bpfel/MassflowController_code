@@ -240,13 +240,28 @@ class MainWindow(QMainWindow):
         self.action_toggle_setpoint.clicked.connect(self._toggle_setpoint)
         toolbar.addWidget(self.action_toggle_setpoint)
 
+        toolbar.addSeparator()
+
+        self.action_save_measurement_buffer = QAction(
+            QIcon(resource_path("Icons\\printer.png")), "Save Measurement Buffer", self
+        )
+        self.action_save_measurement_buffer.setStatusTip("Go to next view")
+        self.action_save_measurement_buffer.triggered.connect(self._save_measurement_buffer)
+        toolbar.addAction(self.action_save_measurement_buffer)
+
+    def _save_measurement_buffer(self):
+        """
+        Toolbar aciton; Allows to save the measurement buffer as a Matlab .mat file.
+        """
+        self.setup.save_measurement_buffer(folder='data', name='Measurement_MassflowSensor', type='mat')
+
     def _toggle_setpoint(self):
         """
         Toolbar action; Allows to change the temperature difference setpoint
         """
         if (
-            self.setup.temperature_difference_setpoint
-            == self.setup.config["general"]["temperature_difference_set_point_low"]
+                self.setup.temperature_difference_setpoint
+                == self.setup.config["general"]["temperature_difference_set_point_low"]
         ):
             self.setup.set_setpoint(
                 self.setup.config["general"]["temperature_difference_set_point_high"]

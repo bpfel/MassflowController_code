@@ -25,6 +25,9 @@ class MeasurementBuffer(object):
         self._data = dict()
         buffer_length = int(buffer_interval_s / sampling_time_s)
         for signal in signals:
+            if ' ' in signal:
+                # Raise error now to prevent unexpected behaviour upon exporting to .mat file later
+                raise RuntimeError('Space used in name string for signal {}. Please use only _ instead!'.format(signal))
             self._data[signal] = deque(maxlen=buffer_length)
 
     def update(self, measurement: dict) -> None:
@@ -38,7 +41,7 @@ class MeasurementBuffer(object):
         """
         if set(measurement.keys()) != set(self._signals):
             logger.error("Incorrect set of signals supplied!")
-            raise AttributeError("Incorrect number of signals applied!")
+            raise AttributeError("Incorrect set of signals supplied!")
         for signal, value in measurement.items():
             self._data[signal].append(value)
 
@@ -65,3 +68,7 @@ class MeasurementBuffer(object):
         logger.info("Clearing the measurement buffer.")
         for signal in self._signals:
             self._data[signal].clear()
+
+    @property
+    def data(self) -> dict:
+        return self._data

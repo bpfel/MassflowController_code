@@ -33,10 +33,10 @@ class FancyPointCounter(QLCDNumber):
 
     def _update_counter(self):
         delta_t = numpy.asarray(
-            self.setup.measurement_buffer["Temperature Difference"]
+            self.setup.measurement_buffer["Temperature_Difference"]
         ).flatten()
         target_delta_t = numpy.asarray(
-            self.setup.measurement_buffer["Target Delta T"]
+            self.setup.measurement_buffer["Target_Delta_T"]
         ).flatten()
         errors = delta_t - target_delta_t
         squared_sums = numpy.sum(errors ** 2)
@@ -222,7 +222,7 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         """
         if (
             abs(
-                self.setup.state["Temperature Difference"]
+                self.setup.state["Temperature_Difference"]
                 - self.setup.temperature_difference_setpoint
             )
             < self.setup.config["anti_cheat"]["pid_setting_threshold"]
@@ -312,12 +312,12 @@ class StatusWidget(FramedWidget):
         gbox_delta_t = QGroupBox("Temperature Difference")
         # LCDs
         self.lcds = {
-            "T1": LabelledQLCD(signal="Temperature 1", title="Temperature [°C]"),
-            "T2": LabelledQLCD(signal="Temperature 2", title="Temperature [°C]"),
-            "H1": LabelledQLCD(signal="Humidity 1", title="Humidity [%]"),
-            "H2": LabelledQLCD(signal="Humidity 2", title="Humidity [%]"),
+            "T1": LabelledQLCD(signal="Temperature_1", title="Temperature [°C]"),
+            "T2": LabelledQLCD(signal="Temperature_2", title="Temperature [°C]"),
+            "H1": LabelledQLCD(signal="Humidity_1", title="Humidity [%]"),
+            "H2": LabelledQLCD(signal="Humidity_2", title="Humidity [%]"),
             "FL": LabelledQLCD(signal="Flow", title="Flow [slm]"),
-            "DT": LabelledQLCD(signal="Temperature Difference", title="Delta T [°C]"),
+            "DT": LabelledQLCD(signal="Temperature_Difference", title="Delta T [°C]"),
         }
         # Layouts
         hlayout_temp1 = QHBoxLayout()

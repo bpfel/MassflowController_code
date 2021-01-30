@@ -197,10 +197,10 @@ class PlotWidgetFactory:
             ylims=(0, self.setup.config['general']['temperature_difference_set_point_high'] + 5),
         )
         signal_actual_delta_t = LivePlotSignal(
-            name="Actual Delta T", identifier="Temperature Difference", color="b"
+            name="Actual Delta T", identifier="Temperature_Difference", color="b"
         )
         signal_target_delta_t = LivePlotSignal(
-            name="Target Delta T", identifier="Target Delta T", color="r"
+            name="Target Delta T", identifier="Target_Delta_T", color="r"
         )
         graph_delta_t.add_signals([signal_actual_delta_t, signal_target_delta_t])
         return graph_delta_t
@@ -213,10 +213,10 @@ class PlotWidgetFactory:
             ylims=(20, 20 + self.setup.config['general']['temperature_difference_set_point_high'] + 5),
         )
         signal_temperature_one = LivePlotSignal(
-            name="Temperature 1", identifier="Temperature 1", color="b"
+            name="Temperature 1", identifier="Temperature_1", color="b"
         )
         signal_temperature_two = LivePlotSignal(
-            name="Temperature 2", identifier="Temperature 2", color="r"
+            name="Temperature 2", identifier="Temperature_2", color="r"
         )
         graph_temperatures.add_signals([signal_temperature_one, signal_temperature_two])
         return graph_temperatures
@@ -229,7 +229,7 @@ class PlotWidgetFactory:
             name="Flow Measurement", identifier="Flow", color="b"
         )
         signal_flow_estimate = LivePlotSignal(
-            name="Flow Estimate", identifier="Flow Estimate", color="r"
+            name="Flow Estimate", identifier="Flow_Estimate", color="r"
         )
         graph_flow.add_signals([signal_flow, signal_flow_estimate])
         return graph_flow
@@ -238,11 +238,11 @@ class PlotWidgetFactory:
         graph_pid = LivePlotWidget(
             setup=self.setup, title="PID Components", ylabel="Gain", ylims=(-0.5, 2.5)
         )
-        singal_p = LivePlotSignal(name="P", identifier="Controller Output P", color="r")
-        signal_i = LivePlotSignal(name="I", identifier="Controller Output I", color="g")
-        signal_d = LivePlotSignal(name="D", identifier="Controller Output D", color="b")
+        singal_p = LivePlotSignal(name="P", identifier="Controller_Output_P", color="r")
+        signal_i = LivePlotSignal(name="I", identifier="Controller_Output_I", color="g")
+        signal_d = LivePlotSignal(name="D", identifier="Controller_Output_D", color="b")
         signal_pid = LivePlotSignal(
-            name="PID", identifier="Controller Output", color="k", width=2
+            name="PID", identifier="Controller_Output", color="k", width=2
         )
         graph_pid.add_signals([singal_p, signal_i, signal_d, signal_pid])
         return graph_pid
@@ -263,10 +263,10 @@ class PlotWidgetFactory:
             ylims=(0, self.setup.config['general']['temperature_difference_set_point_high'] + 5),
         )
         signal_actual_delta_t = LivePlotSignal(
-            name="Actual Delta T", identifier="Temperature Difference", color="b"
+            name="Actual Delta T", identifier="Temperature_Difference", color="b"
         )
         signal_target_delta_t = LivePlotSignal(
-            name="Target Delta T", identifier="Target Delta T", color="r"
+            name="Target Delta T", identifier="Target_Delta_T", color="r"
         )
         graph_delta_t.add_signals(
             actual_signal=signal_actual_delta_t, reference_signal=signal_target_delta_t
