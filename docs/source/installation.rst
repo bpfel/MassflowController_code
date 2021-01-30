@@ -11,6 +11,7 @@ Windows 10
    communication with the computer. Important: Select yes when asked for driver installation at the end of the process.
 #. Find the finished executable at `02_SOFTWARE/disp`.
 
+.. _debugging:
 
 Debugging
 *********
