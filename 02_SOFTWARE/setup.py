@@ -103,7 +103,7 @@ class Setup(object):
         """
         if type == 'mat':
             # Save as matlab .mat file
-            file_name = "{}_{}.mat".format(name, time.time())
+            file_name = "{}_{}.mat".format(name, time.strftime('%Y-%m-%d_%H-%M-%S'))
             file_name = os.path.join(folder, file_name)
             # Check if the folder exists
             if os.path.exists(folder):
