@@ -261,7 +261,7 @@ class CompetitionDisturbanceRejectionWidget(CompetitionWidget):
         """
         Container function for updates that are specific to the inheriting widgets
         """
-        if running_time_s > self.disturbance_delay and self.process_state == 0:
+        if running_time_s > self.disturbance_delay/2 and self.process_state == 0:
             # Switch to disturbance high
             self.set_flow(self.disturbance_high)
             self.process_state = 1

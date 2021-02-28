@@ -317,7 +317,6 @@ class Setup(object):
 
         :return: A dictionary with all measured signals.
         """
-        logger.info("Measuring once...")
         results_eks = self._eks.measure()
         results_sfc = self._sfc.measure()
         results_timestamp = time.time()
