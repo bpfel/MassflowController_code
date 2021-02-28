@@ -12,6 +12,16 @@ target_delta_T = 6 % degree celsius
 f_min = 0.3 %
 % Factors
 massflow_SI_to_slm = 1/std_air_density*1000*60
+massflow_slm_to_SI = 1/massflow_SI_to_slm
 % MFC
 max_massflow_slm = 100
 max_massflow_SI = max_massflow_slm/massflow_SI_to_slm
+
+% parameter for corrected massflow calculation
+actual_transmitted_power = 0.5;
+
+% define variables for parameter estimation
+coil_specific_heat_transfer = 20;
+coil_thermal_timeconstant = 20;
+coil_voltage = 23.5;
+
