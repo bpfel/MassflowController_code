@@ -4,12 +4,23 @@ Installation
 Windows 10
 ##########
 
+Setup GUI
+*********
+
 #. `Install python 3.8 <https://www.python.org/>`_ or newer.
 #. Set your PATH variable such that it includes the `Scripts` folder of your python installation.
 #. Go to `01_SETUP/WINDOWS` and run `py -m setup` in the cmd shell.
-#. Install `Sensirion Control Center <ttps://www.sensirion.com/de/controlcenter/>`_ to allow the sensor bridge to
+#. Install `Sensirion Control Center <https://www.sensirion.com/de/controlcenter/>`_ to allow the sensor bridge to
    communication with the computer. Important: Select yes when asked for driver installation at the end of the process.
 #. Find the finished executable at `02_SOFTWARE/disp`.
+
+Setup Sensirion USB Sensor Viewer
+*********************************
+
+#. `Install the Sensirion USB Sensor Viewer <https://www.sensirion.com/en/environmental-sensors/usb-sensor-viewer/>?`_.
+#. Select COM HARDWARE: `RS485/USB Sensor Cable`.
+#. Select Sensor Product: `DP Sensors (SDP3x/SDP8xx)`.
+#. Go through port numbers, pressing ok until the right one is found.
 
 .. _debugging:
 

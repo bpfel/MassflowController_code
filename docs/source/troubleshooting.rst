@@ -36,6 +36,13 @@ Why does the temperature difference decrease when heating?
 
    #. Navigate to the dropdown menu on the top left ``Configuration -> Reverse Temperature Sensors``.
 
+Why does the flow controller not deliver sufficient flow?
+*********************************************************
+
+* The pressurized air supply has only limited pressure.
+
+    #. Open the pressure reduction valve a bit more until 100slm of flow can be delivered.
+
 Why ... ?
 *********
 
