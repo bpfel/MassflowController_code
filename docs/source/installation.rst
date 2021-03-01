@@ -17,7 +17,7 @@ Setup GUI
 Setup Sensirion USB Sensor Viewer
 *********************************
 
-#. `Install the Sensirion USB Sensor Viewer <https://www.sensirion.com/en/environmental-sensors/usb-sensor-viewer/>?`_.
+#. `Install the `Sensirion USB Sensor Viewer <https://www.sensirion.com/en/environmental-sensors/usb-sensor-viewer/>?`_.
 #. Select COM HARDWARE: `RS485/USB Sensor Cable`.
 #. Select Sensor Product: `DP Sensors (SDP3x/SDP8xx)`.
 #. Execute `Drivers/identify_differential_pressure_sensor.py` with a local python environment.
