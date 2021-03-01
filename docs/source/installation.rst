@@ -20,7 +20,10 @@ Setup Sensirion USB Sensor Viewer
 #. `Install the Sensirion USB Sensor Viewer <https://www.sensirion.com/en/environmental-sensors/usb-sensor-viewer/>?`_.
 #. Select COM HARDWARE: `RS485/USB Sensor Cable`.
 #. Select Sensor Product: `DP Sensors (SDP3x/SDP8xx)`.
-#. Go through port numbers, pressing ok until the right one is found.
+#. Execute `Drivers/identify_differential_pressure_sensor.py` with a local python environment.
+   This will give you an overview of all connected sensors and print the comport ID of the pressure sensor in the final
+   line.
+#. Enter the previously found comport number in the RS485 Sensor viewer and connect.
 
 .. _debugging:
 
